@@ -4,9 +4,18 @@
 
 const SirioAuth = {
   // URL base de la API para permitir pruebas desde file:// o Live Server
-  API_BASE: (window.location.protocol === 'file:' || !window.location.port || window.location.port !== '3000')
-    ? 'http://localhost:3000'
-    : '',
+  API_BASE: (function() {
+    if (window.location.protocol === 'file:') {
+      return 'http://localhost:3000';
+    }
+    const isLocal = ['localhost', '127.0.0.1'].includes(window.location.hostname) || 
+                    window.location.hostname.startsWith('192.168.') || 
+                    window.location.hostname.startsWith('10.');
+    if (isLocal && window.location.port !== '3000') {
+      return 'http://localhost:3000';
+    }
+    return '';
+  })(),
   // Clave para localStorage
   STORAGE_KEY: 'sirio_session_user',
   
@@ -41,11 +50,11 @@ const SirioAuth = {
         storage.setItem(this.STORAGE_KEY, JSON.stringify(userData));
         return { success: true, user: userData };
       } else {
-        return { success: false, message: result.message || 'Error de inicio de sesión.' };
+        return { success: false, message: result.message || 'Error de inicio de sesion.' };
       }
     } catch (error) {
       console.error('Error en login:', error);
-      return { success: false, message: 'No se pudo conectar con el servidor. Por favor, asegúrate de que el servidor local está ejecutándose.' };
+      return { success: false, message: 'No se pudo conectar con el servidor. Por favor, asegurese de que el servidor local este ejecutandose.' };
     }
   },
 

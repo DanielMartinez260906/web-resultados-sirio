@@ -59,7 +59,7 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     } catch (error) {
       console.error('Error al cargar clientes:', error);
-      showGlobalAlert('No se pudo establecer conexión para cargar clientes.', 'error');
+      showGlobalAlert('No se pudo establecer conexion para cargar clientes.', 'error');
     }
   }
 
@@ -83,7 +83,7 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     } catch (error) {
       console.error('Error al cargar historial:', error);
-      clientHistoryContainer.innerHTML = '<p style="color: var(--error); text-align: center; padding: 1rem;">Error de conexión al cargar historial.</p>';
+      clientHistoryContainer.innerHTML = '<p style="color: var(--error); text-align: center; padding: 1rem;">Error de conexion al cargar historial.</p>';
     }
   }
 
@@ -120,7 +120,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // Renderizar el historial de exámenes en tarjetas compactas
   function renderHistory(results) {
     if (results.length === 0) {
-      clientHistoryContainer.innerHTML = '<p style="text-align: center; color: var(--text-dark); padding: 1.5rem 0;">No hay exámenes publicados para este cliente.</p>';
+      clientHistoryContainer.innerHTML = '<p style="text-align: center; color: var(--text-dark); padding: 1.5rem 0;">No hay examenes publicados para este cliente.</p>';
       return;
     }
 
@@ -302,7 +302,7 @@ document.addEventListener('DOMContentLoaded', () => {
       
       // Validar tamaño máximo (10MB)
       if (file.size > 10 * 1024 * 1024) {
-        showGlobalAlert(`El archivo "${file.name}" supera el límite de 10MB y fue descartado.`, 'error');
+        showGlobalAlert(`El archivo "${file.name}" supera el limite de 10MB y fue descartado.`, 'error');
         continue;
       }
       
@@ -364,7 +364,7 @@ document.addEventListener('DOMContentLoaded', () => {
     addMoreDiv.style.marginTop = '10px';
     addMoreDiv.innerHTML = `
       <button type="button" class="btn btn-secondary" style="padding: 6px 14px; font-size: 0.85rem;" id="add-more-files-btn">
-        <i class="fa-solid fa-plus"></i> Añadir más PDFs
+        <i class="fa-solid fa-plus"></i> Anadir mas PDFs
       </button>
     `;
     addMoreDiv.querySelector('#add-more-files-btn').addEventListener('click', (e) => {
@@ -408,7 +408,7 @@ document.addEventListener('DOMContentLoaded', () => {
       formData.append('pdf', file);
     });
 
-    SirioAuth.showLoading(`Publicando ${selectedFiles.length} exámenes...`);
+    SirioAuth.showLoading(`Publicando ${selectedFiles.length} examenes...`);
 
     try {
       const response = await fetch(`${SirioAuth.API_BASE}/api/admin/upload`, {
@@ -431,7 +431,7 @@ document.addEventListener('DOMContentLoaded', () => {
     } catch (error) {
       SirioAuth.hideLoading();
       console.error('Error al publicar exámenes:', error);
-      showGlobalAlert('Error de conexión al subir los archivos PDF al servidor.', 'error');
+      showGlobalAlert('Error de conexion al subir los archivos PDF al servidor.', 'error');
     }
   });
 
@@ -445,7 +445,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const idResultado = deleteBtn.dataset.id;
     if (!idResultado) return;
     
-    const confirmDelete = confirm('¿Estás seguro de que deseas eliminar este resultado? Se borrará de la base de datos de Google Sheets y se eliminará el archivo PDF permanentemente.');
+    const confirmDelete = confirm('¿Esta seguro de que desea eliminar este resultado? Se borrara de la base de datos de Google Sheets y se eliminara el archivo PDF permanentemente.');
     if (!confirmDelete) return;
     
     SirioAuth.showLoading('Eliminando examen del portal...');

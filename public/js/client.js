@@ -38,8 +38,8 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     } catch (error) {
       console.error('Error al cargar resultados:', error);
-      showGlobalAlert('No se pudo establecer conexión con el servidor.', 'error');
-      resultsContainer.innerHTML = '<p style="text-align: center; color: var(--error); padding: 2rem 0; grid-column: 1 / -1;">Error de conexión con el servidor.</p>';
+      showGlobalAlert('No se pudo establecer conexion con el servidor.', 'error');
+      resultsContainer.innerHTML = '<p style="text-align: center; color: var(--error); padding: 2rem 0; grid-column: 1 / -1;">Error de conexion con el servidor.</p>';
     }
   }
 
@@ -49,8 +49,8 @@ document.addEventListener('DOMContentLoaded', () => {
       resultsContainer.innerHTML = `
         <div class="detail-view-placeholder" style="grid-column: 1 / -1; padding: 4rem 1rem;">
           <i class="fa-solid fa-file-waveform" style="font-size: 3rem; color: var(--text-dark); opacity: 0.3; margin-bottom: 1rem;"></i>
-          <h3>No hay Exámenes Disponibles</h3>
-          <p>Aún no se han publicado resultados de exámenes para tu cuenta. Te notificaremos cuando estén disponibles.</p>
+          <h3>No hay Examenes Disponibles</h3>
+          <p>Aun no se han publicado resultados de examenes para tu cuenta. Te notificaremos cuando esten disponibles.</p>
         </div>
       `;
       return;

@@ -56,7 +56,7 @@ function doPost(e) {
     } else if (action === "logAccess") {
       response = logAccess(doc, data);
     } else {
-      response.message = "Acción no reconocida: " + action;
+      response.message = "Accion no reconocida: " + action;
     }
     
   } catch (error) {
@@ -140,7 +140,7 @@ function handleLogin(doc, data) {
     }
   }
   
-  return { success: false, message: "Usuario o contraseña incorrectos." };
+  return { success: false, message: "Usuario o contrasena incorrectos." };
 }
 
 /**
@@ -182,7 +182,7 @@ function addClient(doc, data) {
       return { success: false, message: "El nombre de usuario ya existe." };
     }
     if (rows[i][2].toString() === ident) {
-      return { success: false, message: "Un cliente con esta identificación ya está registrado." };
+      return { success: false, message: "Un cliente con esta identificacion ya esta registrado." };
     }
   }
   
@@ -209,7 +209,7 @@ function addClient(doc, data) {
   ];
   
   sheet.appendRow(newRow);
-  return { success: true, message: "Cliente registrado con éxito.", client: { id_usuario: nextId, nombre: data.nombre } };
+  return { success: true, message: "Cliente registrado con exito.", client: { id_usuario: nextId, nombre: data.nombre } };
 }
 
 /**
@@ -266,7 +266,7 @@ function addResult(doc, data) {
   
   return { 
     success: true, 
-    message: items.length === 1 ? "Examen publicado." : items.length + " exámenes publicados correctamente.", 
+    message: items.length === 1 ? "Examen publicado." : items.length + " examenes publicados correctamente.", 
     ids: idsResponse 
   };
 }
@@ -399,13 +399,13 @@ function deleteResult(doc, data) {
       sheet.deleteRow(i + 1);
       return { 
         success: true, 
-        message: "Examen eliminado de la hoja de cálculo.", 
+        message: "Examen eliminado de la hoja de calculo.", 
         nombre_archivo: fileName 
       };
     }
   }
   
-  return { success: false, message: "No se encontró ningún examen con el ID especificado." };
+  return { success: false, message: "No se encontro ningun examen con el ID especificado." };
 }
 
 /**
