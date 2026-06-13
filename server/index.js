@@ -156,45 +156,57 @@ app.post('/api/admin/clients', async (req, res) => {
 });
 
 // API: Subir Examen PDF (Solo Admins)
-app.post('/api/admin/upload', upload.single('pdf'), async (req, res) => {
+app.post('/api/admin/upload', upload.array('pdf', 20), async (req, res) => {
   try {
-    const { id_usuario, nombre_paciente, nombre_examen, observaciones } = req.body;
+    const { id_usuario } = req.body;
     
-    if (!req.file) {
-      return res.status(400).json({ success: false, message: "Por favor, selecciona un archivo PDF válido." });
+    if (!req.files || req.files.length === 0) {
+      return res.status(400).json({ success: false, message: "Por favor, selecciona al menos un archivo PDF válido." });
     }
     
-    if (!id_usuario || !nombre_paciente || !nombre_examen) {
-      // Borrar el archivo si faltan datos
-      fs.unlinkSync(req.file.path);
-      return res.status(400).json({ success: false, message: "El ID de usuario (cliente), el nombre del paciente y el nombre del examen son requeridos." });
+    if (!id_usuario) {
+      // Borrar archivos subidos si falta el cliente
+      req.files.forEach(file => {
+        if (fs.existsSync(file.path)) fs.unlinkSync(file.path);
+      });
+      return res.status(400).json({ success: false, message: "El ID de usuario (cliente) es requerido." });
     }
     
-    const nombre_archivo = req.file.filename;
+    // Crear lote de registros
+    const resultsData = req.files.map(file => ({
+      id_usuario: id_usuario,
+      nombre_paciente: "", // Campo quitado, se envía vacío
+      nombre_examen: file.originalname, // Nombre original del PDF como título
+      nombre_archivo: file.filename,
+      observaciones: "" // Campo quitado, se envía vacío
+    }));
     
-    // Registrar en Google Sheets / MockDB
-    const result = await db.addResult({
-      id_usuario,
-      nombre_paciente,
-      nombre_examen,
-      nombre_archivo,
-      observaciones
-    });
+    // Registrar en Google Sheets / MockDB en un solo lote (batch)
+    const result = await db.addResult(resultsData);
     
     if (result.success) {
       res.status(200).json({
         success: true,
-        message: "Examen publicado con éxito.",
-        filename: nombre_archivo
+        message: req.files.length === 1 
+          ? "Examen publicado con éxito." 
+          : `${req.files.length} exámenes publicados con éxito.`,
+        filenames: req.files.map(f => f.filename)
       });
     } else {
-      // Eliminar el archivo subido si falla el registro en la BD
-      fs.unlinkSync(req.file.path);
+      // Eliminar los archivos subidos si falla el registro en la BD
+      req.files.forEach(file => {
+        if (fs.existsSync(file.path)) fs.unlinkSync(file.path);
+      });
       res.status(500).json(result);
     }
     
   } catch (error) {
-    console.error("Error en subida de PDF:", error);
+    console.error("Error en subida de PDFs:", error);
+    if (req.files) {
+      req.files.forEach(file => {
+        if (fs.existsSync(file.path)) fs.unlinkSync(file.path);
+      });
+    }
     res.status(500).json({ success: false, message: error.message });
   }
 });

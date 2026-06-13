@@ -13,9 +13,9 @@
 
   <div class="app-container">
     <!-- Cabecera Principal con Logo Oficial -->
-    <header class="main-header" style="padding: 1rem 0;">
-      <div class="header-user-info" style="gap: 20px;">
-        <img src="logo.png" alt="Laboratorio Sirio" style="height: 55px; width: auto;">
+    <header class="main-header" style="padding: 0.8rem 0;">
+      <div class="header-user-info" style="gap: 20px; align-items: center;">
+        <img src="logo.png" alt="Laboratorio Sirio" style="height: 85px; width: auto; transition: var(--transition-smooth);">
         <div style="border-left: 1px solid var(--border-light); padding-left: 20px;">
           <h2 id="admin-name" style="font-size: 1.2rem;">Cargando...</h2>
           <p style="font-size: 0.85rem; color: var(--text-muted); margin-top: 2px;">
@@ -23,7 +23,10 @@
           </p>
         </div>
       </div>
-      <div class="header-actions">
+      <div class="header-actions" style="display: flex; gap: 10px; align-items: center;">
+        <button class="btn btn-secondary btn-icon" id="theme-toggle" title="Cambiar tema">
+          <i class="fa-solid fa-sun"></i>
+        </button>
         <button class="btn btn-secondary" id="logout-btn">
           <i class="fa-solid fa-right-from-bracket"></i> Cerrar Sesión
         </button>
@@ -133,45 +136,24 @@
                 <input type="hidden" id="upload-client-id">
                 
                 <div class="form-group">
-                  <label for="patient-name">Nombre del Paciente (Animal / Mascota)</label>
-                  <input type="text" id="patient-name" class="form-control" placeholder="Ej: Dante (Pastor Alemán), Firulais, Lucas" required>
-                </div>
-
-                <div class="form-group">
-                  <label for="exam-name">Nombre del Examen / Análisis</label>
-                  <input type="text" id="exam-name" class="form-control" placeholder="Ej: Hemograma Completo, Perfil Lipídico, Coprológico" required>
-                </div>
-
-                <div class="form-group">
-                  <label>Archivo de Resultados (Formato PDF)</label>
+                  <label>Archivos de Resultados (Formatos PDF)</label>
                   
                   <!-- Zona Dropzone -->
                   <div class="file-upload-area" id="dropzone">
                     <i class="fa-solid fa-file-pdf"></i>
-                    <p class="file-upload-text">Arrastra el archivo PDF aquí o haz clic para buscar</p>
-                    <p class="file-upload-subtext">Solo archivos PDF (Tamaño máximo: 10MB)</p>
-                    <input type="file" id="pdf-input" class="file-upload-input" accept="application/pdf">
+                    <p class="file-upload-text">Arrastra tus archivos PDF aquí o haz clic para buscar</p>
+                    <p class="file-upload-subtext">Puedes seleccionar varios archivos (Máx. 10MB por archivo)</p>
+                    <input type="file" id="pdf-input" class="file-upload-input" accept="application/pdf" multiple>
                   </div>
 
-                  <!-- Detalle archivo seleccionado -->
-                  <div class="file-selected-info" id="file-info" style="display: none;">
-                    <span class="file-selected-name">
-                      <i class="fa-solid fa-circle-check"></i>
-                      <span id="file-name-text">archivo.pdf</span>
-                    </span>
-                    <button type="button" class="file-remove-btn" id="remove-file-btn">
-                      <i class="fa-solid fa-trash-can"></i>
-                    </button>
+                  <!-- Contenedor de archivos seleccionados -->
+                  <div id="file-list-container" style="display: none; flex-direction: column; gap: 8px; margin-bottom: 1.5rem; width: 100%;">
+                    <!-- Se rellenará dinámicamente -->
                   </div>
-                </div>
-
-                <div class="form-group">
-                  <label for="exam-obs">Observaciones (Opcional)</label>
-                  <textarea id="exam-obs" class="form-control" rows="3" placeholder="Comentarios, valores atípicos o notas adicionales para el cliente..."></textarea>
                 </div>
 
                 <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 0.5rem;" id="submit-upload-btn">
-                  <i class="fa-solid fa-share-nodes"></i> Publicar Examen en el Portal
+                  <i class="fa-solid fa-share-nodes"></i> Publicar Exámenes en el Portal
                 </button>
               </form>
             </div>

@@ -14,7 +14,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // Variables de estado
   let allClients = [];
   let selectedClient = null;
-  let selectedFile = null;
+  let selectedFiles = []; // Almacena el listado de archivos seleccionados/arrastrados
 
   // Elementos del DOM
   const clientsContainer = document.getElementById('clients-container');
@@ -33,14 +33,9 @@ document.addEventListener('DOMContentLoaded', () => {
   // Formulario de Subida
   const uploadResultForm = document.getElementById('upload-result-form');
   const uploadClientIdInput = document.getElementById('upload-client-id');
-  const patientNameInput = document.getElementById('patient-name');
-  const examNameInput = document.getElementById('exam-name');
-  const examObsInput = document.getElementById('exam-obs');
   const dropzone = document.getElementById('dropzone');
   const pdfInput = document.getElementById('pdf-input');
-  const fileInfo = document.getElementById('file-info');
-  const fileNameText = document.getElementById('file-name-text');
-  const removeFileBtn = document.getElementById('remove-file-btn');
+  const fileListContainer = document.getElementById('file-list-container');
 
   // Alertas
   const globalAlert = document.getElementById('admin-global-alert');
@@ -53,7 +48,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // Cargar lista de clientes
   async function loadClients() {
     try {
-      const response = await fetch('/api/admin/clients');
+      const response = await fetch(`${SirioAuth.API_BASE}/api/admin/clients`);
       const data = await response.json();
       
       if (data.success) {
@@ -78,7 +73,7 @@ document.addEventListener('DOMContentLoaded', () => {
     `;
 
     try {
-      const response = await fetch(`/api/client/results?id_usuario=${clientId}`);
+      const response = await fetch(`${SirioAuth.API_BASE}/api/client/results?id_usuario=${clientId}`);
       const data = await response.json();
 
       if (data.success) {
@@ -122,7 +117,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // Renderizar el historial de exámenes
+  // Renderizar el historial de exámenes en tarjetas compactas
   function renderHistory(results) {
     if (results.length === 0) {
       clientHistoryContainer.innerHTML = '<p style="text-align: center; color: var(--text-dark); padding: 1.5rem 0;">No hay exámenes publicados para este cliente.</p>';
@@ -137,24 +132,20 @@ document.addEventListener('DOMContentLoaded', () => {
       div.style.borderLeft = '3px solid var(--color-accent)';
       
       div.innerHTML = `
-        <div class="client-item-info" style="flex-grow: 1;">
-          <h4 style="font-size: 0.95rem; font-weight: 600;">
-            Paciente: <span style="color: var(--text-main);">${res.nombre_paciente}</span>
+        <div class="client-item-info" style="flex-grow: 1; min-width: 0; padding-right: 10px;">
+          <h4 style="font-size: 0.95rem; font-weight: 600; text-overflow: ellipsis; overflow: hidden; white-space: nowrap;" title="${res.nombre_examen}">
+            <i class="fa-solid fa-file-pdf" style="color: var(--error); margin-right: 6px;"></i> ${res.nombre_examen}
           </h4>
-          <p style="font-size: 0.85rem; color: var(--color-primary); font-weight: 500; margin-top: 2px;">
-            Examen: ${res.nombre_examen}
-          </p>
           <p style="font-size: 0.75rem; margin-top: 4px; color: var(--text-dark);">
             <i class="fa-solid fa-calendar"></i> ${res.fecha_subida.split('T')[0]} 
-            ${res.observaciones ? `| <i class="fa-solid fa-comment"></i> ${res.observaciones.substring(0, 30)}${res.observaciones.length > 30 ? '...' : ''}` : ''}
           </p>
         </div>
-        <div style="display: flex; gap: 8px; align-items: center;">
+        <div style="display: flex; gap: 6px; align-items: center; flex-shrink: 0;">
           <a href="/uploads/${res.nombre_archivo}" target="_blank" class="btn btn-secondary btn-icon" style="padding: 6px 10px;" title="Ver PDF">
-            <i class="fa-solid fa-file-pdf" style="color: var(--error); font-size: 1.1rem;"></i>
+            <i class="fa-solid fa-eye" style="font-size: 0.95rem;"></i>
           </a>
           <button class="btn btn-danger btn-icon delete-result-btn" data-id="${res.id_resultado}" style="padding: 6px 10px;" title="Eliminar examen">
-            <i class="fa-solid fa-trash-can" style="font-size: 1rem;"></i>
+            <i class="fa-solid fa-trash-can" style="font-size: 0.95rem;"></i>
           </button>
         </div>
       `;
@@ -230,7 +221,7 @@ document.addEventListener('DOMContentLoaded', () => {
     SirioAuth.showLoading('Creando cuenta de cliente...');
 
     try {
-      const response = await fetch('/api/admin/clients', {
+      const response = await fetch(`${SirioAuth.API_BASE}/api/admin/clients`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
@@ -262,7 +253,7 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   // ==========================================================================
-  // DRAG & DROP Y SELECCIÓN DE ARCHIVOS
+  // DRAG & DROP Y SELECCIÓN DE ARCHIVOS MÚLTIPLES
   // ==========================================================================
 
   // Forzar click en input file
@@ -280,62 +271,117 @@ document.addEventListener('DOMContentLoaded', () => {
     dropzone.classList.remove('dragover');
   });
 
-  // Dropear archivo
+  // Dropear archivos
   dropzone.addEventListener('drop', (e) => {
     e.preventDefault();
     dropzone.classList.remove('dragover');
     if (e.dataTransfer.files.length > 0) {
-      handleFileSelected(e.dataTransfer.files[0]);
+      handleFilesSelected(e.dataTransfer.files);
     }
   });
 
   // Selección tradicional
   pdfInput.addEventListener('change', () => {
     if (pdfInput.files.length > 0) {
-      handleFileSelected(pdfInput.files[0]);
+      handleFilesSelected(pdfInput.files);
     }
   });
 
-  // Validador y guardado del archivo
-  function handleFileSelected(file) {
-    if (file.type !== 'application/pdf') {
-      showGlobalAlert('Solo se admiten archivos en formato PDF.', 'error');
-      return;
-    }
+  // Procesar archivos seleccionados (añadiéndolos al listado actual)
+  function handleFilesSelected(filesList) {
+    let addedCount = 0;
     
-    if (file.size > 10 * 1024 * 1024) { // 10MB
-      showGlobalAlert('El tamaño máximo permitido es 10MB.', 'error');
-      return;
+    for (let i = 0; i < filesList.length; i++) {
+      const file = filesList[i];
+      
+      // Validar tipo de archivo
+      if (file.type !== 'application/pdf') {
+        showGlobalAlert(`El archivo "${file.name}" no es un PDF y fue descartado.`, 'error');
+        continue;
+      }
+      
+      // Validar tamaño máximo (10MB)
+      if (file.size > 10 * 1024 * 1024) {
+        showGlobalAlert(`El archivo "${file.name}" supera el límite de 10MB y fue descartado.`, 'error');
+        continue;
+      }
+      
+      // Evitar duplicados por nombre
+      if (selectedFiles.some(f => f.name === file.name && f.size === file.size)) {
+        continue;
+      }
+      
+      selectedFiles.push(file);
+      addedCount++;
     }
 
-    selectedFile = file;
-    fileNameText.innerText = `${file.name} (${(file.size / 1024 / 1024).toFixed(2)} MB)`;
-    dropzone.style.display = 'none';
-    fileInfo.style.display = 'flex';
+    if (addedCount > 0) {
+      renderSelectedFiles();
+    }
   }
 
-  // Quitar archivo seleccionado
-  removeFileBtn.addEventListener('click', (e) => {
-    e.stopPropagation();
-    resetFileSelection();
-  });
+  // Renderizar la lista de archivos seleccionados
+  function renderSelectedFiles() {
+    if (selectedFiles.length === 0) {
+      fileListContainer.style.display = 'none';
+      dropzone.style.display = 'flex';
+      pdfInput.value = '';
+      return;
+    }
 
-  function resetFileSelection() {
-    selectedFile = null;
-    pdfInput.value = '';
-    fileInfo.style.display = 'none';
-    dropzone.style.display = 'flex';
+    dropzone.style.display = 'none';
+    fileListContainer.innerHTML = '';
+    fileListContainer.style.display = 'flex';
+
+    selectedFiles.forEach((file, index) => {
+      const div = document.createElement('div');
+      div.className = 'file-selected-info';
+      div.style.marginBottom = '0'; // Eliminar margen extra
+      
+      div.innerHTML = `
+        <span class="file-selected-name" style="word-break: break-all; min-width: 0; flex-grow: 1; padding-right: 10px;">
+          <i class="fa-solid fa-file-pdf" style="color: var(--error);"></i>
+          <span>${file.name} (${(file.size / 1024 / 1024).toFixed(2)} MB)</span>
+        </span>
+        <button type="button" class="file-remove-btn" data-index="${index}">
+          <i class="fa-solid fa-trash-can"></i>
+        </button>
+      `;
+      
+      // Eliminar este archivo individualmente al hacer clic en su papelera
+      div.querySelector('.file-remove-btn').addEventListener('click', (e) => {
+        e.stopPropagation();
+        selectedFiles.splice(index, 1);
+        renderSelectedFiles();
+      });
+      
+      fileListContainer.appendChild(div);
+    });
+
+    // Agregar un botón inferior para añadir más archivos
+    const addMoreDiv = document.createElement('div');
+    addMoreDiv.style.textAlign = 'center';
+    addMoreDiv.style.marginTop = '10px';
+    addMoreDiv.innerHTML = `
+      <button type="button" class="btn btn-secondary" style="padding: 6px 14px; font-size: 0.85rem;" id="add-more-files-btn">
+        <i class="fa-solid fa-plus"></i> Añadir más PDFs
+      </button>
+    `;
+    addMoreDiv.querySelector('#add-more-files-btn').addEventListener('click', (e) => {
+      e.stopPropagation();
+      pdfInput.click();
+    });
+    
+    fileListContainer.appendChild(addMoreDiv);
   }
 
   function resetUploadForm() {
-    patientNameInput.value = '';
-    examNameInput.value = '';
-    examObsInput.value = '';
-    resetFileSelection();
+    selectedFiles = [];
+    renderSelectedFiles();
   }
 
   // ==========================================================================
-  // PUBLICAR EXAMEN (Subir PDF)
+  // PUBLICAR EXÁMENES (Subir PDFs en lote)
   // ==========================================================================
 
   uploadResultForm.addEventListener('submit', async (e) => {
@@ -346,28 +392,26 @@ document.addEventListener('DOMContentLoaded', () => {
       return;
     }
 
-    if (!selectedFile) {
-      showGlobalAlert('Por favor, selecciona un archivo PDF con los resultados.', 'error');
+    if (selectedFiles.length === 0) {
+      showGlobalAlert('Por favor, selecciona o arrastra al menos un archivo PDF con los resultados.', 'error');
       return;
     }
 
     const id_usuario = uploadClientIdInput.value;
-    const nombre_paciente = patientNameInput.value.trim();
-    const nombre_examen = examNameInput.value.trim();
-    const observaciones = examObsInput.value.trim();
 
     // Crear FormData
     const formData = new FormData();
     formData.append('id_usuario', id_usuario);
-    formData.append('nombre_paciente', nombre_paciente);
-    formData.append('nombre_examen', nombre_examen);
-    formData.append('observaciones', observaciones);
-    formData.append('pdf', selectedFile);
+    
+    // Adjuntar todos los archivos seleccionados bajo la clave 'pdf'
+    selectedFiles.forEach(file => {
+      formData.append('pdf', file);
+    });
 
-    SirioAuth.showLoading('Publicando examen PDF...');
+    SirioAuth.showLoading(`Publicando ${selectedFiles.length} exámenes...`);
 
     try {
-      const response = await fetch('/api/admin/upload', {
+      const response = await fetch(`${SirioAuth.API_BASE}/api/admin/upload`, {
         method: 'POST',
         body: formData
       });
@@ -376,7 +420,7 @@ document.addEventListener('DOMContentLoaded', () => {
       SirioAuth.hideLoading();
 
       if (result.success) {
-        showGlobalAlert('¡Examen publicado con éxito en el portal!', 'success');
+        showGlobalAlert(result.message, 'success');
         resetUploadForm();
         
         // Recargar historial del cliente activo
@@ -386,8 +430,8 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     } catch (error) {
       SirioAuth.hideLoading();
-      console.error('Error al publicar examen:', error);
-      showGlobalAlert('Error de conexión al subir el PDF al servidor.', 'error');
+      console.error('Error al publicar exámenes:', error);
+      showGlobalAlert('Error de conexión al subir los archivos PDF al servidor.', 'error');
     }
   });
 
@@ -407,7 +451,7 @@ document.addEventListener('DOMContentLoaded', () => {
     SirioAuth.showLoading('Eliminando examen del portal...');
     
     try {
-      const response = await fetch('/api/admin/delete-result', {
+      const response = await fetch(`${SirioAuth.API_BASE}/api/admin/delete-result`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'

@@ -34,6 +34,32 @@
   --shadow-premium: 0 10px 30px -10px rgba(0, 0, 0, 0.5), 0 1px 3px rgba(255, 255, 255, 0.05);
 }
 
+/* Estilos de Modo Claro (Clinical Light Theme) */
+body.light-theme {
+  --bg-primary: #f1f5f9;
+  --bg-secondary: #ffffff;
+  --bg-card: rgba(255, 255, 255, 0.85);
+  --bg-card-hover: rgba(255, 255, 255, 0.95);
+  
+  --text-main: #0f172a;
+  --text-muted: #475569;
+  --text-dark: #94a3b8;
+  
+  --border-light: rgba(15, 23, 42, 0.08);
+  --border-focus: rgba(14, 165, 233, 0.5);
+  --border-accent: rgba(212, 175, 55, 0.5);
+  
+  --color-accent-light: rgba(212, 175, 55, 0.08);
+  
+  --shadow-premium: 0 10px 30px -10px rgba(0, 0, 0, 0.08), 0 1px 3px rgba(0, 0, 0, 0.02);
+}
+
+body.light-theme {
+  background-image: 
+    radial-gradient(at 0% 0%, rgba(14, 165, 233, 0.05) 0px, transparent 50%),
+    radial-gradient(at 100% 100%, rgba(212, 175, 55, 0.03) 0px, transparent 50%);
+}
+
 /* Reset de estilos */
 * {
   margin: 0;
@@ -639,10 +665,10 @@ input, textarea, select {
   background: rgba(15, 28, 48, 0.6);
   border: 1px solid var(--border-light);
   border-radius: 12px;
-  padding: 1.5rem;
+  padding: 1rem 1.15rem;
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 8px;
   transition: var(--transition-smooth);
 }
 
@@ -696,7 +722,7 @@ input, textarea, select {
 
 .result-card-footer {
   margin-top: auto;
-  padding-top: 12px;
+  padding-top: 8px;
   border-top: 1px solid var(--border-light);
   display: flex;
   gap: 10px;
@@ -704,8 +730,8 @@ input, textarea, select {
 
 .result-card-footer .btn {
   flex: 1;
-  padding: 8px 12px;
-  font-size: 0.85rem;
+  padding: 6px 10px;
+  font-size: 0.8rem;
   border-radius: 8px;
 }
 

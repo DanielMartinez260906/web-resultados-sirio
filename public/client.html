@@ -13,9 +13,9 @@
 
   <div class="app-container">
     <!-- Cabecera Principal con Logo Oficial -->
-    <header class="main-header" style="padding: 1rem 0;">
-      <div class="header-user-info" style="gap: 20px;">
-        <img src="logo.png" alt="Laboratorio Sirio" style="height: 55px; width: auto;">
+    <header class="main-header" style="padding: 0.8rem 0;">
+      <div class="header-user-info" style="gap: 20px; align-items: center;">
+        <img src="logo.png" alt="Laboratorio Sirio" style="height: 85px; width: auto; transition: var(--transition-smooth);">
         <div style="border-left: 1px solid var(--border-light); padding-left: 20px;">
           <h2 id="client-name" style="font-size: 1.2rem;">Cargando...</h2>
           <p style="font-size: 0.85rem; color: var(--text-muted); margin-top: 2px;">
@@ -23,7 +23,10 @@
           </p>
         </div>
       </div>
-      <div class="header-actions">
+      <div class="header-actions" style="display: flex; gap: 10px; align-items: center;">
+        <button class="btn btn-secondary btn-icon" id="theme-toggle" title="Cambiar tema">
+          <i class="fa-solid fa-sun"></i>
+        </button>
         <button class="btn btn-secondary" id="logout-btn">
           <i class="fa-solid fa-right-from-bracket"></i> Cerrar Sesión
         </button>

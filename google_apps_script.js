@@ -1,30 +1,28 @@
 /**
- * CÓDIGO PARA GOOGLE APPS SCRIPT (ACTUALIZADO CON SOPORTE PARA ELIMINACIÓN)
+ * CÓDIGO PARA GOOGLE APPS SCRIPT (ESTRUCTURA DE 5 COLUMNAS DE RESULTADOS)
  * 
  * Instrucciones de instalación:
- * 1. Abre tu Google Sheet donde quieres guardar los datos.
- * 2. Ve a 'Extensiones' > 'Apps Script'.
- * 3. Borra el código existente en 'Código.gs'.
- * 4. Pega este código.
- * 5. Cambia el valor de API_KEY en la línea 17 por una clave secreta propia si lo deseas (recuerda poner la misma en tu archivo .env).
- * 6. Haz clic en 'Implementar' > 'Nueva implementación'.
- * 7. En 'Tipo de implementación', selecciona 'Aplicación web'.
- * 8. Configura:
- *    - Descripción: API SIRIO Portal
- *    - Ejecutar como: Tú (tu cuenta de Google)
- *    - Quién tiene acceso: Cualquier persona (Anyone)
- * 9. Haz clic en 'Implementar', autoriza los permisos y copia la 'URL de la aplicación web'.
- * 10. Pega esta URL en el archivo .env de tu servidor.
+ * 1. Abre tu Google Sheet.
+ * 2. ELIMINA la pestaña 'Resultados' existente (haz clic derecho sobre la pestaña abajo y selecciona 'Eliminar').
+ *    *Nota: Esto es necesario para que el script la vuelva a crear con la estructura limpia de 5 columnas sin errores de orden.*
+ * 3. Ve a 'Extensiones' > 'Apps Script'.
+ * 4. Borra todo el código existente.
+ * 5. Pega este código.
+ * 6. Guarda el proyecto (ícono de disquete).
+ * 7. Haz clic en 'Implementar' > 'Administrar implementaciones'.
+ *    - Edita la implementación existente de tipo 'Aplicación web'.
+ *    - Cambia la versión a 'Nueva versión'.
+ *    - Haz clic en 'Implementar'.
  */
 
-var API_KEY = "SIRIO_SECRET_API_KEY"; // Cambia esto por una contraseña secreta para tu API
+var API_KEY = "SIRIO_SECRET_API_KEY"; // Debe coincidir con la de tu archivo .env
 
 function doPost(e) {
   var response = { success: false, message: "" };
   
   try {
     if (!e || !e.postData || !e.postData.contents) {
-      response.message = "No se recibieron datos en el cuerpo de la solicitud (POST body vacío).";
+      response.message = "No se recibieron datos en el cuerpo de la solicitud.";
       return returnJSON(response);
     }
     
@@ -40,7 +38,7 @@ function doPost(e) {
     var data = requestData.data;
     var doc = SpreadsheetApp.getActiveSpreadsheet();
     
-    // Inicializar hojas si no existen
+    // Inicializar hojas
     checkAndInitSheets(doc);
     
     if (action === "login") {
@@ -75,13 +73,14 @@ function returnJSON(data) {
 }
 
 /**
- * Crea las pestañas necesarias si no existen al arrancar
+ * Inicializa las pestañas con las cabeceras exactas
  */
 function checkAndInitSheets(doc) {
   var sheets = ["Usuarios", "Resultados", "Accesos"];
   var headers = {
     "Usuarios": ["id_usuario", "nombre", "identificacion", "usuario", "contrasena", "rol", "fecha_registro"],
-    "Resultados": ["id_resultado", "id_usuario", "nombre_paciente", "nombre_examen", "nombre_archivo", "fecha_subida", "observaciones"],
+    // Estructura limpia de 5 columnas
+    "Resultados": ["id_resultado", "id_usuario", "nombre_examen", "nombre_archivo", "fecha_subida"],
     "Accesos": ["id_log", "usuario", "rol", "fecha_hora", "estado"]
   };
   
@@ -92,13 +91,11 @@ function checkAndInitSheets(doc) {
       sheet = doc.insertSheet(name);
       sheet.appendRow(headers[name]);
       
-      // Aplicar un estilo básico a la cabecera
       var headerRange = sheet.getRange(1, 1, 1, headers[name].length);
       headerRange.setFontWeight("bold");
       headerRange.setBackground("#0a192f");
       headerRange.setFontColor("#ffffff");
       
-      // Si creamos usuarios, agregar el administrador por defecto
       if (name === "Usuarios") {
         sheet.appendRow([
           "U000",
@@ -115,7 +112,7 @@ function checkAndInitSheets(doc) {
 }
 
 /**
- * Maneja el inicio de sesión
+ * Login
  */
 function handleLogin(doc, data) {
   var sheet = doc.getSheetByName("Usuarios");
@@ -147,7 +144,7 @@ function handleLogin(doc, data) {
 }
 
 /**
- * Obtiene todos los clientes
+ * Obtener clientes
  */
 function getClients(doc) {
   var sheet = doc.getSheetByName("Usuarios");
@@ -171,7 +168,7 @@ function getClients(doc) {
 }
 
 /**
- * Agrega un nuevo cliente
+ * Crear cliente
  */
 function addClient(doc, data) {
   var sheet = doc.getSheetByName("Usuarios");
@@ -216,15 +213,24 @@ function addClient(doc, data) {
 }
 
 /**
- * Agrega un resultado de examen (PDF) asociado a un cliente y su paciente
+ * Publicar resultados en lote (Adaptativo al esquema)
  */
 function addResult(doc, data) {
   var sheet = doc.getSheetByName("Resultados");
   var rows = sheet.getDataRange().getValues();
+  var headers = rows[0];
+  var colMap = {};
+  for (var i = 0; i < headers.length; i++) {
+    colMap[headers[i].toString().trim()] = i;
+  }
+  
+  var items = Array.isArray(data) ? data : [data];
   
   var lastIdNum = 0;
+  var idxIdRes = colMap["id_resultado"] !== undefined ? colMap["id_resultado"] : 0;
+  
   for (var i = 1; i < rows.length; i++) {
-    var currentId = rows[i][0].toString();
+    var currentId = rows[i][idxIdRes].toString();
     if (currentId.startsWith("R")) {
       var num = parseInt(currentId.substring(1));
       if (!isNaN(num) && num > lastIdNum) {
@@ -232,42 +238,113 @@ function addResult(doc, data) {
       }
     }
   }
-  var nextId = "R" + String(lastIdNum + 1).padStart(3, '0');
   
-  var newRow = [
-    nextId,
-    data.id_usuario,
-    data.nombre_paciente,
-    data.nombre_examen,
-    data.nombre_archivo,
-    new Date().toISOString().split('T')[0],
-    data.observaciones || ""
-  ];
+  var idsResponse = [];
+  var today = new Date().toISOString().split('T')[0];
   
-  sheet.appendRow(newRow);
-  return { success: true, message: "Examen publicado en Google Sheets correctamente.", id_resultado: nextId };
+  for (var k = 0; k < items.length; k++) {
+    var item = items[k];
+    lastIdNum++;
+    var nextId = "R" + String(lastIdNum).padStart(3, '0');
+    
+    // Crear fila vacía con longitud exacta de cabeceras
+    var newRow = new Array(headers.length);
+    for (var j = 0; j < newRow.length; j++) {
+      newRow[j] = "";
+    }
+    
+    // Rellenar valores en las columnas correspondientes
+    if ("id_resultado" in colMap) newRow[colMap["id_resultado"]] = nextId;
+    if ("id_usuario" in colMap) newRow[colMap["id_usuario"]] = item.id_usuario;
+    if ("nombre_examen" in colMap) newRow[colMap["nombre_examen"]] = item.nombre_examen;
+    if ("nombre_archivo" in colMap) newRow[colMap["nombre_archivo"]] = item.nombre_archivo;
+    if ("fecha_subida" in colMap) newRow[colMap["fecha_subida"]] = today;
+    
+    sheet.appendRow(newRow);
+    idsResponse.push(nextId);
+  }
+  
+  return { 
+    success: true, 
+    message: items.length === 1 ? "Examen publicado." : items.length + " exámenes publicados correctamente.", 
+    ids: idsResponse 
+  };
 }
 
 /**
- * Obtiene los exámenes de un cliente
+ * Obtener resultados del cliente (Adaptativo a 5 o 7 columnas)
  */
 function getClientResults(doc, data) {
   var sheet = doc.getSheetByName("Resultados");
   var rows = sheet.getDataRange().getValues();
-  var results = [];
+  var headers = rows[0];
+  var colMap = {};
+  for (var i = 0; i < headers.length; i++) {
+    colMap[headers[i].toString().trim()] = i;
+  }
   
+  var results = [];
   var idCliente = data.id_usuario;
+  
+  var idxIdRes = colMap["id_resultado"];
+  var idxIdUser = colMap["id_usuario"];
+  var idxExamen = colMap["nombre_examen"];
+  var idxArchivo = colMap["nombre_archivo"];
+  var idxFecha = colMap["fecha_subida"];
+  var idxPaciente = colMap["nombre_paciente"]; // Indica formato viejo si existe
   
   for (var i = 1; i < rows.length; i++) {
     var row = rows[i];
-    if (row[1].toString() === idCliente) {
+    
+    if (idxIdUser !== undefined && row[idxIdUser].toString().trim() === idCliente.toString().trim()) {
+      var nombreExamen = "";
+      var nombreArchivo = "";
+      var fechaSubida = "";
+      
+      // Manejar retrocompatibilidad si la hoja tiene "nombre_paciente"
+      if (idxPaciente !== undefined && idxPaciente < idxExamen) {
+        var valCol2 = row[2] ? row[2].toString().trim() : "";
+        var valCol3 = row[3] ? row[3].toString().trim() : "";
+        var valCol4 = row[4] ? row[4].toString().trim() : "";
+        var valCol5 = row[5] ? row[5].toString().trim() : "";
+        
+        if (valCol2.toLowerCase().endsWith('.pdf')) {
+          // Caso nuevo en hoja vieja (original en Col C, archivo en Col D, fecha en Col E)
+          nombreExamen = valCol2;
+          nombreArchivo = valCol3;
+          fechaSubida = valCol4;
+        } else if (valCol3.toLowerCase().endsWith('.pdf')) {
+          // Caso intermedio/viejo donde la Col D contiene el archivo PDF
+          nombreExamen = valCol3;
+          nombreArchivo = valCol3;
+          fechaSubida = valCol4;
+        } else if (valCol4.toLowerCase().endsWith('.pdf')) {
+          // Caso viejo real (paciente en Col C, examen en Col D, archivo en Col E)
+          nombreExamen = valCol4; // Nombre del PDF como título principal
+          nombreArchivo = valCol4;
+          fechaSubida = valCol5;
+        } else {
+          nombreExamen = valCol3;
+          nombreArchivo = valCol4;
+          fechaSubida = valCol5;
+        }
+      } else {
+        // Formato nuevo limpio de 5 columnas
+        nombreExamen = idxExamen !== undefined && row[idxExamen] ? row[idxExamen].toString().trim() : "";
+        nombreArchivo = idxArchivo !== undefined && row[idxArchivo] ? row[idxArchivo].toString().trim() : "";
+        fechaSubida = idxFecha !== undefined && row[idxFecha] ? row[idxFecha].toString().trim() : "";
+      }
+      
+      // Asegurar título del PDF como nombre del examen si no se cargó
+      if (!nombreExamen && nombreArchivo) {
+        nombreExamen = nombreArchivo;
+      }
+      
       results.push({
-        id_resultado: row[0],
-        nombre_paciente: row[2],
-        nombre_examen: row[3],
-        nombre_archivo: row[4],
-        fecha_subida: row[5],
-        observaciones: row[6]
+        id_resultado: idxIdRes !== undefined ? row[idxIdRes] : "",
+        nombre_examen: nombreExamen,
+        nombre_archivo: nombreArchivo,
+        fecha_subida: fechaSubida
       });
     }
   }
@@ -280,18 +357,46 @@ function getClientResults(doc, data) {
 }
 
 /**
- * Elimina un resultado de examen por su ID
+ * Eliminar resultado (Adaptativo)
  */
 function deleteResult(doc, data) {
   var sheet = doc.getSheetByName("Resultados");
   var rows = sheet.getDataRange().getValues();
+  var headers = rows[0];
+  var colMap = {};
+  for (var i = 0; i < headers.length; i++) {
+    colMap[headers[i].toString().trim()] = i;
+  }
+  
   var idResultado = data.id_resultado.trim();
+  var idxIdRes = colMap["id_resultado"];
+  var idxArchivo = colMap["nombre_archivo"];
+  var idxPaciente = colMap["nombre_paciente"];
   
   for (var i = 1; i < rows.length; i++) {
     var row = rows[i];
-    if (row[0].toString().trim() === idResultado) {
-      var fileName = row[4].toString(); // Columna E (nombre_archivo)
-      sheet.deleteRow(i + 1); // deleteRow es 1-indexed, i es 0-indexed pero el encabezado está en la fila 1
+    if (idxIdRes !== undefined && row[idxIdRes].toString().trim() === idResultado) {
+      var fileName = "";
+      
+      if (idxPaciente !== undefined && idxPaciente < colMap["nombre_examen"]) {
+        var valCol2 = row[2] ? row[2].toString().trim() : "";
+        var valCol3 = row[3] ? row[3].toString().trim() : "";
+        var valCol4 = row[4] ? row[4].toString().trim() : "";
+        
+        if (valCol2.toLowerCase().endsWith('.pdf')) {
+          fileName = valCol3;
+        } else if (valCol3.toLowerCase().endsWith('.pdf')) {
+          fileName = valCol3;
+        } else if (valCol4.toLowerCase().endsWith('.pdf')) {
+          fileName = valCol4;
+        } else {
+          fileName = valCol4;
+        }
+      } else {
+        fileName = idxArchivo !== undefined ? row[idxArchivo].toString() : "";
+      }
+      
+      sheet.deleteRow(i + 1);
       return { 
         success: true, 
         message: "Examen eliminado de la hoja de cálculo.", 
@@ -300,11 +405,11 @@ function deleteResult(doc, data) {
     }
   }
   
-  return { success: false, message: "No se encontró ningún examen con el ID especificado en la hoja de cálculo." };
+  return { success: false, message: "No se encontró ningún examen con el ID especificado." };
 }
 
 /**
- * Registra auditoría de accesos
+ * Registro de acceso
  */
 function logAccess(doc, data) {
   var sheet = doc.getSheetByName("Accesos");

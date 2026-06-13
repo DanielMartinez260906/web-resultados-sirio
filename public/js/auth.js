@@ -3,6 +3,10 @@
  */
 
 const SirioAuth = {
+  // URL base de la API para permitir pruebas desde file:// o Live Server
+  API_BASE: (window.location.protocol === 'file:' || !window.location.port || window.location.port !== '3000')
+    ? 'http://localhost:3000'
+    : '',
   // Clave para localStorage
   STORAGE_KEY: 'sirio_session_user',
   
@@ -21,7 +25,7 @@ const SirioAuth = {
   // Iniciar sesión
   async login(username, password, rememberMe) {
     try {
-      const response = await fetch('/api/auth/login', {
+      const response = await fetch(`${this.API_BASE}/api/auth/login`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
@@ -93,7 +97,7 @@ const SirioAuth = {
     if (document.getElementById('sirio-status-badge')) return;
 
     try {
-      const response = await fetch('/api/status');
+      const response = await fetch(`${this.API_BASE}/api/status`);
       const data = await response.json();
       
       const badge = document.createElement('div');
@@ -148,7 +152,37 @@ const SirioAuth = {
   }
 };
 
-// Ejecutar inicialización del badge al cargar el DOM
+// Ejecutar inicialización al cargar el DOM (Tema y Estado de Conexión)
 document.addEventListener('DOMContentLoaded', () => {
+  // Aplicar tema guardado en localStorage
+  const savedTheme = localStorage.getItem('sirio_theme');
+  if (savedTheme === 'light') {
+    document.body.classList.add('light-theme');
+  }
+  
+  // Inicializar botón de alternancia de tema si está presente en el DOM
+  const themeToggle = document.getElementById('theme-toggle');
+  if (themeToggle) {
+    updateThemeIcon(themeToggle);
+    themeToggle.addEventListener('click', () => {
+      document.body.classList.toggle('light-theme');
+      const isLight = document.body.classList.contains('light-theme');
+      localStorage.setItem('sirio_theme', isLight ? 'light' : 'dark');
+      updateThemeIcon(themeToggle);
+    });
+  }
+
   SirioAuth.initStatusBadge();
 });
+
+function updateThemeIcon(btn) {
+  const icon = btn.querySelector('i');
+  if (!icon) return;
+  if (document.body.classList.contains('light-theme')) {
+    icon.className = 'fa-solid fa-moon';
+    btn.title = "Cambiar a Modo Oscuro";
+  } else {
+    icon.className = 'fa-solid fa-sun';
+    btn.title = "Cambiar a Modo Claro";
+  }
+}

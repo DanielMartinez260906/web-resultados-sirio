@@ -26,7 +26,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // Cargar exámenes
   async function loadResults() {
     try {
-      const response = await fetch(`/api/client/results?id_usuario=${currentUser.id_usuario}`);
+      const response = await fetch(`${SirioAuth.API_BASE}/api/client/results?id_usuario=${currentUser.id_usuario}`);
       const data = await response.json();
 
       if (data.success) {
@@ -76,25 +76,21 @@ document.addEventListener('DOMContentLoaded', () => {
 
       card.innerHTML = `
         <div class="result-card-header">
-          <div class="result-icon" style="background: var(--color-accent-light); color: var(--color-accent);">
-            <i class="fa-solid fa-paw"></i>
+          <div class="result-icon" style="background: rgba(14, 165, 233, 0.1); color: var(--color-primary);">
+            <i class="fa-solid fa-file-pdf" style="color: var(--error); font-size: 1.25rem;"></i>
           </div>
           <span class="result-date"><i class="fa-solid fa-calendar-day"></i> ${dateLabel}</span>
         </div>
         
-        <div class="result-card-body">
-          <h3 style="font-size: 1.15rem; font-weight: 700; margin-bottom: 4px; color: var(--color-accent);">
-            Paciente: ${res.nombre_paciente}
+        <div class="result-card-body" style="padding-top: 4px;">
+          <h3 style="font-size: 0.95rem; font-weight: 600; color: var(--text-main); word-break: break-all; line-height: 1.45;" title="${res.nombre_examen}">
+            ${res.nombre_examen}
           </h3>
-          <h4 style="font-size: 0.95rem; font-weight: 600; margin-bottom: 8px; color: var(--text-main);">
-            Análisis: ${res.nombre_examen}
-          </h4>
-          <p>${res.observaciones ? res.observaciones : '<span style="font-style: italic; color: var(--text-dark);">Sin observaciones adicionales.</span>'}</p>
         </div>
         
         <div class="result-card-footer">
           <a href="/uploads/${res.nombre_archivo}" target="_blank" class="btn btn-secondary">
-            <i class="fa-solid fa-eye"></i> Ver Examen
+            <i class="fa-solid fa-eye"></i> Ver
           </a>
           <a href="/uploads/${res.nombre_archivo}" download="${res.nombre_archivo}" class="btn btn-primary">
             <i class="fa-solid fa-circle-down"></i> Descargar
@@ -106,13 +102,11 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // Filtrar exámenes por paciente, tipo de examen o observaciones
+  // Filtrar exámenes por nombre del archivo PDF
   searchExamInput.addEventListener('keyup', () => {
     const query = searchExamInput.value.toLowerCase().trim();
     const filtered = allResults.filter(res => 
-      res.nombre_paciente.toLowerCase().includes(query) ||
-      res.nombre_examen.toLowerCase().includes(query) || 
-      (res.observaciones && res.observaciones.toLowerCase().includes(query))
+      res.nombre_examen.toLowerCase().includes(query)
     );
     renderResults(filtered);
   });

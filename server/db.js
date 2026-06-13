@@ -165,25 +165,39 @@ function handleMockAction(action, data) {
     }
     
     case 'addResult': {
-      const lastIdNum = db.Resultados.reduce((max, r) => {
+      const items = Array.isArray(data) ? data : [data];
+      let lastIdNum = db.Resultados.reduce((max, r) => {
         const num = parseInt(r.id_resultado.substring(1));
         return num > max ? num : max;
       }, 0);
-      const nextId = "R" + String(lastIdNum + 1).padStart(3, '0');
       
-      const newResult = {
-        id_resultado: nextId,
-        id_usuario: data.id_usuario,
-        nombre_paciente: data.nombre_paciente,
-        nombre_examen: data.nombre_examen,
-        nombre_archivo: data.nombre_archivo,
-        fecha_subida: new Date().toISOString().split('T')[0],
-        observaciones: data.observaciones || ""
-      };
+      const addedIds = [];
+      const today = new Date().toISOString().split('T')[0];
       
-      db.Resultados.push(newResult);
+      for (const item of items) {
+        lastIdNum++;
+        const nextId = "R" + String(lastIdNum).padStart(3, '0');
+        const newResult = {
+          id_resultado: nextId,
+          id_usuario: item.id_usuario,
+          nombre_paciente: "",
+          nombre_examen: item.nombre_examen,
+          nombre_archivo: item.nombre_archivo,
+          fecha_subida: today,
+          observaciones: ""
+        };
+        db.Resultados.push(newResult);
+        addedIds.push(nextId);
+      }
+      
       writeMockDB(db);
-      return { success: true, message: "Examen publicado en base de datos local correctamente.", id_resultado: nextId };
+      return { 
+        success: true, 
+        message: items.length === 1 
+          ? "Examen publicado en base de datos local correctamente." 
+          : `${items.length} exámenes publicados en base de datos local correctamente.`, 
+        ids: addedIds 
+      };
     }
     
     case 'getClientResults': {
