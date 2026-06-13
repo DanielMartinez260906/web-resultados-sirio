@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mi Portal de Cliente - Laboratorio SIRIO</title>
+  <!-- Font Awesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <!-- Estilos Premium -->
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+
+  <div class="app-container">
+    <!-- Cabecera Principal con Logo Oficial -->
+    <header class="main-header" style="padding: 1rem 0;">
+      <div class="header-user-info" style="gap: 20px;">
+        <img src="logo.png" alt="Laboratorio Sirio" style="height: 55px; width: auto;">
+        <div style="border-left: 1px solid var(--border-light); padding-left: 20px;">
+          <h2 id="client-name" style="font-size: 1.2rem;">Cargando...</h2>
+          <p style="font-size: 0.85rem; color: var(--text-muted); margin-top: 2px;">
+            <i class="fa-solid fa-hospital-user"></i> Portal de Cliente | ID/NIT: <span id="client-id-text">...</span>
+          </p>
+        </div>
+      </div>
+      <div class="header-actions">
+        <button class="btn btn-secondary" id="logout-btn">
+          <i class="fa-solid fa-right-from-bracket"></i> Cerrar Sesión
+        </button>
+      </div>
+    </header>
+
+    <!-- Alertas Globales -->
+    <div id="client-global-alert" class="alert" style="display: none;">
+      <i class="fa-solid"></i>
+      <span id="client-global-alert-text"></span>
+    </div>
+
+    <!-- Filtros y Títulos de Resultados -->
+    <div class="panel-card" style="margin-bottom: 2rem; padding: 1.5rem 2rem;">
+      <div style="display: flex; flex-direction: column; gap: 1rem; justify-content: space-between; align-items: stretch;">
+        <h3 style="font-size: 1.2rem; font-weight: 600; display: flex; align-items: center; gap: 10px;">
+          <i class="fa-solid fa-folder-open" style="color: var(--color-accent);"></i> Historial de Exámenes y Análisis Publicados
+        </h3>
+        
+        <div class="search-container" style="margin-bottom: 0; max-width: 500px;">
+          <i class="fa-solid fa-magnifying-glass"></i>
+          <input type="text" id="search-exam" placeholder="Buscar por paciente, tipo de examen u observaciones...">
+        </div>
+      </div>
+    </div>
+
+    <!-- Grilla de Resultados -->
+    <div class="results-grid" id="results-container">
+      <!-- Cargado dinámicamente -->
+      <div style="grid-column: 1 / -1; text-align: center; color: var(--text-dark); padding: 4rem 0;">
+        <i class="fa-solid fa-circle-notch fa-spin" style="font-size: 2rem; margin-bottom: 1rem; color: var(--color-primary);"></i>
+        <p>Buscando tus resultados de laboratorio...</p>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Botón Flotante de WhatsApp -->
+  <a href="https://wa.me/573106606973?text=Hola%20Laboratorio%20SIRIO%2C%20tengo%20una%20consulta%20sobre%20mis%20resultados." 
+     class="whatsapp-float" 
+     target="_blank" 
+     rel="noopener noreferrer" 
+     title="Contactar con el Laboratorio via WhatsApp">
+    <i class="fa-brands fa-whatsapp"></i>
+  </a>
+
+  <footer>
+    <p>&copy; 2026 Laboratorio de Investigación y Análisis Veterinario SIRIO. Todos los derechos reservados.</p>
+  </footer>
+
+  <!-- Scripts -->
+  <script src="js/auth.js"></script>
+  <script src="js/client.js"></script>
+</body>
+</html>

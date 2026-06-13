@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Panel de Administración - Laboratorio SIRIO</title>
+  <!-- Font Awesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <!-- Estilos Premium -->
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+
+  <div class="app-container">
+    <!-- Cabecera Principal con Logo Oficial -->
+    <header class="main-header" style="padding: 1rem 0;">
+      <div class="header-user-info" style="gap: 20px;">
+        <img src="logo.png" alt="Laboratorio Sirio" style="height: 55px; width: auto;">
+        <div style="border-left: 1px solid var(--border-light); padding-left: 20px;">
+          <h2 id="admin-name" style="font-size: 1.2rem;">Cargando...</h2>
+          <p style="font-size: 0.85rem; color: var(--text-muted); margin-top: 2px;">
+            <i class="fa-solid fa-user-shield"></i> Personal del Laboratorio
+          </p>
+        </div>
+      </div>
+      <div class="header-actions">
+        <button class="btn btn-secondary" id="logout-btn">
+          <i class="fa-solid fa-right-from-bracket"></i> Cerrar Sesión
+        </button>
+      </div>
+    </header>
+
+    <!-- Notificaciones Generales -->
+    <div id="admin-global-alert" class="alert" style="display: none;">
+      <i class="fa-solid"></i>
+      <span id="admin-global-alert-text"></span>
+    </div>
+
+    <!-- Contenido del Panel -->
+    <div class="dashboard-grid admin-layout">
+      
+      <!-- Columna Izquierda: Clientes -->
+      <div style="display: flex; flex-direction: column; gap: 2rem;">
+        
+        <!-- Registrar Cliente -->
+        <div class="panel-card">
+          <h3 class="panel-card-title">
+            <i class="fa-solid fa-user-plus"></i> Registrar Cliente
+          </h3>
+          <p style="font-size: 0.8rem; color: var(--text-muted); margin-top: -1rem; margin-bottom: 1rem;">
+            (Clínicas, Médicos Veterinarios o Propietarios que verán los exámenes)
+          </p>
+          
+          <form id="create-client-form">
+            <div class="form-group">
+              <label for="new-client-name">Nombre / Razón Social</label>
+              <input type="text" id="new-client-name" class="form-control" placeholder="Ej: Clínica Vet. San Francisco" required>
+            </div>
+            
+            <div class="form-group">
+              <label for="new-client-id">Identificación / NIT / Cédula</label>
+              <input type="text" id="new-client-id" class="form-control" placeholder="Ej: 900123456" required>
+            </div>
+
+            <div class="form-group">
+              <label for="new-client-username">Usuario de Acceso</label>
+              <input type="text" id="new-client-username" class="form-control" placeholder="Ej: vetsanfrancisco" required>
+            </div>
+
+            <div class="form-group">
+              <label for="new-client-password">Contraseña temporal</label>
+              <input type="text" id="new-client-password" class="form-control" placeholder="Ej: sirio2026" required>
+            </div>
+
+            <button type="submit" class="btn btn-accent" style="width: 100%; margin-top: 0.5rem;">
+              <i class="fa-solid fa-user-check"></i> Registrar Cliente
+            </button>
+          </form>
+        </div>
+
+        <!-- Lista de Clientes -->
+        <div class="panel-card" style="flex-grow: 1;">
+          <h3 class="panel-card-title">
+            <i class="fa-solid fa-users"></i> Clientes Registrados
+          </h3>
+          
+          <div class="search-container">
+            <i class="fa-solid fa-magnifying-glass"></i>
+            <input type="text" id="search-client" placeholder="Buscar cliente por nombre o ID...">
+          </div>
+
+          <div class="client-list" id="clients-container">
+            <!-- Se carga dinámicamente -->
+            <div style="text-align: center; color: var(--text-dark); padding: 2rem 0;">
+              <i class="fa-solid fa-circle-notch fa-spin" style="font-size: 1.5rem; margin-bottom: 0.5rem;"></i>
+              <p>Cargando clientes...</p>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Columna Derecha: Detalles del Cliente Activo y Subida de Resultados -->
+      <div class="panel-card" id="detail-panel">
+        
+        <!-- Estado Inicial: Sin Selección -->
+        <div class="detail-view-placeholder" id="placeholder-detail">
+          <img src="logo.png" alt="Logo Sirio" style="max-width: 180px; opacity: 0.25; filter: grayscale(1); margin-bottom: 1.5rem;">
+          <h3>Ningún Cliente Seleccionado</h3>
+          <p>Selecciona un cliente de la lista de la izquierda para publicar exámenes o ver su historial.</p>
+        </div>
+
+        <!-- Estado Activo: Cliente Seleccionado -->
+        <div id="active-client-view" style="display: none; height: 100%;">
+          <div class="active-client-header">
+            <div class="active-client-details">
+              <h3 id="active-client-name">Juan Pérez</h3>
+              <p><i class="fa-solid fa-id-card"></i> ID/NIT: <span id="active-client-id-val">12345678</span> | Usuario: <span id="active-client-username-val">juanp</span></p>
+            </div>
+            <button class="btn btn-secondary btn-icon" id="deselect-client-btn" title="Cerrar cliente">
+              <i class="fa-solid fa-xmark"></i>
+            </button>
+          </div>
+
+          <div style="display: grid; grid-template-columns: 1fr; gap: 2rem;">
+            <!-- Formulario de Publicación de Examen -->
+            <div>
+              <h4 style="font-size: 1.05rem; font-weight: 600; margin-bottom: 1.2rem; color: var(--color-primary);">
+                <i class="fa-solid fa-cloud-arrow-up"></i> Publicar Resultados para este Cliente
+              </h4>
+              
+              <form id="upload-result-form">
+                <input type="hidden" id="upload-client-id">
+                
+                <div class="form-group">
+                  <label for="patient-name">Nombre del Paciente (Animal / Mascota)</label>
+                  <input type="text" id="patient-name" class="form-control" placeholder="Ej: Dante (Pastor Alemán), Firulais, Lucas" required>
+                </div>
+
+                <div class="form-group">
+                  <label for="exam-name">Nombre del Examen / Análisis</label>
+                  <input type="text" id="exam-name" class="form-control" placeholder="Ej: Hemograma Completo, Perfil Lipídico, Coprológico" required>
+                </div>
+
+                <div class="form-group">
+                  <label>Archivo de Resultados (Formato PDF)</label>
+                  
+                  <!-- Zona Dropzone -->
+                  <div class="file-upload-area" id="dropzone">
+                    <i class="fa-solid fa-file-pdf"></i>
+                    <p class="file-upload-text">Arrastra el archivo PDF aquí o haz clic para buscar</p>
+                    <p class="file-upload-subtext">Solo archivos PDF (Tamaño máximo: 10MB)</p>
+                    <input type="file" id="pdf-input" class="file-upload-input" accept="application/pdf">
+                  </div>
+
+                  <!-- Detalle archivo seleccionado -->
+                  <div class="file-selected-info" id="file-info" style="display: none;">
+                    <span class="file-selected-name">
+                      <i class="fa-solid fa-circle-check"></i>
+                      <span id="file-name-text">archivo.pdf</span>
+                    </span>
+                    <button type="button" class="file-remove-btn" id="remove-file-btn">
+                      <i class="fa-solid fa-trash-can"></i>
+                    </button>
+                  </div>
+                </div>
+
+                <div class="form-group">
+                  <label for="exam-obs">Observaciones (Opcional)</label>
+                  <textarea id="exam-obs" class="form-control" rows="3" placeholder="Comentarios, valores atípicos o notas adicionales para el cliente..."></textarea>
+                </div>
+
+                <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 0.5rem;" id="submit-upload-btn">
+                  <i class="fa-solid fa-share-nodes"></i> Publicar Examen en el Portal
+                </button>
+              </form>
+            </div>
+
+            <!-- Historial del Cliente -->
+            <div style="border-top: 1px solid var(--border-light); padding-top: 2rem;">
+              <h4 style="font-size: 1.05rem; font-weight: 600; margin-bottom: 1rem;">
+                <i class="fa-solid fa-clock-rotate-left"></i> Historial de Exámenes Publicados a este Cliente
+              </h4>
+              <div class="client-list" id="client-history-container" style="max-height: 250px;">
+                <!-- Cargado dinámicamente -->
+                <p style="text-align: center; color: var(--text-dark); padding: 1rem;">No hay exámenes publicados para este cliente.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+  </div>
+
+  <footer>
+    <p>&copy; 2026 Laboratorio de Investigación y Análisis Veterinario SIRIO. Todos los derechos reservados.</p>
+  </footer>
+
+  <!-- Scripts -->
+  <script src="js/auth.js"></script>
+  <script src="js/admin.js"></script>
+</body>
+</html>
