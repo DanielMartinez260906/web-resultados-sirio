@@ -642,6 +642,15 @@ document.addEventListener('DOMContentLoaded', () => {
     }, 5000);
   }
 
+  // Contador de caracteres para contraseña de cliente
+  const pwdInput    = document.getElementById('new-client-password');
+  const pwdCounter  = document.getElementById('pwd-char-count');
+  pwdInput.addEventListener('input', () => {
+    const len = pwdInput.value.length;
+    pwdCounter.textContent = len + '/15';
+    pwdCounter.style.color = len >= 13 ? 'var(--error)' : len >= 10 ? '#f59e0b' : 'var(--text-muted)';
+  });
+
   // Inicialización
   loadClients();
   loadGeneralOverview();

@@ -76,8 +76,20 @@
 
             <div class="form-group">
               <label for="new-client-password">Contraseña temporal</label>
-              <input type="text" id="new-client-password" class="form-control"
-                     placeholder="Ej: sirio2026" required>
+              <div style="position: relative;">
+                <input type="text" id="new-client-password" class="form-control"
+                       placeholder="Ej: sirio2026" required
+                       maxlength="15"
+                       style="padding-right: 50px;">
+                <span id="pwd-char-count"
+                      style="position: absolute; right: 12px; top: 50%; transform: translateY(-50%);
+                             font-size: 0.75rem; color: var(--text-muted); pointer-events: none; font-weight: 600;">
+                  0/15
+                </span>
+              </div>
+              <p style="font-size: 0.72rem; color: var(--text-muted); margin-top: 4px;">
+                Máximo 15 caracteres
+              </p>
             </div>
 
             <button type="submit" class="btn btn-accent" style="width: 100%; margin-top: 0.25rem;">

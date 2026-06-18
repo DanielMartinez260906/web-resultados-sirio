@@ -52,8 +52,15 @@
                style="position: absolute; left: 16px; top: 50%; transform: translateY(-50%); color: var(--text-dark); pointer-events: none;"></i>
             <input type="password" id="password" class="form-control"
                    placeholder="••••••••"
-                   style="padding-left: 46px;"
+                   style="padding-left: 46px; padding-right: 50px;"
                    required autocomplete="current-password">
+            <button type="button" id="toggle-password"
+                    style="position: absolute; right: 12px; top: 50%; transform: translateY(-50%);
+                           background: none; border: none; cursor: pointer; color: var(--text-dark);
+                           padding: 4px; display: flex; align-items: center; justify-content: center;
+                           transition: color 0.2s;" title="Mostrar/ocultar contraseña">
+              <i class="fa-solid fa-eye" id="toggle-password-icon"></i>
+            </button>
           </div>
         </div>
 
@@ -109,6 +116,16 @@
           alertMsg.innerText = result.message;
           alertBox.style.display = 'flex';
         }
+      });
+      // Toggle mostrar/ocultar contraseña
+      const toggleBtn  = document.getElementById('toggle-password');
+      const toggleIcon = document.getElementById('toggle-password-icon');
+      const pwdInput   = document.getElementById('password');
+      toggleBtn.addEventListener('click', () => {
+        const isHidden = pwdInput.type === 'password';
+        pwdInput.type  = isHidden ? 'text' : 'password';
+        toggleIcon.className = isHidden ? 'fa-solid fa-eye-slash' : 'fa-solid fa-eye';
+        toggleBtn.style.color = isHidden ? 'var(--color-primary)' : 'var(--text-dark)';
       });
     });
   </script>
