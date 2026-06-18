@@ -2,74 +2,106 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="description" content="Portal de resultados de exámenes - Laboratorio Clínico SIRIO">
   <title>Mi Portal de Cliente - Laboratorio SIRIO</title>
-  <!-- Font Awesome Icons -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-  <!-- Estilos Premium -->
   <link rel="stylesheet" href="css/styles.css">
 </head>
 <body>
 
   <div class="app-container">
-    <!-- Cabecera Principal con Logo Oficial -->
-    <header class="main-header" style="padding: 0.8rem 0;">
-      <div class="header-user-info" style="gap: 20px; align-items: center;">
-        <img src="logo.png" alt="Laboratorio Sirio" style="height: 85px; width: auto; transition: var(--transition-smooth);">
-        <div style="border-left: 1px solid var(--border-light); padding-left: 20px;">
-          <h2 id="client-name" style="font-size: 1.2rem;">Cargando...</h2>
-          <p style="font-size: 0.85rem; color: var(--text-muted); margin-top: 2px;">
-            <i class="fa-solid fa-hospital-user"></i> Portal de Cliente | ID/NIT: <span id="client-id-text">...</span>
+    <!-- ── Cabecera ────────────────────────────────────────────────────── -->
+    <header class="main-header" style="padding: 0.6rem 0;">
+      <div class="header-user-info">
+        <img src="logo.png" alt="Laboratorio Sirio">
+        <div class="header-divider">
+          <h2 id="client-name">Cargando...</h2>
+          <p>
+            <i class="fa-solid fa-hospital-user"></i>
+            Portal Cliente&nbsp;|&nbsp;ID: <span id="client-id-text">...</span>
           </p>
         </div>
       </div>
-      <div class="header-actions" style="display: flex; gap: 10px; align-items: center;">
+      <div class="header-actions">
         <button class="btn btn-secondary btn-icon" id="theme-toggle" title="Cambiar tema">
           <i class="fa-solid fa-sun"></i>
         </button>
         <button class="btn btn-secondary" id="logout-btn">
-          <i class="fa-solid fa-right-from-bracket"></i> Cerrar Sesión
+          <i class="fa-solid fa-right-from-bracket"></i>
+          <span class="btn-logout-text">Cerrar Sesión</span>
         </button>
       </div>
     </header>
 
-    <!-- Alertas Globales -->
+    <!-- ── Alertas Globales ───────────────────────────────────────────── -->
     <div id="client-global-alert" class="alert" style="display: none;">
       <i class="fa-solid"></i>
       <span id="client-global-alert-text"></span>
     </div>
 
-    <!-- Filtros y Títulos de Resultados -->
-    <div class="panel-card" style="margin-bottom: 2rem; padding: 1.5rem 2rem;">
-      <div style="display: flex; flex-direction: column; gap: 1rem; justify-content: space-between; align-items: stretch;">
-        <h3 style="font-size: 1.2rem; font-weight: 600; display: flex; align-items: center; gap: 10px;">
-          <i class="fa-solid fa-folder-open" style="color: var(--color-accent);"></i> Historial de Exámenes y Análisis Publicados
-        </h3>
-        
-        <div class="search-container" style="margin-bottom: 0; max-width: 500px;">
+    <!-- ── Barra de Filtros ───────────────────────────────────────────── -->
+    <div class="panel-card" style="margin-bottom: 1.5rem;">
+      <h3 style="font-size: 1.05rem; font-weight: 600; display: flex; align-items: center; gap: 10px; margin-bottom: 1rem;">
+        <i class="fa-solid fa-folder-open" style="color: var(--color-accent);"></i>
+        Historial de Exámenes Publicados
+      </h3>
+
+      <div class="filter-bar-row">
+        <!-- Buscador -->
+        <div class="search-container" style="margin-bottom: 0; flex: 1 1 200px;">
           <i class="fa-solid fa-magnifying-glass"></i>
-          <input type="text" id="search-exam" placeholder="Buscar por paciente, tipo de examen u observaciones...">
+          <input type="text" id="search-exam" placeholder="Buscar por nombre del PDF...">
         </div>
+
+        <!-- Filtro por Fecha -->
+        <div class="filter-group" style="flex: 0 1 auto;">
+          <label for="filter-date">
+            <i class="fa-solid fa-calendar-days"></i> Fecha:
+          </label>
+          <input type="date" id="filter-date" class="form-control"
+                 style="padding: 8px 10px; height: 42px; border-radius: 8px; font-size: 0.85rem; width: auto; min-width: 140px;">
+        </div>
+
+        <!-- Ordenamiento -->
+        <div class="filter-group" style="flex: 0 1 auto;">
+          <label for="sort-order">
+            <i class="fa-solid fa-sort"></i> Orden:
+          </label>
+          <select id="sort-order" class="form-control"
+                  style="padding: 8px 10px; height: 42px; border-radius: 8px; font-size: 0.85rem; width: auto; min-width: 150px;">
+            <option value="date-desc">Más recientes</option>
+            <option value="date-asc">Más antiguos</option>
+            <option value="name-asc">Nombre A–Z</option>
+            <option value="name-desc">Nombre Z–A</option>
+          </select>
+        </div>
+
+        <!-- Limpiar -->
+        <button id="clear-filters-btn" class="btn btn-secondary"
+                style="padding: 8px 14px; font-size: 0.85rem; height: 42px; border-radius: 8px; gap: 6px;">
+          <i class="fa-solid fa-filter-circle-xmark"></i>
+          <span class="btn-logout-text">Limpiar</span>
+        </button>
       </div>
     </div>
 
-    <!-- Grilla de Resultados -->
+    <!-- ── Grilla de Resultados ───────────────────────────────────────── -->
     <div class="results-grid" id="results-container">
-      <!-- Cargado dinámicamente -->
       <div style="grid-column: 1 / -1; text-align: center; color: var(--text-dark); padding: 4rem 0;">
-        <i class="fa-solid fa-circle-notch fa-spin" style="font-size: 2rem; margin-bottom: 1rem; color: var(--color-primary);"></i>
+        <i class="fa-solid fa-circle-notch fa-spin" style="font-size: 2rem; margin-bottom: 1rem; color: var(--color-primary); display: block;"></i>
         <p>Buscando tus resultados de laboratorio...</p>
       </div>
     </div>
-
   </div>
 
-  <!-- Botón Flotante de WhatsApp -->
-  <a href="https://wa.me/573106606973?text=Hola%20Laboratorio%20SIRIO%2C%20tengo%20una%20consulta%20sobre%20mis%20resultados." 
-     class="whatsapp-float" 
-     target="_blank" 
-     rel="noopener noreferrer" 
-     title="Contactar con el Laboratorio via WhatsApp">
+  <!-- ── WhatsApp Flotante ──────────────────────────────────────────────── -->
+  <a href="https://wa.me/573106606973?text=Hola%20Laboratorio%20SIRIO%2C%20tengo%20una%20consulta%20sobre%20mis%20resultados."
+     class="whatsapp-float"
+     target="_blank"
+     rel="noopener noreferrer"
+     title="Contactar con el Laboratorio via WhatsApp"
+     aria-label="Contactar por WhatsApp">
     <i class="fa-brands fa-whatsapp"></i>
   </a>
 
@@ -77,7 +109,6 @@
     <p>&copy; 2026 Laboratorio de Investigación y Análisis Veterinario SIRIO. Todos los derechos reservados.</p>
   </footer>
 
-  <!-- Scripts -->
   <script src="js/auth.js"></script>
   <script src="js/client.js"></script>
 </body>

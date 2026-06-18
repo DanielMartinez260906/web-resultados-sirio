@@ -61,18 +61,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const card = document.createElement('div');
       card.className = 'result-card';
       
-      // Formatear la fecha a un formato amigable (ej: 13 de junio, 2026)
-      const dateStr = res.fecha_subida.split('T')[0];
-      const dateParts = dateStr.split('-');
-      let dateLabel = dateStr;
-      
-      if (dateParts.length === 3) {
-        const meses = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'];
-        const dia = parseInt(dateParts[2]);
-        const mes = meses[parseInt(dateParts[1]) - 1];
-        const anio = dateParts[0];
-        dateLabel = `${dia} ${mes}, ${anio}`;
-      }
+      const dateLabel = SirioAuth.formatDate(res.fecha_subida);
 
       card.innerHTML = `
         <div class="result-card-header">
@@ -102,13 +91,57 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // Filtrar exámenes por nombre del archivo PDF
-  searchExamInput.addEventListener('keyup', () => {
+  // Elementos de filtros adicionales
+  const filterDateInput = document.getElementById('filter-date');
+  const sortOrderSelect = document.getElementById('sort-order');
+  const clearFiltersBtn = document.getElementById('clear-filters-btn');
+
+  function filterAndRenderResults() {
     const query = searchExamInput.value.toLowerCase().trim();
-    const filtered = allResults.filter(res => 
-      res.nombre_examen.toLowerCase().includes(query)
-    );
+    const dateVal = filterDateInput.value; // formato YYYY-MM-DD
+    const sortVal = sortOrderSelect.value;
+
+    let filtered = [...allResults];
+
+    // 1. Filtrar por buscador
+    if (query) {
+      filtered = filtered.filter(res => 
+        res.nombre_examen.toLowerCase().includes(query)
+      );
+    }
+
+    // 2. Filtrar por fecha
+    if (dateVal) {
+      filtered = filtered.filter(res => {
+        if (!res.fecha_subida) return false;
+        const resDate = res.fecha_subida.split('T')[0];
+        return resDate === dateVal;
+      });
+    }
+
+    // 3. Ordenar
+    if (sortVal === 'date-desc') {
+      filtered.sort((a, b) => new Date(b.fecha_subida) - new Date(a.fecha_subida));
+    } else if (sortVal === 'date-asc') {
+      filtered.sort((a, b) => new Date(a.fecha_subida) - new Date(b.fecha_subida));
+    } else if (sortVal === 'name-asc') {
+      filtered.sort((a, b) => a.nombre_examen.localeCompare(b.nombre_examen));
+    } else if (sortVal === 'name-desc') {
+      filtered.sort((a, b) => b.nombre_examen.localeCompare(a.nombre_examen));
+    }
+
     renderResults(filtered);
+  }
+
+  // Eventos de filtros
+  searchExamInput.addEventListener('keyup', filterAndRenderResults);
+  filterDateInput.addEventListener('change', filterAndRenderResults);
+  sortOrderSelect.addEventListener('change', filterAndRenderResults);
+  clearFiltersBtn.addEventListener('click', () => {
+    searchExamInput.value = '';
+    filterDateInput.value = '';
+    sortOrderSelect.value = 'date-desc';
+    filterAndRenderResults();
   });
 
   // Mostrar alertas

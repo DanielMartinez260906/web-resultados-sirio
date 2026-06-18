@@ -15,13 +15,17 @@ document.addEventListener('DOMContentLoaded', () => {
   let allClients = [];
   let selectedClient = null;
   let selectedFiles = []; // Almacena el listado de archivos seleccionados/arrastrados
+  let allResults = []; // Almacena todos los resultados para el historial general
 
   // Elementos del DOM
   const clientsContainer = document.getElementById('clients-container');
   const searchClientInput = document.getElementById('search-client');
   const createClientForm = document.getElementById('create-client-form');
-  const placeholderDetail = document.getElementById('placeholder-detail');
+  const generalOverviewView = document.getElementById('general-overview-view');
   const activeClientView = document.getElementById('active-client-view');
+  const allResultsTableBody = document.getElementById('all-results-table-body');
+  const totalResultsCount = document.getElementById('total-results-count');
+  const searchAllResults = document.getElementById('search-all-results');
   
   // Detalle de Cliente Activo
   const activeClientName = document.getElementById('active-client-name');
@@ -62,6 +66,135 @@ document.addEventListener('DOMContentLoaded', () => {
       showGlobalAlert('No se pudo establecer conexion para cargar clientes.', 'error');
     }
   }
+
+  // Cargar historial general de todos los resultados
+  async function loadGeneralOverview() {
+    allResultsTableBody.innerHTML = `
+      <tr>
+        <td colspan="4" style="text-align: center; color: var(--text-dark); padding: 2.5rem 0;">
+          <i class="fa-solid fa-circle-notch fa-spin" style="margin-bottom: 0.5rem; font-size: 1.2rem; color: var(--color-primary);"></i>
+          <p>Cargando historial general...</p>
+        </td>
+      </tr>
+    `;
+
+    try {
+      const response = await fetch(`${SirioAuth.API_BASE}/api/admin/results`);
+      const data = await response.json();
+
+      if (data.success) {
+        allResults = data.results;
+        renderGeneralOverview(allResults);
+      } else {
+        allResultsTableBody.innerHTML = `<tr><td colspan="4" style="text-align: center; color: var(--error); padding: 1.5rem;">${data.message || 'Error al obtener historial general.'}</td></tr>`;
+      }
+    } catch (error) {
+      console.error('Error al cargar historial general:', error);
+      allResultsTableBody.innerHTML = `<tr><td colspan="4" style="text-align: center; color: var(--error); padding: 1.5rem;">Error de conexion al cargar historial general.</td></tr>`;
+    }
+  }
+
+  // Renderizar la tabla de historial general
+  function renderGeneralOverview(results) {
+    totalResultsCount.innerText = `${results.length} ${results.length === 1 ? 'examen' : 'examenes'}`;
+    
+    if (results.length === 0) {
+      allResultsTableBody.innerHTML = `
+        <tr>
+          <td colspan="4" style="text-align: center; color: var(--text-muted); padding: 3rem 0;">
+            <i class="fa-solid fa-folder-open" style="font-size: 2rem; margin-bottom: 0.5rem; opacity: 0.3;"></i>
+            <p>No se han publicado examenes todavia.</p>
+          </td>
+        </tr>
+      `;
+      return;
+    }
+
+    allResultsTableBody.innerHTML = '';
+    results.forEach(res => {
+      const tr = document.createElement('tr');
+      tr.style.borderBottom = '1px solid var(--border-light)';
+      tr.style.transition = 'var(--transition-smooth)';
+      
+      tr.addEventListener('mouseenter', () => tr.style.background = 'rgba(255, 255, 255, 0.02)');
+      tr.addEventListener('mouseleave', () => tr.style.background = 'transparent');
+
+      tr.innerHTML = `
+        <td style="padding: 12px 16px; font-weight: 500; color: var(--text-main); max-width: 150px; text-overflow: ellipsis; overflow: hidden; white-space: nowrap;" title="${res.nombre_cliente}">
+          ${res.nombre_cliente}
+        </td>
+        <td style="padding: 12px 16px; color: var(--text-main); font-weight: 600; max-width: 250px; text-overflow: ellipsis; overflow: hidden; white-space: nowrap;" title="${res.nombre_examen}">
+          <i class="fa-solid fa-file-pdf" style="color: var(--error); margin-right: 6px;"></i> ${res.nombre_examen}
+        </td>
+        <td style="padding: 12px 16px; color: var(--text-muted); font-size: 0.8rem;">
+          ${SirioAuth.formatDate(res.fecha_subida)}
+        </td>
+        <td style="padding: 12px 16px; text-align: center;">
+          <div style="display: flex; gap: 6px; justify-content: center; align-items: center;">
+            <a href="/uploads/${res.nombre_archivo}" target="_blank" class="btn btn-secondary btn-icon" style="padding: 4px 8px;" title="Ver PDF">
+              <i class="fa-solid fa-eye" style="font-size: 0.85rem;"></i>
+            </a>
+            <button class="btn btn-danger btn-icon delete-general-result-btn" data-id="${res.id_resultado}" style="padding: 4px 8px;" title="Eliminar examen">
+              <i class="fa-solid fa-trash-can" style="font-size: 0.85rem;"></i>
+            </button>
+          </div>
+        </td>
+      `;
+      allResultsTableBody.appendChild(tr);
+    });
+  }
+
+  // Filtrado del historial general
+  searchAllResults.addEventListener('keyup', () => {
+    const query = searchAllResults.value.toLowerCase().trim();
+    if (!query) {
+      renderGeneralOverview(allResults);
+      return;
+    }
+    const filtered = allResults.filter(res => 
+      res.nombre_cliente.toLowerCase().includes(query) || 
+      res.nombre_examen.toLowerCase().includes(query)
+    );
+    renderGeneralOverview(filtered);
+  });
+
+  // Delegacion de eventos para eliminar desde la tabla general
+  allResultsTableBody.addEventListener('click', async (e) => {
+    const deleteBtn = e.target.closest('.delete-general-result-btn');
+    if (!deleteBtn) return;
+    
+    const idResultado = deleteBtn.dataset.id;
+    if (!idResultado) return;
+    
+    const confirmDelete = confirm('¿Esta seguro de que desea eliminar este resultado? Se borrara de la base de datos y se eliminara el archivo PDF permanentemente.');
+    if (!confirmDelete) return;
+    
+    SirioAuth.showLoading('Eliminando examen...');
+    
+    try {
+      const response = await fetch(`${SirioAuth.API_BASE}/api/admin/delete-result`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ id_resultado: idResultado })
+      });
+      
+      const result = await response.json();
+      SirioAuth.hideLoading();
+      
+      if (result.success) {
+        showGlobalAlert('Examen eliminado correctamente del portal.', 'success');
+        loadGeneralOverview(); // Recargar el resumen general
+      } else {
+        showGlobalAlert(result.message || 'Error al eliminar el examen.', 'error');
+      }
+    } catch (error) {
+      SirioAuth.hideLoading();
+      console.error('Error al eliminar resultado:', error);
+      showGlobalAlert('Error de red al intentar eliminar el examen.', 'error');
+    }
+  });
 
   // Cargar historial de exámenes del cliente activo
   async function loadClientHistory(clientId) {
@@ -137,7 +270,7 @@ document.addEventListener('DOMContentLoaded', () => {
             <i class="fa-solid fa-file-pdf" style="color: var(--error); margin-right: 6px;"></i> ${res.nombre_examen}
           </h4>
           <p style="font-size: 0.75rem; margin-top: 4px; color: var(--text-dark);">
-            <i class="fa-solid fa-calendar"></i> ${res.fecha_subida.split('T')[0]} 
+            <i class="fa-solid fa-calendar"></i> ${SirioAuth.formatDate(res.fecha_subida)} 
           </p>
         </div>
         <div style="display: flex; gap: 6px; align-items: center; flex-shrink: 0;">
@@ -171,7 +304,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     // Mostrar panel
-    placeholderDetail.style.display = 'none';
+    generalOverviewView.style.display = 'none';
     activeClientView.style.display = 'block';
 
     // Rellenar cabecera e input oculto
@@ -192,8 +325,9 @@ document.addEventListener('DOMContentLoaded', () => {
     selectedClient = null;
     document.querySelectorAll('.client-item').forEach(item => item.classList.remove('active'));
     activeClientView.style.display = 'none';
-    placeholderDetail.style.display = 'flex';
+    generalOverviewView.style.display = 'block';
     resetUploadForm();
+    loadGeneralOverview(); // Recargar el historial general
   }
 
   deselectClientBtn.addEventListener('click', deselectClient);
@@ -504,4 +638,5 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Inicialización
   loadClients();
+  loadGeneralOverview();
 });

@@ -158,14 +158,42 @@ const SirioAuth = {
     if (overlay) {
       overlay.classList.remove('active');
     }
+  },
+
+  // Formatear la fecha y hora completa en espanol
+  formatDate(isoString) {
+    if (!isoString) return 'Fecha de publicacion no registrada';
+    try {
+      const date = new Date(isoString);
+      if (isNaN(date.getTime())) {
+        return isoString;
+      }
+      const dias = ['Domingo', 'Lunes', 'Martes', 'Miercoles', 'Jueves', 'Viernes', 'Sabado'];
+      const meses = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'];
+      
+      const diaSemana = dias[date.getDay()];
+      const dia = date.getDate();
+      const mes = meses[date.getMonth()];
+      const anio = date.getFullYear();
+      
+      let horas = date.getHours();
+      const minutos = String(date.getMinutes()).padStart(2, '0');
+      const ampm = horas >= 12 ? 'PM' : 'AM';
+      horas = horas % 12;
+      horas = horas ? horas : 12;
+      
+      return `${diaSemana}, ${dia} ${mes}, ${anio} - ${horas}:${minutos} ${ampm}`;
+    } catch (e) {
+      return isoString;
+    }
   }
 };
 
 // Ejecutar inicialización al cargar el DOM (Tema y Estado de Conexión)
 document.addEventListener('DOMContentLoaded', () => {
-  // Aplicar tema guardado en localStorage
+  // Aplicar tema guardado en localStorage (Modo Claro por defecto)
   const savedTheme = localStorage.getItem('sirio_theme');
-  if (savedTheme === 'light') {
+  if (savedTheme !== 'dark') {
     document.body.classList.add('light-theme');
   }
   

@@ -227,6 +227,16 @@ app.get('/api/client/results', async (req, res) => {
   }
 });
 
+// API: Obtener todos los exámenes (Solo Admins)
+app.get('/api/admin/results', async (req, res) => {
+  try {
+    const result = await db.getAllResults();
+    res.json(result);
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
 // API: Eliminar Examen PDF (Solo Admins)
 app.post('/api/admin/delete-result', async (req, res) => {
   const { id_resultado } = req.body;

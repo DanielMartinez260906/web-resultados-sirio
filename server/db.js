@@ -172,7 +172,7 @@ function handleMockAction(action, data) {
       }, 0);
       
       const addedIds = [];
-      const today = new Date().toISOString().split('T')[0];
+      const today = new Date().toISOString();
       
       for (const item of items) {
         lastIdNum++;
@@ -235,6 +235,23 @@ function handleMockAction(action, data) {
       writeMockDB(db);
       return { success: true };
     }
+    case 'getAllResults': {
+      const db = readMockDB();
+      const userMap = {};
+      db.Usuarios.forEach(u => {
+        userMap[u.id_usuario] = u.nombre;
+      });
+      const results = db.Resultados.map(r => ({
+        id_resultado: r.id_resultado,
+        id_usuario: r.id_usuario,
+        nombre_cliente: userMap[r.id_usuario] || r.id_usuario || "Cliente Desconocido",
+        nombre_examen: r.nombre_examen,
+        nombre_archivo: r.nombre_archivo,
+        fecha_subida: r.fecha_subida
+      }));
+      results.sort((a, b) => new Date(b.fecha_subida) - new Date(a.fecha_subida));
+      return { success: true, results };
+    }
     
     default:
       return { success: false, message: `Acción desconocida en MockDB: ${action}` };
@@ -251,5 +268,6 @@ module.exports = {
   addResult: (resultData) => callSheetsAPI('addResult', resultData),
   getClientResults: (id_usuario) => callSheetsAPI('getClientResults', { id_usuario }),
   deleteResult: (id_resultado) => callSheetsAPI('deleteResult', { id_resultado }), // Exportado
+  getAllResults: () => callSheetsAPI('getAllResults'),
   logAccess: (usuario, rol, estado) => callSheetsAPI('logAccess', { usuario, rol, estado })
 };

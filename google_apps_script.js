@@ -53,6 +53,8 @@ function doPost(e) {
       response = getClientResults(doc, data);
     } else if (action === "deleteResult") {
       response = deleteResult(doc, data);
+    } else if (action === "getAllResults") {
+      response = getAllResults(doc);
     } else if (action === "logAccess") {
       response = logAccess(doc, data);
     } else {
@@ -213,6 +215,19 @@ function addClient(doc, data) {
 }
 
 /**
+ * Convierte un valor de celda de Sheets a cadena ISO 8601.
+ * Google Sheets puede devolver objetos Date en vez de strings.
+ */
+function cellToISOString(val) {
+  if (!val) return "";
+  if (val instanceof Date) {
+    var timezone = Session.getScriptTimeZone();
+    return Utilities.formatDate(val, timezone, "yyyy-MM-dd'T'HH:mm:ssXXX");
+  }
+  return val.toString().trim();
+}
+
+/**
  * Publicar resultados en lote (Adaptativo al esquema)
  */
 function addResult(doc, data) {
@@ -240,7 +255,8 @@ function addResult(doc, data) {
   }
   
   var idsResponse = [];
-  var today = new Date().toISOString().split('T')[0];
+  var timezone = Session.getScriptTimeZone();
+  var today = Utilities.formatDate(new Date(), timezone, "yyyy-MM-dd'T'HH:mm:ssXXX");
   
   for (var k = 0; k < items.length; k++) {
     var item = items[k];
@@ -306,18 +322,18 @@ function getClientResults(doc, data) {
         var valCol2 = row[2] ? row[2].toString().trim() : "";
         var valCol3 = row[3] ? row[3].toString().trim() : "";
         var valCol4 = row[4] ? row[4].toString().trim() : "";
-        var valCol5 = row[5] ? row[5].toString().trim() : "";
+        var valCol5 = row[5] ? cellToISOString(row[5]) : "";
         
         if (valCol2.toLowerCase().endsWith('.pdf')) {
           // Caso nuevo en hoja vieja (original en Col C, archivo en Col D, fecha en Col E)
           nombreExamen = valCol2;
           nombreArchivo = valCol3;
-          fechaSubida = valCol4;
+          fechaSubida = cellToISOString(row[4]);
         } else if (valCol3.toLowerCase().endsWith('.pdf')) {
           // Caso intermedio/viejo donde la Col D contiene el archivo PDF
           nombreExamen = valCol3;
           nombreArchivo = valCol3;
-          fechaSubida = valCol4;
+          fechaSubida = cellToISOString(row[4]);
         } else if (valCol4.toLowerCase().endsWith('.pdf')) {
           // Caso viejo real (paciente en Col C, examen en Col D, archivo en Col E)
           nombreExamen = valCol4; // Nombre del PDF como título principal
@@ -332,7 +348,7 @@ function getClientResults(doc, data) {
         // Formato nuevo limpio de 5 columnas
         nombreExamen = idxExamen !== undefined && row[idxExamen] ? row[idxExamen].toString().trim() : "";
         nombreArchivo = idxArchivo !== undefined && row[idxArchivo] ? row[idxArchivo].toString().trim() : "";
-        fechaSubida = idxFecha !== undefined && row[idxFecha] ? row[idxFecha].toString().trim() : "";
+        fechaSubida = idxFecha !== undefined ? cellToISOString(row[idxFecha]) : "";
       }
       
       // Asegurar título del PDF como nombre del examen si no se cargó
@@ -440,4 +456,94 @@ function logAccess(doc, data) {
   
   sheet.appendRow(newRow);
   return { success: true };
+}
+
+/**
+ * Obtener todos los resultados de todos los clientes (para el historial general del admin)
+ */
+function getAllResults(doc) {
+  var sheet = doc.getSheetByName("Resultados");
+  var rows = sheet.getDataRange().getValues();
+  
+  var usersSheet = doc.getSheetByName("Usuarios");
+  var userRows = usersSheet.getDataRange().getValues();
+  
+  // Crear mapa de id_usuario -> nombre de cliente
+  var userMap = {};
+  for (var j = 1; j < userRows.length; j++) {
+    userMap[userRows[j][0].toString().trim()] = userRows[j][1].toString().trim();
+  }
+  
+  var headers = rows[0];
+  var colMap = {};
+  for (var i = 0; i < headers.length; i++) {
+    colMap[headers[i].toString().trim()] = i;
+  }
+  
+  var results = [];
+  
+  var idxIdRes = colMap["id_resultado"];
+  var idxIdUser = colMap["id_usuario"];
+  var idxExamen = colMap["nombre_examen"];
+  var idxArchivo = colMap["nombre_archivo"];
+  var idxFecha = colMap["fecha_subida"];
+  var idxPaciente = colMap["nombre_paciente"];
+  
+  for (var i = 1; i < rows.length; i++) {
+    var row = rows[i];
+    var idUser = row[idxIdUser] ? row[idxIdUser].toString().trim() : "";
+    var nombreCliente = userMap[idUser] || idUser || "Cliente Desconocido";
+    
+    var nombreExamen = "";
+    var nombreArchivo = "";
+    var fechaSubida = "";
+    
+    if (idxPaciente !== undefined && idxPaciente < idxExamen) {
+      var valCol2 = row[2] ? row[2].toString().trim() : "";
+      var valCol3 = row[3] ? row[3].toString().trim() : "";
+      var valCol4 = row[4] ? row[4].toString().trim() : "";
+      var valCol5 = row[5] ? cellToISOString(row[5]) : "";
+      
+      if (valCol2.toLowerCase().endsWith('.pdf')) {
+        nombreExamen = valCol2;
+        nombreArchivo = valCol3;
+        fechaSubida = cellToISOString(row[4]);
+      } else if (valCol3.toLowerCase().endsWith('.pdf')) {
+        nombreExamen = valCol3;
+        nombreArchivo = valCol3;
+        fechaSubida = cellToISOString(row[4]);
+      } else if (valCol4.toLowerCase().endsWith('.pdf')) {
+        nombreExamen = valCol4;
+        nombreArchivo = valCol4;
+        fechaSubida = valCol5;
+      } else {
+        nombreExamen = valCol3;
+        nombreArchivo = valCol4;
+        fechaSubida = valCol5;
+      }
+    } else {
+      nombreExamen = idxExamen !== undefined && row[idxExamen] ? row[idxExamen].toString().trim() : "";
+      nombreArchivo = idxArchivo !== undefined && row[idxArchivo] ? row[idxArchivo].toString().trim() : "";
+      fechaSubida = idxFecha !== undefined ? cellToISOString(row[idxFecha]) : "";
+    }
+    
+    if (!nombreExamen && nombreArchivo) {
+      nombreExamen = nombreArchivo;
+    }
+    
+    results.push({
+      id_resultado: idxIdRes !== undefined ? row[idxIdRes] : "",
+      id_usuario: idUser,
+      nombre_cliente: nombreCliente,
+      nombre_examen: nombreExamen,
+      nombre_archivo: nombreArchivo,
+      fecha_subida: fechaSubida
+    });
+  }
+  
+  results.sort(function(a, b) {
+    return new Date(b.fecha_subida) - new Date(a.fecha_subida);
+  });
+  
+  return { success: true, results: results };
 }
