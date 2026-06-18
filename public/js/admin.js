@@ -118,28 +118,32 @@ document.addEventListener('DOMContentLoaded', () => {
       
       tr.addEventListener('mouseenter', () => tr.style.background = 'rgba(255, 255, 255, 0.02)');
       tr.addEventListener('mouseleave', () => tr.style.background = 'transparent');
-
+      
       tr.innerHTML = `
-        <td style="padding: 12px 16px; font-weight: 500; color: var(--text-main); max-width: 150px; text-overflow: ellipsis; overflow: hidden; white-space: nowrap;" title="${res.nombre_cliente}">
-          ${res.nombre_cliente}
-        </td>
-        <td style="padding: 12px 16px; color: var(--text-main); font-weight: 600; max-width: 250px; text-overflow: ellipsis; overflow: hidden; white-space: nowrap;" title="${res.nombre_examen}">
-          <i class="fa-solid fa-file-pdf" style="color: var(--error); margin-right: 6px;"></i> ${res.nombre_examen}
-        </td>
-        <td style="padding: 12px 16px; color: var(--text-muted); font-size: 0.8rem;">
-          ${SirioAuth.formatDate(res.fecha_subida)}
-        </td>
-        <td style="padding: 12px 16px; text-align: center;">
-          <div style="display: flex; gap: 6px; justify-content: center; align-items: center;">
-            <a href="/uploads/${res.nombre_archivo}" target="_blank" class="btn btn-secondary btn-icon" style="padding: 4px 8px;" title="Ver PDF">
-              <i class="fa-solid fa-eye" style="font-size: 0.85rem;"></i>
-            </a>
-            <button class="btn btn-danger btn-icon delete-general-result-btn" data-id="${res.id_resultado}" style="padding: 4px 8px;" title="Eliminar examen">
-              <i class="fa-solid fa-trash-can" style="font-size: 0.85rem;"></i>
-            </button>
-          </div>
-        </td>
-      `;
+          <td style="padding: 12px 16px; font-weight: 500; color: var(--text-main); max-width: 150px; text-overflow: ellipsis; overflow: hidden; white-space: nowrap;" title="${res.nombre_cliente}">
+            ${res.nombre_cliente}
+          </td>
+          <td style="padding: 12px 16px; color: var(--text-main); font-weight: 600; max-width: 250px; text-overflow: ellipsis; overflow: hidden; white-space: nowrap;" title="${res.nombre_examen}">
+            <i class="fa-solid fa-file-pdf" style="color: var(--error); margin-right: 6px;"></i> ${res.nombre_examen}
+          </td>
+          <td style="padding: 12px 16px; color: var(--text-muted); font-size: 0.8rem;">
+            ${SirioAuth.formatDate(res.fecha_subida)}
+          </td>
+          <td style="padding: 12px 16px; color: var(--text-main); max-width: 140px; text-overflow: ellipsis; overflow: hidden; white-space: nowrap;" title="${res.admin_nombre || res.admin_id || 'Sin dato'}">
+            <i class="fa-solid fa-user-shield" style="color: var(--color-primary); margin-right: 5px; font-size: 0.8rem;"></i>
+            ${res.admin_nombre || res.admin_id || '<span style="color:var(--text-muted);font-style:italic;">Sin dato</span>'}
+          </td>
+          <td style="padding: 12px 16px; text-align: center;">
+            <div style="display: flex; gap: 6px; justify-content: center; align-items: center;">
+              <a href="/uploads/${res.nombre_archivo}" target="_blank" class="btn btn-secondary btn-icon" style="padding: 4px 8px;" title="Ver PDF">
+                <i class="fa-solid fa-eye" style="font-size: 0.85rem;"></i>
+              </a>
+              <button class="btn btn-danger btn-icon delete-general-result-btn" data-id="${res.id_resultado}" style="padding: 4px 8px;" title="Eliminar examen">
+                <i class="fa-solid fa-trash-can" style="font-size: 0.85rem;"></i>
+              </button>
+            </div>
+          </td>
+        `;
       allResultsTableBody.appendChild(tr);
     });
   }
@@ -536,6 +540,8 @@ document.addEventListener('DOMContentLoaded', () => {
     // Crear FormData
     const formData = new FormData();
     formData.append('id_usuario', id_usuario);
+    formData.append('admin_id', currentUser.id_usuario);
+    formData.append('admin_nombre', currentUser.nombre);
     
     // Adjuntar todos los archivos seleccionados bajo la clave 'pdf'
     selectedFiles.forEach(file => {

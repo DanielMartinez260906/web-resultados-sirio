@@ -158,7 +158,7 @@ app.post('/api/admin/clients', async (req, res) => {
 // API: Subir Examen PDF (Solo Admins)
 app.post('/api/admin/upload', upload.array('pdf', 20), async (req, res) => {
   try {
-    const { id_usuario } = req.body;
+    const { id_usuario, admin_id, admin_nombre } = req.body;
     
     if (!req.files || req.files.length === 0) {
       return res.status(400).json({ success: false, message: "Por favor, selecciona al menos un archivo PDF válido." });
@@ -178,7 +178,9 @@ app.post('/api/admin/upload', upload.array('pdf', 20), async (req, res) => {
       nombre_paciente: "", // Campo quitado, se envía vacío
       nombre_examen: file.originalname, // Nombre original del PDF como título
       nombre_archivo: file.filename,
-      observaciones: "" // Campo quitado, se envía vacío
+      observaciones: "", // Campo quitado, se envía vacío
+      admin_id: admin_id || "",
+      admin_nombre: admin_nombre || ""
     }));
     
     // Registrar en Google Sheets / MockDB en un solo lote (batch)

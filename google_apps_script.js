@@ -38,8 +38,9 @@ function doPost(e) {
     var data = requestData.data;
     var doc = SpreadsheetApp.getActiveSpreadsheet();
     
-    // Inicializar hojas
+    // Inicializar hojas y migrar columnas faltantes
     checkAndInitSheets(doc);
+    migrateSheets(doc);
     
     if (action === "login") {
       response = handleLogin(doc, data);
@@ -75,14 +76,39 @@ function returnJSON(data) {
 }
 
 /**
+ * Migra hojas existentes añadiendo columnas nuevas si faltan.
+ * Se ejecuta en cada request para garantizar compatibilidad.
+ */
+function migrateSheets(doc) {
+  var sheet = doc.getSheetByName("Resultados");
+  if (!sheet) return;
+  
+  var headers = sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0];
+  var colMap = {};
+  for (var i = 0; i < headers.length; i++) {
+    colMap[headers[i].toString().trim()] = i;
+  }
+  
+  // Agregar columna admin_nombre si no existe
+  if (!("admin_nombre" in colMap)) {
+    var newColIndex = sheet.getLastColumn() + 1;
+    sheet.getRange(1, newColIndex).setValue("admin_nombre");
+    var headerCell = sheet.getRange(1, newColIndex);
+    headerCell.setFontWeight("bold");
+    headerCell.setBackground("#0a192f");
+    headerCell.setFontColor("#ffffff");
+  }
+}
+
+/**
  * Inicializa las pestañas con las cabeceras exactas
  */
 function checkAndInitSheets(doc) {
   var sheets = ["Usuarios", "Resultados", "Accesos"];
   var headers = {
     "Usuarios": ["id_usuario", "nombre", "identificacion", "usuario", "contrasena", "rol", "fecha_registro"],
-    // Estructura limpia de 5 columnas
-    "Resultados": ["id_resultado", "id_usuario", "nombre_examen", "nombre_archivo", "fecha_subida"],
+    // Estructura de 6 columnas con admin_nombre
+    "Resultados": ["id_resultado", "id_usuario", "nombre_examen", "nombre_archivo", "fecha_subida", "admin_nombre"],
     "Accesos": ["id_log", "usuario", "rol", "fecha_hora", "estado"]
   };
   
@@ -275,6 +301,7 @@ function addResult(doc, data) {
     if ("nombre_examen" in colMap) newRow[colMap["nombre_examen"]] = item.nombre_examen;
     if ("nombre_archivo" in colMap) newRow[colMap["nombre_archivo"]] = item.nombre_archivo;
     if ("fecha_subida" in colMap) newRow[colMap["fecha_subida"]] = today;
+    if ("admin_nombre" in colMap) newRow[colMap["admin_nombre"]] = item.admin_nombre || "";
     
     sheet.appendRow(newRow);
     idsResponse.push(nextId);
@@ -488,6 +515,7 @@ function getAllResults(doc) {
   var idxArchivo = colMap["nombre_archivo"];
   var idxFecha = colMap["fecha_subida"];
   var idxPaciente = colMap["nombre_paciente"];
+  var idxAdminNombre = colMap["admin_nombre"]; // Nueva columna
   
   for (var i = 1; i < rows.length; i++) {
     var row = rows[i];
@@ -497,6 +525,7 @@ function getAllResults(doc) {
     var nombreExamen = "";
     var nombreArchivo = "";
     var fechaSubida = "";
+    var adminNombre = idxAdminNombre !== undefined && row[idxAdminNombre] ? row[idxAdminNombre].toString().trim() : "";
     
     if (idxPaciente !== undefined && idxPaciente < idxExamen) {
       var valCol2 = row[2] ? row[2].toString().trim() : "";
@@ -537,7 +566,8 @@ function getAllResults(doc) {
       nombre_cliente: nombreCliente,
       nombre_examen: nombreExamen,
       nombre_archivo: nombreArchivo,
-      fecha_subida: fechaSubida
+      fecha_subida: fechaSubida,
+      admin_nombre: adminNombre
     });
   }
   

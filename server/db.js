@@ -184,7 +184,9 @@ function handleMockAction(action, data) {
           nombre_examen: item.nombre_examen,
           nombre_archivo: item.nombre_archivo,
           fecha_subida: today,
-          observaciones: ""
+          observaciones: "",
+          admin_id: item.admin_id || "",
+          admin_nombre: item.admin_nombre || ""
         };
         db.Resultados.push(newResult);
         addedIds.push(nextId);
@@ -247,7 +249,9 @@ function handleMockAction(action, data) {
         nombre_cliente: userMap[r.id_usuario] || r.id_usuario || "Cliente Desconocido",
         nombre_examen: r.nombre_examen,
         nombre_archivo: r.nombre_archivo,
-        fecha_subida: r.fecha_subida
+        fecha_subida: r.fecha_subida,
+        admin_id: r.admin_id || "",
+        admin_nombre: r.admin_nombre || ""
       }));
       results.sort((a, b) => new Date(b.fecha_subida) - new Date(a.fecha_subida));
       return { success: true, results };

@@ -286,7 +286,15 @@ select.form-control {
 
 body.light-theme select.form-control {
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23475569' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+  appearance: none;
+  -webkit-appearance: none;
 }
+
+/* Hide default dropdown arrow in Windows Edge/IE */
+select::-ms-expand {
+  display: none;
+}
+
 
 /* ==========================================================================
    LOGIN PAGE
