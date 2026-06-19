@@ -115,25 +115,6 @@ function migrateSheets(doc) {
     cell.setFontColor("#ffffff");
     SpreadsheetApp.flush();
   }
-
-  // Re-leer cabeceras tras posible migración
-  lastCol = sheet.getLastColumn();
-  headers = sheet.getRange(1, 1, 1, lastCol).getValues()[0];
-  colMap  = {};
-  for (var i = 0; i < headers.length; i++) {
-    colMap[headers[i].toString().trim().toLowerCase()] = i;
-  }
-
-  // Agregar columna url_archivo si no existe
-  if (!("url_archivo" in colMap)) {
-    var newCol2 = lastCol + 1;
-    var cell2   = sheet.getRange(1, newCol2);
-    cell2.setValue("url_archivo");
-    cell2.setFontWeight("bold");
-    cell2.setBackground("#0a192f");
-    cell2.setFontColor("#ffffff");
-    SpreadsheetApp.flush();
-  }
 }
 
 // ============================================================
@@ -142,7 +123,7 @@ function migrateSheets(doc) {
 function checkAndInitSheets(doc) {
   var sheetsConfig = {
     "Usuarios":  ["id_usuario","nombre","identificacion","usuario","contrasena","rol","fecha_registro"],
-    "Resultados":["id_resultado","id_usuario","nombre_examen","nombre_archivo","url_archivo","fecha_subida","admin_nombre"],
+    "Resultados":["id_resultado","id_usuario","nombre_examen","nombre_archivo","fecha_subida","admin_nombre"],
     "Accesos":   ["id_log","usuario","rol","fecha_hora","estado"]
   };
 
@@ -291,7 +272,6 @@ function addResult(doc, data) {
     if ("id_usuario"    in colMap) newRow[colMap["id_usuario"]]    = item.id_usuario    || "";
     if ("nombre_examen" in colMap) newRow[colMap["nombre_examen"]] = item.nombre_examen || "";
     if ("nombre_archivo"in colMap) newRow[colMap["nombre_archivo"]]= item.nombre_archivo|| "";
-    if ("url_archivo"   in colMap) newRow[colMap["url_archivo"]]   = item.url_archivo   || "";
     if ("fecha_subida"  in colMap) newRow[colMap["fecha_subida"]]  = today;
     if ("admin_nombre"  in colMap) newRow[colMap["admin_nombre"]]  = item.admin_nombre  || "";
 
@@ -316,13 +296,12 @@ function getClientResults(doc, data) {
   var colMap  = buildColMap(headers);
 
   var idCliente   = data.id_usuario;
-  var idxIdRes      = colMap["id_resultado"];
-  var idxIdUser     = colMap["id_usuario"];
-  var idxExamen     = colMap["nombre_examen"];
-  var idxArchivo    = colMap["nombre_archivo"];
-  var idxUrl        = colMap["url_archivo"];
-  var idxFecha      = colMap["fecha_subida"];
-  var results       = [];
+  var idxIdRes    = colMap["id_resultado"];
+  var idxIdUser   = colMap["id_usuario"];
+  var idxExamen   = colMap["nombre_examen"];
+  var idxArchivo  = colMap["nombre_archivo"];
+  var idxFecha    = colMap["fecha_subida"];
+  var results     = [];
 
   for (var i = 1; i < rows.length; i++) {
     var row = rows[i];
@@ -331,17 +310,14 @@ function getClientResults(doc, data) {
 
     var nombreExamen  = idxExamen  !== undefined && row[idxExamen]  ? row[idxExamen].toString().trim()  : "";
     var nombreArchivo = idxArchivo !== undefined && row[idxArchivo] ? row[idxArchivo].toString().trim() : "";
-    var urlArchivo    = idxUrl     !== undefined && row[idxUrl]     ? row[idxUrl].toString().trim()     : "";
     var fechaSubida   = idxFecha   !== undefined                    ? cellToISOString(row[idxFecha])    : "";
 
     if (!nombreExamen && nombreArchivo) nombreExamen = nombreArchivo;
-    if (!urlArchivo && nombreArchivo)   urlArchivo   = "/uploads/" + nombreArchivo;
 
     results.push({
       id_resultado:  idxIdRes !== undefined ? row[idxIdRes] : "",
       nombre_examen: nombreExamen,
       nombre_archivo:nombreArchivo,
-      url_archivo:   urlArchivo,
       fecha_subida:  fechaSubida
     });
   }
@@ -367,13 +343,12 @@ function getAllResults(doc) {
     userMap[uRows[j][0].toString().trim()] = uRows[j][1].toString().trim();
   }
 
-  var idxIdRes       = colMap["id_resultado"];
-  var idxIdUser      = colMap["id_usuario"];
-  var idxExamen      = colMap["nombre_examen"];
-  var idxArchivo     = colMap["nombre_archivo"];
-  var idxUrl         = colMap["url_archivo"];
-  var idxFecha       = colMap["fecha_subida"];
-  var idxAdminNombre = colMap["admin_nombre"];
+  var idxIdRes      = colMap["id_resultado"];
+  var idxIdUser     = colMap["id_usuario"];
+  var idxExamen     = colMap["nombre_examen"];
+  var idxArchivo    = colMap["nombre_archivo"];
+  var idxFecha      = colMap["fecha_subida"];
+  var idxAdminNombre= colMap["admin_nombre"];  // puede ser undefined en filas viejas
 
   var results = [];
 
@@ -383,12 +358,10 @@ function getAllResults(doc) {
 
     var nombreExamen   = idxExamen      !== undefined && row[idxExamen]      ? row[idxExamen].toString().trim()      : "";
     var nombreArchivo  = idxArchivo     !== undefined && row[idxArchivo]     ? row[idxArchivo].toString().trim()     : "";
-    var urlArchivo     = idxUrl         !== undefined && row[idxUrl]         ? row[idxUrl].toString().trim()         : "";
     var fechaSubida    = idxFecha       !== undefined                        ? cellToISOString(row[idxFecha])        : "";
     var adminNombre    = idxAdminNombre !== undefined && row[idxAdminNombre] ? row[idxAdminNombre].toString().trim() : "";
 
     if (!nombreExamen && nombreArchivo) nombreExamen = nombreArchivo;
-    if (!urlArchivo && nombreArchivo)   urlArchivo   = "/uploads/" + nombreArchivo;
 
     results.push({
       id_resultado:  idxIdRes !== undefined ? row[idxIdRes].toString() : "",
@@ -396,7 +369,6 @@ function getAllResults(doc) {
       nombre_cliente:userMap[idUser] || idUser || "Cliente Desconocido",
       nombre_examen: nombreExamen,
       nombre_archivo:nombreArchivo,
-      url_archivo:   urlArchivo,
       fecha_subida:  fechaSubida,
       admin_nombre:  adminNombre
     });
