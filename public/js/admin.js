@@ -651,6 +651,112 @@ document.addEventListener('DOMContentLoaded', () => {
     pwdCounter.style.color = len >= 13 ? 'var(--error)' : len >= 10 ? '#f59e0b' : 'var(--text-muted)';
   });
 
+  // ==========================================================================
+  // LÓGICA DE ELIMINAR TODOS LOS EXÁMENES (ZONA DE PELIGRO)
+  // ==========================================================================
+  const securityPhrases = [
+    'ELIMINAR TODO MI HISTORIAL',
+    'BORRAR EXAMENES COMPLETAMENTE',
+    'CONFIRMAR VACIADO ABSOLUTO',
+    'BORRADO DE ALTA SEGURIDAD',
+    'AUTORIZAR DESTRUCCION DE PDFS'
+  ];
+
+  let currentSecurityPhrase = '';
+  const deleteAllModal = document.getElementById('delete-all-modal');
+  const phraseDisplay = document.getElementById('security-phrase-display');
+  const phraseInput = document.getElementById('security-phrase-input');
+  const checkConfirm1 = document.getElementById('check-confirm-1');
+  const checkConfirm2 = document.getElementById('check-confirm-2');
+  const confirmBtn = document.getElementById('confirm-delete-all-btn');
+
+  function generateSecurityPhrase() {
+    const randomIndex = Math.floor(Math.random() * securityPhrases.length);
+    currentSecurityPhrase = securityPhrases[randomIndex];
+    phraseDisplay.textContent = currentSecurityPhrase;
+    phraseInput.value = '';
+    checkConfirm1.checked = false;
+    checkConfirm2.checked = false;
+    updateDeleteAllButtonState();
+  }
+
+  function updateDeleteAllButtonState() {
+    const check1 = checkConfirm1.checked;
+    const check2 = checkConfirm2.checked;
+    const textInput = phraseInput.value.trim().toUpperCase();
+    
+    if (check1 && check2 && textInput === currentSecurityPhrase) {
+      confirmBtn.disabled = false;
+    } else {
+      confirmBtn.disabled = true;
+    }
+  }
+
+  // Escuchar cambios
+  checkConfirm1.addEventListener('change', updateDeleteAllButtonState);
+  checkConfirm2.addEventListener('change', updateDeleteAllButtonState);
+  phraseInput.addEventListener('input', updateDeleteAllButtonState);
+
+  // Bloquear copiar/pegar y arrastrar en la frase de confirmación
+  phraseInput.addEventListener('paste', (e) => {
+    e.preventDefault();
+    showGlobalAlert('No se permite pegar el texto. Debe escribirlo carácter por carácter.', 'error');
+  });
+
+  phraseInput.addEventListener('drop', (e) => {
+    e.preventDefault();
+    showGlobalAlert('No se permite arrastrar texto. Debe escribirlo carácter por carácter.', 'error');
+  });
+
+  // Abrir Modal
+  document.getElementById('delete-all-btn').addEventListener('click', () => {
+    deleteAllModal.style.display = 'flex';
+    generateSecurityPhrase();
+  });
+
+  // Cerrar Modal
+  function closeDeleteAllModal() {
+    deleteAllModal.style.display = 'none';
+  }
+
+  document.getElementById('close-delete-all-modal').addEventListener('click', closeDeleteAllModal);
+  document.getElementById('cancel-delete-all-btn').addEventListener('click', closeDeleteAllModal);
+
+  // Enviar Petición
+  confirmBtn.addEventListener('click', async () => {
+    closeDeleteAllModal();
+    SirioAuth.showLoading('Eliminando todos los exámenes...');
+
+    try {
+      const response = await fetch(`${SirioAuth.API_BASE}/api/admin/delete-all-results`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      });
+
+      const result = await response.json();
+      SirioAuth.hideLoading();
+
+      if (result.success) {
+        showGlobalAlert(result.message || 'Todos los exámenes fueron eliminados correctamente.', 'success');
+        
+        // Si hay un cliente activo seleccionado, lo deseleccionamos
+        if (selectedClient) {
+          deselectClient();
+        } else {
+          loadGeneralOverview();
+        }
+      } else {
+        showGlobalAlert(result.message || 'Error al eliminar todos los exámenes.', 'error');
+      }
+    } catch (error) {
+      SirioAuth.hideLoading();
+      console.error('Error al vaciar los exámenes:', error);
+      showGlobalAlert('Error de red al intentar eliminar todos los exámenes.', 'error');
+    }
+  });
+
   // Inicialización
   loadClients();
   loadGeneralOverview();

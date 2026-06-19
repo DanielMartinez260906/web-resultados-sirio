@@ -269,6 +269,39 @@ app.post('/api/admin/delete-result', async (req, res) => {
   }
 });
 
+// API: Eliminar todos los exámenes y sus PDFs (Solo Admins)
+app.post('/api/admin/delete-all-results', async (req, res) => {
+  try {
+    const result = await db.deleteAllResults();
+    
+    if (result.success) {
+      // Intentar borrar todos los archivos físicos devueltos
+      let deleteCount = 0;
+      if (result.archivos_eliminados && Array.isArray(result.archivos_eliminados)) {
+        result.archivos_eliminados.forEach(filename => {
+          if (filename && filename !== 'ejemplo_examen.pdf') {
+            const filePath = path.join(UPLOADS_DIR, filename);
+            if (fs.existsSync(filePath)) {
+              fs.unlinkSync(filePath);
+              deleteCount++;
+            }
+          }
+        });
+        console.log(`🗑️ Se eliminaron físicamente ${deleteCount} archivos PDF del servidor.`);
+      }
+      res.json({
+        success: true,
+        message: `Se eliminaron todos los exámenes del portal (${deleteCount} archivos físicos borrados).`
+      });
+    } else {
+      res.status(400).json(result);
+    }
+  } catch (error) {
+    console.error("Error al eliminar todos los resultados:", error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
 // Manejo de errores de Multer
 app.use((err, req, res, next) => {
   if (err instanceof multer.MulterError) {

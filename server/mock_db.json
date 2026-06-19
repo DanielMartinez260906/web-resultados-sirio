@@ -1,0 +1,34 @@
+{
+  "Usuarios": [
+    {
+      "id_usuario": "U000",
+      "nombre": "Administrador Laboratorio",
+      "identificacion": "00000000",
+      "usuario": "admin",
+      "contrasena": "admin123",
+      "rol": "admin",
+      "fecha_registro": "2026-06-19"
+    },
+    {
+      "id_usuario": "U001",
+      "nombre": "Clínica Veterinaria San Francisco",
+      "identificacion": "900123456",
+      "usuario": "sanfrancisco",
+      "contrasena": "vet123",
+      "rol": "cliente",
+      "fecha_registro": "2026-06-19"
+    }
+  ],
+  "Resultados": [
+    {
+      "id_resultado": "R001",
+      "id_usuario": "U001",
+      "nombre_paciente": "Dante (Pastor Alemán)",
+      "nombre_examen": "Hemograma Completo - Demostración",
+      "nombre_archivo": "ejemplo_examen.pdf",
+      "fecha_subida": "2026-06-19",
+      "observaciones": "Niveles de hemoglobina y plaquetas estables. Se observa leve leucocitosis."
+    }
+  ],
+  "Accesos": []
+}

@@ -224,6 +224,22 @@ function handleMockAction(action, data) {
       }
       return { success: false, message: "El examen especificado no existe en la base de datos local." };
     }
+
+    case 'deleteAllResults': {
+      const deletedFiles = [];
+      db.Resultados.forEach(r => {
+        if (r.nombre_archivo && r.nombre_archivo !== 'ejemplo_examen.pdf') {
+          deletedFiles.push(r.nombre_archivo);
+        }
+      });
+      db.Resultados = [];
+      writeMockDB(db);
+      return {
+        success: true,
+        message: "Todos los examenes fueron eliminados de la base de datos local.",
+        archivos_eliminados: deletedFiles
+      };
+    }
     
     case 'logAccess': {
       const nextId = "L" + String(db.Accesos.length + 1).padStart(5, '0');
@@ -272,6 +288,7 @@ module.exports = {
   addResult: (resultData) => callSheetsAPI('addResult', resultData),
   getClientResults: (id_usuario) => callSheetsAPI('getClientResults', { id_usuario }),
   deleteResult: (id_resultado) => callSheetsAPI('deleteResult', { id_resultado }), // Exportado
+  deleteAllResults: () => callSheetsAPI('deleteAllResults'),
   getAllResults: () => callSheetsAPI('getAllResults'),
   logAccess: (usuario, rol, estado) => callSheetsAPI('logAccess', { usuario, rol, estado })
 };

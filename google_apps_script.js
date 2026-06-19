@@ -34,7 +34,7 @@ function doGet(e) {
 
   return ContentService.createTextOutput(JSON.stringify({
     status: "ok",
-    version: "2.0",
+    version: "2.1",
     columnas: headers
   })).setMimeType(ContentService.MimeType.JSON);
 }
@@ -72,6 +72,7 @@ function doPost(e) {
     else if (action === "addResult")        { response = addResult(doc, data); }
     else if (action === "getClientResults") { response = getClientResults(doc, data); }
     else if (action === "deleteResult")     { response = deleteResult(doc, data); }
+    else if (action === "deleteAllResults")  { response = deleteAllResults(doc); }
     else if (action === "getAllResults")     { response = getAllResults(doc); }
     else if (action === "logAccess")        { response = logAccess(doc, data); }
     else { response.message = "Accion no reconocida: " + action; }
@@ -400,6 +401,44 @@ function deleteResult(doc, data) {
     }
   }
   return { success: false, message: "No se encontro el examen con ID: " + idResultado };
+}
+
+// ============================================================
+// ELIMINAR TODOS LOS RESULTADOS
+// ============================================================
+function deleteAllResults(doc) {
+  var sheet = doc.getSheetByName("Resultados");
+  if (!sheet) {
+    return { success: false, message: "No se encontro la hoja Resultados." };
+  }
+  
+  var lastRow = sheet.getLastRow();
+  var deletedFiles = [];
+  
+  if (lastRow > 1) {
+    var rows = sheet.getDataRange().getValues();
+    var headers = rows[0];
+    var colMap = buildColMap(headers);
+    var idxArchivo = colMap["nombre_archivo"];
+    
+    // Obtener todos los archivos PDF a eliminar fisicamente
+    for (var i = 1; i < rows.length; i++) {
+      var row = rows[i];
+      var fileName = idxArchivo !== undefined && row[idxArchivo] ? row[idxArchivo].toString().trim() : "";
+      if (fileName && fileName !== "ejemplo_examen.pdf") {
+        deletedFiles.push(fileName);
+      }
+    }
+    
+    // Eliminar las filas de datos, conservando la cabecera (fila 1)
+    sheet.deleteRows(2, lastRow - 1);
+  }
+  
+  return {
+    success: true,
+    message: "Todos los examenes fueron eliminados del Google Sheet.",
+    archivos_eliminados: deletedFiles
+  };
 }
 
 // ============================================================

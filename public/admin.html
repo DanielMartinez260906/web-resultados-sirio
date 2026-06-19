@@ -118,6 +118,19 @@
           </div>
         </div>
 
+        <!-- Zona de Peligro -->
+        <div class="panel-card" style="margin-top: 1rem; border-color: rgba(239, 68, 68, 0.25);">
+          <h3 class="panel-card-title" style="color: var(--error);">
+            <i class="fa-solid fa-triangle-exclamation"></i> Zona de Peligro
+          </h3>
+          <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 1rem;">
+            Acciones críticas que afectan la integridad de los datos.
+          </p>
+          <button class="btn btn-danger" id="delete-all-btn" style="width: 100%;">
+            <i class="fa-solid fa-dumpster-fire"></i> Eliminar Todos los Exámenes
+          </button>
+        </div>
+
       </div>
       <!-- ── FIN Columna Izquierda ──────────────────────────────────── -->
 
@@ -238,6 +251,61 @@
       </div>
       <!-- ── FIN Columna Derecha ────────────────────────────────────── -->
 
+    </div>
+  </div>
+
+  <!-- Modal de Confirmación de Eliminación Absoluta -->
+  <div id="delete-all-modal" class="modal-overlay" style="display: none;">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3 class="modal-title" style="color: var(--error);">
+          <i class="fa-solid fa-triangle-exclamation"></i> Acción Crítica Irreversible
+        </h3>
+        <button class="btn-close-modal" id="close-delete-all-modal">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+      <div class="modal-body">
+        <p style="margin-bottom: 1rem; font-size: 0.9rem;">
+          Está a punto de <strong>eliminar permanentemente todos los exámenes</strong> y sus correspondientes archivos PDF. Esta acción no se puede deshacer.
+        </p>
+        
+        <div class="security-filters">
+          <div style="margin-bottom: 0.75rem;">
+            <label class="checkbox-container">
+              <input type="checkbox" id="check-confirm-1">
+              <span class="checkmark"></span>
+              Confirmo que deseo borrar todos los archivos PDF del servidor de forma definitiva.
+            </label>
+          </div>
+          
+          <div style="margin-bottom: 1rem;">
+            <label class="checkbox-container">
+              <input type="checkbox" id="check-confirm-2">
+              <span class="checkmark"></span>
+              Confirmo que deseo borrar todos los registros de exámenes del Google Sheet.
+            </label>
+          </div>
+          
+          <div style="border-top: 1px solid var(--border-light); padding-top: 1rem;">
+            <p style="font-size: 0.82rem; color: var(--text-muted); margin-bottom: 0.5rem;">
+              Para proceder, escriba la siguiente frase exactamente (letra por letra, sin copiar ni pegar):
+            </p>
+            <div class="security-phrase-box" id="security-phrase-display">ELIMINAR TODO MI HISTORIAL</div>
+            
+            <input type="text" id="security-phrase-input" class="form-control" autocomplete="off"
+                   placeholder="Escriba la frase de seguridad aquí..." 
+                   onpaste="return false;" ondrop="return false;"
+                   style="margin-top: 0.5rem; text-align: center; font-weight: 500;">
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" id="cancel-delete-all-btn">Cancelar</button>
+        <button class="btn btn-danger" id="confirm-delete-all-btn" disabled>
+          <i class="fa-solid fa-dumpster-fire"></i> Confirmar Eliminación Total
+        </button>
+      </div>
     </div>
   </div>
 
