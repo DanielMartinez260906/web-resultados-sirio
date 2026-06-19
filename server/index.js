@@ -188,12 +188,20 @@ app.post('/api/admin/clients', async (req, res) => {
   }
 });
 
-// API: Actualizar perfil de cliente (Llamado por Cliente o Admin)
+// API: Actualizar perfil de cliente (Solo permitido si lo solicita el Administrador)
 app.post('/api/client/update-profile', async (req, res) => {
-  const { id_usuario, nombre, direccion, correo, telefono, contrasena } = req.body;
+  const { id_usuario, nombre, direccion, correo, telefono, contrasena, requested_by_admin } = req.body;
   
   if (!id_usuario) {
     return res.status(400).json({ success: false, message: "El ID de usuario es requerido." });
+  }
+
+  // Restringir actualización para que solo la pueda ejecutar el rol de admin
+  if (!requested_by_admin) {
+    return res.status(403).json({ 
+      success: false, 
+      message: "No tiene permisos para modificar este perfil. Los clientes no pueden editar sus propios datos." 
+    });
   }
   
   try {

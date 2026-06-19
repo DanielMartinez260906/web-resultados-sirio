@@ -68,20 +68,10 @@ document.addEventListener('DOMContentLoaded', () => {
   function initProfile() {
     // Lectura
     const nameVal = document.getElementById('profile-name-val');
-    const identVal = document.getElementById('profile-ident-val');
-    const addressVal = document.getElementById('profile-address-val');
-    const emailVal = document.getElementById('profile-email-val');
-    const phoneVal = document.getElementById('profile-phone-val');
     const usernameVal = document.getElementById('profile-username-val');
-    const dateVal = document.getElementById('profile-date-val');
 
     if (nameVal) nameVal.innerText = currentUser.nombre;
-    if (identVal) identVal.innerText = currentUser.identificacion;
-    if (addressVal) addressVal.innerText = currentUser.direccion || 'No registrada';
-    if (emailVal) emailVal.innerText = currentUser.correo || 'No registrado';
-    if (phoneVal) phoneVal.innerText = currentUser.telefono || 'No registrado';
     if (usernameVal) usernameVal.innerText = currentUser.usuario;
-    if (dateVal) dateVal.innerText = currentUser.fecha_registro ? currentUser.fecha_registro.split('T')[0] : '...';
     
     const pwdVal = document.getElementById('profile-password-val');
     if (pwdVal) {
@@ -93,19 +83,6 @@ document.addEventListener('DOMContentLoaded', () => {
         if (icon) icon.className = 'fa-solid fa-eye';
       }
     }
-
-    // Formulario de edición
-    const nameInput = document.getElementById('edit-client-name-input');
-    const addressInput = document.getElementById('edit-client-address-input');
-    const emailInput = document.getElementById('edit-client-email-input');
-    const phoneInput = document.getElementById('edit-client-phone-input');
-    const passwordInput = document.getElementById('edit-client-password-input');
-
-    if (nameInput) nameInput.value = currentUser.nombre;
-    if (addressInput) addressInput.value = currentUser.direccion || '';
-    if (emailInput) emailInput.value = currentUser.correo || '';
-    if (phoneInput) phoneInput.value = currentUser.telefono || '';
-    if (passwordInput) passwordInput.value = '';
   }
   
   initProfile();
@@ -124,87 +101,6 @@ document.addEventListener('DOMContentLoaded', () => {
           pwdVal.innerText = '••••••••';
           icon.className = 'fa-solid fa-eye';
         }
-      }
-    });
-  }
-
-  // Gestión de edición de perfil (Ver / Ocultar Formulario)
-  const profileViewMode = document.getElementById('profile-view-mode');
-  const profileEditForm = document.getElementById('profile-edit-form');
-  const profileEditBtn = document.getElementById('profile-edit-btn');
-  const profileCancelBtn = document.getElementById('profile-cancel-btn');
-
-  if (profileEditBtn) {
-    profileEditBtn.addEventListener('click', () => {
-      if (profileViewMode) profileViewMode.style.display = 'none';
-      if (profileEditForm) profileEditForm.style.display = 'block';
-    });
-  }
-
-  if (profileCancelBtn) {
-    profileCancelBtn.addEventListener('click', () => {
-      if (profileEditForm) profileEditForm.style.display = 'none';
-      if (profileViewMode) profileViewMode.style.display = 'block';
-    });
-  }
-
-  // Guardar Cambios del Perfil
-  if (profileEditForm) {
-    profileEditForm.addEventListener('submit', async (e) => {
-      e.preventDefault();
-
-      const nombre = document.getElementById('edit-client-name-input').value;
-      const direccion = document.getElementById('edit-client-address-input').value;
-      const correo = document.getElementById('edit-client-email-input').value;
-      const telefono = document.getElementById('edit-client-phone-input').value;
-      const contrasena = document.getElementById('edit-client-password-input').value;
-
-      SirioAuth.showLoading('Guardando cambios en tu perfil...');
-
-      try {
-        const response = await fetch(`${SirioAuth.API_BASE}/api/client/update-profile`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({
-            id_usuario: currentUser.id_usuario,
-            nombre,
-            direccion,
-            correo,
-            telefono,
-            contrasena
-          })
-        });
-
-        const result = await response.json();
-        SirioAuth.hideLoading();
-
-        if (result.success) {
-          showGlobalAlert(result.message || 'Perfil actualizado correctamente.', 'success');
-          
-          // Actualizar sesión del cliente en almacenamiento local
-          currentUser = result.user;
-          const rememberMe = localStorage.getItem(SirioAuth.STORAGE_KEY) !== null;
-          const storage = rememberMe ? localStorage : sessionStorage;
-          storage.setItem(SirioAuth.STORAGE_KEY, JSON.stringify(currentUser));
-
-          // Actualizar la cabecera
-          document.getElementById('client-name').innerText = currentUser.nombre;
-          
-          // Inicializar interfaz con nuevos datos
-          initProfile();
-
-          // Ocultar formulario
-          profileEditForm.style.display = 'none';
-          profileViewMode.style.display = 'block';
-        } else {
-          showGlobalAlert(result.message || 'Error al actualizar el perfil.', 'error');
-        }
-      } catch (err) {
-        SirioAuth.hideLoading();
-        console.error('Error al actualizar perfil:', err);
-        showGlobalAlert('Error de red al intentar actualizar el perfil.', 'error');
       }
     });
   }

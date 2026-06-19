@@ -1194,7 +1194,8 @@ document.addEventListener('DOMContentLoaded', () => {
             direccion,
             correo,
             telefono,
-            contrasena
+            contrasena,
+            requested_by_admin: true
           })
         });
         

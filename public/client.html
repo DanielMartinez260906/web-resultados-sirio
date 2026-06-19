@@ -135,37 +135,9 @@
               <span id="profile-name-val" style="font-weight: 600; color: var(--text-main); font-size: 1.05rem;">...</span>
             </div>
             
-            <div class="profile-details-subgrid" style="display: grid; grid-template-columns: 1fr; gap: 1rem;">
-              <div class="profile-detail-item" style="background: rgba(255, 255, 255, 0.02); padding: 12px; border-radius: 8px; border: 1px solid var(--border-light);">
-                <span style="font-size: 0.78rem; color: var(--text-muted); display: block; margin-bottom: 4px;">Identificación (NIT/Cédula)</span>
-                <span id="profile-ident-val" style="font-weight: 600; color: var(--text-main);">...</span>
-              </div>
-            </div>
-
             <div class="profile-detail-item" style="background: rgba(255, 255, 255, 0.02); padding: 12px; border-radius: 8px; border: 1px solid var(--border-light);">
-              <span style="font-size: 0.78rem; color: var(--text-muted); display: block; margin-bottom: 4px;">Dirección Física</span>
-              <span id="profile-address-val" style="font-weight: 600; color: var(--text-main);">No registrada</span>
-            </div>
-
-            <div class="profile-detail-item" style="background: rgba(255, 255, 255, 0.02); padding: 12px; border-radius: 8px; border: 1px solid var(--border-light);">
-              <span style="font-size: 0.78rem; color: var(--text-muted); display: block; margin-bottom: 4px;">Correo Electrónico</span>
-              <span id="profile-email-val" style="font-weight: 600; color: var(--text-main);">No registrado</span>
-            </div>
-
-            <div class="profile-detail-item" style="background: rgba(255, 255, 255, 0.02); padding: 12px; border-radius: 8px; border: 1px solid var(--border-light);">
-              <span style="font-size: 0.78rem; color: var(--text-muted); display: block; margin-bottom: 4px;">Teléfono de Contacto</span>
-              <span id="profile-phone-val" style="font-weight: 600; color: var(--text-main);">No registrado</span>
-            </div>
-
-            <div class="profile-details-subgrid-2" style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
-              <div class="profile-detail-item" style="background: rgba(255, 255, 255, 0.02); padding: 12px; border-radius: 8px; border: 1px solid var(--border-light);">
-                <span style="font-size: 0.78rem; color: var(--text-muted); display: block; margin-bottom: 4px;">Usuario de Acceso</span>
-                <span id="profile-username-val" style="font-weight: 600; color: var(--text-main);">...</span>
-              </div>
-              <div class="profile-detail-item" style="background: rgba(255, 255, 255, 0.02); padding: 12px; border-radius: 8px; border: 1px solid var(--border-light);">
-                <span style="font-size: 0.78rem; color: var(--text-muted); display: block; margin-bottom: 4px;">Fecha de Registro</span>
-                <span id="profile-date-val" style="font-weight: 600; color: var(--text-main);">...</span>
-              </div>
+              <span style="font-size: 0.78rem; color: var(--text-muted); display: block; margin-bottom: 4px;">Usuario de Acceso</span>
+              <span id="profile-username-val" style="font-weight: 600; color: var(--text-main);">...</span>
             </div>
 
             <div class="profile-detail-item" style="background: rgba(255, 255, 255, 0.02); padding: 12px; border-radius: 8px; border: 1px solid var(--border-light);">
@@ -178,44 +150,7 @@
               </div>
             </div>
           </div>
-          
-          <button id="profile-edit-btn" class="btn btn-accent" style="width: 100%; gap: 8px;">
-            <i class="fa-solid fa-pen-to-square"></i> Editar Mis Datos
-          </button>
         </div>
-
-        <!-- Formulario de Edición (Oculto inicialmente) -->
-        <form id="profile-edit-form" style="display: none;">
-          <div class="form-group">
-            <label for="edit-client-name-input">Nombre / Razón Social</label>
-            <input type="text" id="edit-client-name-input" class="form-control" required>
-          </div>
-          <div class="form-group">
-            <label for="edit-client-address-input">Dirección</label>
-            <input type="text" id="edit-client-address-input" class="form-control" placeholder="Ej: Calle 10 # 4-50">
-          </div>
-          <div class="form-group">
-            <label for="edit-client-email-input">Correo Electrónico</label>
-            <input type="email" id="edit-client-email-input" class="form-control" placeholder="Ej: clinica@correo.com">
-          </div>
-          <div class="form-group">
-            <label for="edit-client-phone-input">Teléfono</label>
-            <input type="text" id="edit-client-phone-input" class="form-control" placeholder="Ej: +57 312 4567890">
-          </div>
-          <div class="form-group">
-            <label for="edit-client-password-input">Nueva Contraseña (Dejar vacío para conservar actual)</label>
-            <input type="password" id="edit-client-password-input" class="form-control" placeholder="Escribe nueva contraseña si deseas cambiarla...">
-          </div>
-          
-          <div style="display: flex; gap: 10px; margin-top: 1.5rem;">
-            <button type="submit" class="btn btn-primary" style="flex: 1; gap: 6px;">
-              <i class="fa-solid fa-floppy-disk"></i> Guardar Cambios
-            </button>
-            <button type="button" id="profile-cancel-btn" class="btn btn-secondary" style="flex: 1; gap: 6px;">
-              Cancelar
-            </button>
-          </div>
-        </form>
       </div>
     </div>
   </div>
