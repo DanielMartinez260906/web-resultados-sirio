@@ -183,6 +183,7 @@ function handleMockAction(action, data) {
           nombre_paciente: "",
           nombre_examen: item.nombre_examen,
           nombre_archivo: item.nombre_archivo,
+          url_archivo: item.url_archivo || `/uploads/${item.nombre_archivo}`,
           fecha_subida: today,
           observaciones: "",
           admin_id: item.admin_id || "",
@@ -206,7 +207,13 @@ function handleMockAction(action, data) {
       const idCliente = data.id_usuario;
       const results = db.Resultados.filter(r => r.id_usuario === idCliente);
       results.sort((a, b) => new Date(b.fecha_subida) - new Date(a.fecha_subida));
-      return { success: true, results };
+      return { success: true, results: results.map(r => ({
+        id_resultado:  r.id_resultado,
+        nombre_examen: r.nombre_examen,
+        nombre_archivo:r.nombre_archivo,
+        url_archivo:   r.url_archivo || `/uploads/${r.nombre_archivo}`,
+        fecha_subida:  r.fecha_subida
+      })) };
     }
 
     case 'deleteResult': {
@@ -244,14 +251,15 @@ function handleMockAction(action, data) {
         userMap[u.id_usuario] = u.nombre;
       });
       const results = db.Resultados.map(r => ({
-        id_resultado: r.id_resultado,
-        id_usuario: r.id_usuario,
-        nombre_cliente: userMap[r.id_usuario] || r.id_usuario || "Cliente Desconocido",
+        id_resultado:  r.id_resultado,
+        id_usuario:    r.id_usuario,
+        nombre_cliente:userMap[r.id_usuario] || r.id_usuario || 'Cliente Desconocido',
         nombre_examen: r.nombre_examen,
-        nombre_archivo: r.nombre_archivo,
-        fecha_subida: r.fecha_subida,
-        admin_id: r.admin_id || "",
-        admin_nombre: r.admin_nombre || ""
+        nombre_archivo:r.nombre_archivo,
+        url_archivo:   r.url_archivo || `/uploads/${r.nombre_archivo}`,
+        fecha_subida:  r.fecha_subida,
+        admin_id:      r.admin_id || '',
+        admin_nombre:  r.admin_nombre || ''
       }));
       results.sort((a, b) => new Date(b.fecha_subida) - new Date(a.fecha_subida));
       return { success: true, results };

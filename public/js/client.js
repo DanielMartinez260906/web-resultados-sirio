@@ -78,10 +78,10 @@ document.addEventListener('DOMContentLoaded', () => {
         </div>
         
         <div class="result-card-footer">
-          <a href="/uploads/${res.nombre_archivo}" target="_blank" class="btn btn-secondary">
+          <a href="${res.url_archivo}" target="_blank" class="btn btn-secondary">
             <i class="fa-solid fa-eye"></i> Ver
           </a>
-          <a href="/uploads/${res.nombre_archivo}" download="${res.nombre_archivo}" class="btn btn-primary">
+          <a href="${res.url_archivo}" download="${res.nombre_examen}" class="btn btn-primary">
             <i class="fa-solid fa-circle-down"></i> Descargar
           </a>
         </div>
