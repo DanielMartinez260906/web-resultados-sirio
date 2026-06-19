@@ -135,18 +135,71 @@ app.get('/api/admin/clients', async (req, res) => {
   }
 });
 
-// API: Registrar cliente (Solo Admins)
+// API: Registrar usuario (cliente o administrador - Solo Admins)
+app.post('/api/admin/users', async (req, res) => {
+  const { nombre, identificacion, usuario, contrasena, direccion, correo, telefono, rol } = req.body;
+  
+  if (!nombre || !usuario || !contrasena) {
+    return res.status(400).json({ success: false, message: "Nombre, usuario y contraseña son obligatorios." });
+  }
+
+  const rolNormalizado = (rol || 'cliente').toLowerCase().trim();
+
+  try {
+    let result;
+    if (rolNormalizado === 'admin') {
+      // Registrar administrador
+      result = await db.addAdmin({ nombre, identificacion: identificacion || '00000000', usuario, contrasena });
+    } else {
+      // Registrar cliente (requiere identificación)
+      if (!identificacion) {
+        return res.status(400).json({ success: false, message: "La identificación es obligatoria para registrar un cliente." });
+      }
+      result = await db.addClient({ nombre, identificacion, usuario, contrasena, direccion, correo, telefono });
+    }
+
+    if (result.success) {
+      res.status(201).json(result);
+    } else {
+      res.status(400).json(result);
+    }
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
+// API: Registrar cliente (Solo Admins) – ruta legacy para compatibilidad
 app.post('/api/admin/clients', async (req, res) => {
-  const { nombre, identificacion, usuario, contrasena } = req.body;
+  const { nombre, identificacion, usuario, contrasena, direccion, correo, telefono } = req.body;
   
   if (!nombre || !identificacion || !usuario || !contrasena) {
-    return res.status(400).json({ success: false, message: "Todos los campos del cliente son obligatorios." });
+    return res.status(400).json({ success: false, message: "Todos los campos obligatorios del cliente deben ser diligenciados." });
   }
   
   try {
-    const result = await db.addClient({ nombre, identificacion, usuario, contrasena });
+    const result = await db.addClient({ nombre, identificacion, usuario, contrasena, direccion, correo, telefono });
     if (result.success) {
       res.status(201).json(result);
+    } else {
+      res.status(400).json(result);
+    }
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
+// API: Actualizar perfil de cliente (Llamado por Cliente o Admin)
+app.post('/api/client/update-profile', async (req, res) => {
+  const { id_usuario, nombre, direccion, correo, telefono, contrasena } = req.body;
+  
+  if (!id_usuario) {
+    return res.status(400).json({ success: false, message: "El ID de usuario es requerido." });
+  }
+  
+  try {
+    const result = await db.updateClient({ id_usuario, nombre, direccion, correo, telefono, contrasena });
+    if (result.success) {
+      res.json(result);
     } else {
       res.status(400).json(result);
     }
@@ -265,6 +318,46 @@ app.post('/api/admin/delete-result', async (req, res) => {
     }
   } catch (error) {
     console.error("Error al eliminar resultado:", error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
+// API: Eliminar Cliente e Historial Asociado (Solo Admins)
+app.post('/api/admin/delete-client', async (req, res) => {
+  const { id_usuario } = req.body;
+  
+  if (!id_usuario) {
+    return res.status(400).json({ success: false, message: "El ID de usuario es requerido." });
+  }
+  
+  try {
+    const result = await db.deleteClient(id_usuario);
+    
+    if (result.success) {
+      // Borrar físicamente todos los archivos PDF del cliente
+      let deleteCount = 0;
+      if (result.archivos_eliminados && Array.isArray(result.archivos_eliminados)) {
+        result.archivos_eliminados.forEach(filename => {
+          if (filename && filename !== 'ejemplo_examen.pdf') {
+            const filePath = path.join(UPLOADS_DIR, filename);
+            if (fs.existsSync(filePath)) {
+              fs.unlinkSync(filePath);
+              deleteCount++;
+            }
+          }
+        });
+        console.log(`🗑️ Se eliminaron físicamente ${deleteCount} archivos PDF del cliente ${id_usuario}.`);
+      }
+      
+      res.json({
+        success: true,
+        message: result.message || `Cliente eliminado correctamente. Se borraron ${deleteCount} archivos PDF.`
+      });
+    } else {
+      res.status(400).json(result);
+    }
+  } catch (error) {
+    console.error("Error al eliminar cliente:", error);
     res.status(500).json({ success: false, message: error.message });
   }
 });

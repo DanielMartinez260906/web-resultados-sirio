@@ -40,57 +40,182 @@
       <span id="client-global-alert-text"></span>
     </div>
 
-    <!-- ── Barra de Filtros ───────────────────────────────────────────── -->
-    <div class="panel-card" style="margin-bottom: 1.5rem;">
-      <h3 style="font-size: 1.05rem; font-weight: 600; display: flex; align-items: center; gap: 10px; margin-bottom: 1rem;">
-        <i class="fa-solid fa-folder-open" style="color: var(--color-accent);"></i>
-        Historial de Exámenes Publicados
-      </h3>
+    <!-- ── Barra de Navegación del Cliente ────────────────────────────── -->
+    <nav class="admin-nav" id="client-nav">
+      <button class="nav-tab active" data-tab="tab-client-results">
+        <i class="fa-solid fa-square-poll-horizontal"></i>
+        <span>Mis Resultados</span>
+      </button>
+      <button class="nav-tab" data-tab="tab-client-profile">
+        <i class="fa-solid fa-user-gear"></i>
+        <span>Mi Perfil</span>
+      </button>
+    </nav>
 
-      <div class="filter-bar-row">
-        <!-- Buscador -->
-        <div class="search-container" style="margin-bottom: 0; flex: 1 1 200px;">
-          <i class="fa-solid fa-magnifying-glass"></i>
-          <input type="text" id="search-exam" placeholder="Buscar por nombre del PDF...">
+    <!-- Pestaña 1: Mis Resultados -->
+    <div id="tab-client-results" class="tab-content">
+      <!-- ── Barra de Filtros ───────────────────────────────────────────── -->
+      <div class="panel-card" style="margin-bottom: 1.5rem;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; flex-wrap: wrap; gap: var(--space-sm);">
+          <h3 style="font-size: 1.05rem; font-weight: 600; display: flex; align-items: center; gap: 10px; margin: 0;">
+            <i class="fa-solid fa-folder-open" style="color: var(--color-accent);"></i>
+            Historial de Exámenes Publicados
+          </h3>
+          <!-- Alternador de diseño: Mosaico / Lista -->
+          <div class="view-toggle" style="display: flex; gap: 4px; background: rgba(7, 13, 25, 0.4); padding: 4px; border-radius: 8px; border: 1px solid var(--border-light);">
+            <button id="view-grid-btn" class="btn btn-secondary btn-icon active" title="Vista Mosaico" style="padding: 6px 10px; height: 32px; border-radius: 6px; font-size: 0.85rem; border: none; min-height: auto;">
+              <i class="fa-solid fa-grip"></i>
+            </button>
+            <button id="view-list-btn" class="btn btn-secondary btn-icon" title="Vista Lista" style="padding: 6px 10px; height: 32px; border-radius: 6px; font-size: 0.85rem; border: none; min-height: auto;">
+              <i class="fa-solid fa-list"></i>
+            </button>
+          </div>
         </div>
 
-        <!-- Filtro por Fecha -->
-        <div class="filter-group" style="flex: 0 1 auto;">
-          <label for="filter-date">
-            <i class="fa-solid fa-calendar-days"></i> Fecha:
-          </label>
-          <input type="date" id="filter-date" class="form-control"
-                 style="padding: 8px 10px; height: 42px; border-radius: 8px; font-size: 0.85rem; width: auto; min-width: 140px;">
-        </div>
+        <div class="filter-bar-row">
+          <!-- Buscador -->
+          <div class="search-container" style="margin-bottom: 0; flex: 1 1 200px;">
+            <i class="fa-solid fa-magnifying-glass"></i>
+            <input type="text" id="search-exam" placeholder="Buscar por nombre del PDF...">
+          </div>
 
-        <!-- Ordenamiento -->
-        <div class="filter-group" style="flex: 0 1 auto;">
-          <label for="sort-order">
-            <i class="fa-solid fa-sort"></i> Orden:
-          </label>
-          <select id="sort-order" class="form-control"
-                  style="padding: 8px 10px; height: 42px; border-radius: 8px; font-size: 0.85rem; width: auto; min-width: 150px;">
-            <option value="date-desc">Más recientes</option>
-            <option value="date-asc">Más antiguos</option>
-            <option value="name-asc">Nombre A–Z</option>
-            <option value="name-desc">Nombre Z–A</option>
-          </select>
-        </div>
+          <!-- Filtro por Fecha -->
+          <div class="filter-group" style="flex: 0 1 auto;">
+            <label for="filter-date">
+              <i class="fa-solid fa-calendar-days"></i> Fecha:
+            </label>
+            <input type="date" id="filter-date" class="form-control"
+                   style="padding: 8px 10px; height: 42px; border-radius: 8px; font-size: 0.85rem; width: auto; min-width: 140px;">
+          </div>
 
-        <!-- Limpiar -->
-        <button id="clear-filters-btn" class="btn btn-secondary"
-                style="padding: 8px 14px; font-size: 0.85rem; height: 42px; border-radius: 8px; gap: 6px;">
-          <i class="fa-solid fa-filter-circle-xmark"></i>
-          <span class="btn-logout-text">Limpiar</span>
-        </button>
+          <!-- Ordenamiento -->
+          <div class="filter-group" style="flex: 0 1 auto;">
+            <label for="sort-order">
+              <i class="fa-solid fa-sort"></i> Orden:
+            </label>
+            <select id="sort-order" class="form-control"
+                    style="padding: 8px 10px; height: 42px; border-radius: 8px; font-size: 0.85rem; width: auto; min-width: 150px;">
+              <option value="date-desc">Más recientes</option>
+              <option value="date-asc">Más antiguos</option>
+              <option value="name-asc">Nombre A–Z</option>
+              <option value="name-desc">Nombre Z–A</option>
+            </select>
+          </div>
+
+          <!-- Limpiar -->
+          <button id="clear-filters-btn" class="btn btn-secondary"
+                  style="padding: 8px 14px; font-size: 0.85rem; height: 42px; border-radius: 8px; gap: 6px;">
+            <i class="fa-solid fa-filter-circle-xmark"></i>
+            <span class="btn-logout-text">Limpiar</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- ── Grilla de Resultados ───────────────────────────────────────── -->
+      <div class="results-grid" id="results-container">
+        <div style="grid-column: 1 / -1; text-align: center; color: var(--text-dark); padding: 4rem 0;">
+          <i class="fa-solid fa-circle-notch fa-spin" style="font-size: 2rem; margin-bottom: 1rem; color: var(--color-primary); display: block;"></i>
+          <p>Buscando tus resultados de laboratorio...</p>
+        </div>
       </div>
     </div>
 
-    <!-- ── Grilla de Resultados ───────────────────────────────────────── -->
-    <div class="results-grid" id="results-container">
-      <div style="grid-column: 1 / -1; text-align: center; color: var(--text-dark); padding: 4rem 0;">
-        <i class="fa-solid fa-circle-notch fa-spin" style="font-size: 2rem; margin-bottom: 1rem; color: var(--color-primary); display: block;"></i>
-        <p>Buscando tus resultados de laboratorio...</p>
+    <!-- Pestaña 2: Mi Perfil -->
+    <div id="tab-client-profile" class="tab-content" style="display: none;">
+      <div class="panel-card centered-panel">
+        <h3 class="panel-card-title" style="margin-bottom: 1.5rem;">
+          <i class="fa-solid fa-user-gear"></i> Mi Perfil de Cliente
+        </h3>
+        
+        <!-- Vista del Perfil (Lectura) -->
+        <div id="profile-view-mode">
+          <div class="profile-details-grid" style="display: grid; grid-template-columns: 1fr; gap: 1rem; margin-bottom: 1.5rem;">
+            <div class="profile-detail-item" style="background: rgba(255, 255, 255, 0.02); padding: 12px; border-radius: 8px; border: 1px solid var(--border-light);">
+              <span style="font-size: 0.78rem; color: var(--text-muted); display: block; margin-bottom: 4px;">Nombre / Razón Social</span>
+              <span id="profile-name-val" style="font-weight: 600; color: var(--text-main); font-size: 1.05rem;">...</span>
+            </div>
+            
+            <div class="profile-details-subgrid" style="display: grid; grid-template-columns: 1fr; gap: 1rem;">
+              <div class="profile-detail-item" style="background: rgba(255, 255, 255, 0.02); padding: 12px; border-radius: 8px; border: 1px solid var(--border-light);">
+                <span style="font-size: 0.78rem; color: var(--text-muted); display: block; margin-bottom: 4px;">Identificación (NIT/Cédula)</span>
+                <span id="profile-ident-val" style="font-weight: 600; color: var(--text-main);">...</span>
+              </div>
+            </div>
+
+            <div class="profile-detail-item" style="background: rgba(255, 255, 255, 0.02); padding: 12px; border-radius: 8px; border: 1px solid var(--border-light);">
+              <span style="font-size: 0.78rem; color: var(--text-muted); display: block; margin-bottom: 4px;">Dirección Física</span>
+              <span id="profile-address-val" style="font-weight: 600; color: var(--text-main);">No registrada</span>
+            </div>
+
+            <div class="profile-detail-item" style="background: rgba(255, 255, 255, 0.02); padding: 12px; border-radius: 8px; border: 1px solid var(--border-light);">
+              <span style="font-size: 0.78rem; color: var(--text-muted); display: block; margin-bottom: 4px;">Correo Electrónico</span>
+              <span id="profile-email-val" style="font-weight: 600; color: var(--text-main);">No registrado</span>
+            </div>
+
+            <div class="profile-detail-item" style="background: rgba(255, 255, 255, 0.02); padding: 12px; border-radius: 8px; border: 1px solid var(--border-light);">
+              <span style="font-size: 0.78rem; color: var(--text-muted); display: block; margin-bottom: 4px;">Teléfono de Contacto</span>
+              <span id="profile-phone-val" style="font-weight: 600; color: var(--text-main);">No registrado</span>
+            </div>
+
+            <div class="profile-details-subgrid-2" style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+              <div class="profile-detail-item" style="background: rgba(255, 255, 255, 0.02); padding: 12px; border-radius: 8px; border: 1px solid var(--border-light);">
+                <span style="font-size: 0.78rem; color: var(--text-muted); display: block; margin-bottom: 4px;">Usuario de Acceso</span>
+                <span id="profile-username-val" style="font-weight: 600; color: var(--text-main);">...</span>
+              </div>
+              <div class="profile-detail-item" style="background: rgba(255, 255, 255, 0.02); padding: 12px; border-radius: 8px; border: 1px solid var(--border-light);">
+                <span style="font-size: 0.78rem; color: var(--text-muted); display: block; margin-bottom: 4px;">Fecha de Registro</span>
+                <span id="profile-date-val" style="font-weight: 600; color: var(--text-main);">...</span>
+              </div>
+            </div>
+
+            <div class="profile-detail-item" style="background: rgba(255, 255, 255, 0.02); padding: 12px; border-radius: 8px; border: 1px solid var(--border-light);">
+              <span style="font-size: 0.78rem; color: var(--text-muted); display: block; margin-bottom: 4px;">Contraseña</span>
+              <div style="display: flex; justify-content: space-between; align-items: center;">
+                <span id="profile-password-val" style="font-weight: 600; color: var(--text-main); font-family: monospace; letter-spacing: 2px;">••••••••</span>
+                <button type="button" id="toggle-profile-pwd-btn" style="background: transparent; border: none; color: var(--color-primary); cursor: pointer; padding: 2px 6px;">
+                  <i class="fa-solid fa-eye"></i>
+                </button>
+              </div>
+            </div>
+          </div>
+          
+          <button id="profile-edit-btn" class="btn btn-accent" style="width: 100%; gap: 8px;">
+            <i class="fa-solid fa-pen-to-square"></i> Editar Mis Datos
+          </button>
+        </div>
+
+        <!-- Formulario de Edición (Oculto inicialmente) -->
+        <form id="profile-edit-form" style="display: none;">
+          <div class="form-group">
+            <label for="edit-client-name-input">Nombre / Razón Social</label>
+            <input type="text" id="edit-client-name-input" class="form-control" required>
+          </div>
+          <div class="form-group">
+            <label for="edit-client-address-input">Dirección</label>
+            <input type="text" id="edit-client-address-input" class="form-control" placeholder="Ej: Calle 10 # 4-50">
+          </div>
+          <div class="form-group">
+            <label for="edit-client-email-input">Correo Electrónico</label>
+            <input type="email" id="edit-client-email-input" class="form-control" placeholder="Ej: clinica@correo.com">
+          </div>
+          <div class="form-group">
+            <label for="edit-client-phone-input">Teléfono</label>
+            <input type="text" id="edit-client-phone-input" class="form-control" placeholder="Ej: +57 312 4567890">
+          </div>
+          <div class="form-group">
+            <label for="edit-client-password-input">Nueva Contraseña (Dejar vacío para conservar actual)</label>
+            <input type="password" id="edit-client-password-input" class="form-control" placeholder="Escribe nueva contraseña si deseas cambiarla...">
+          </div>
+          
+          <div style="display: flex; gap: 10px; margin-top: 1.5rem;">
+            <button type="submit" class="btn btn-primary" style="flex: 1; gap: 6px;">
+              <i class="fa-solid fa-floppy-disk"></i> Guardar Cambios
+            </button>
+            <button type="button" id="profile-cancel-btn" class="btn btn-secondary" style="flex: 1; gap: 6px;">
+              Cancelar
+            </button>
+          </div>
+        </form>
       </div>
     </div>
   </div>

@@ -42,6 +42,9 @@ function createDefaultMockDB() {
         usuario: "sanfrancisco",
         contrasena: "vet123",
         rol: "cliente",
+        direccion: "Calle 10 # 5-20, Envigado",
+        correo: "contacto@vetsanfrancisco.com",
+        telefono: "+57 300 123 4567",
         fecha_registro: new Date().toISOString().split('T')[0]
       }
     ],
@@ -118,16 +121,14 @@ function handleMockAction(action, data) {
       const user = db.Usuarios.find(u => u.usuario.toLowerCase() === username && u.contrasena === password);
       
       if (user) {
-        const { contrasena, ...safeUser } = user;
-        return { success: true, user: safeUser };
+        return { success: true, user };
       }
       return { success: false, message: "Usuario o contraseña incorrectos (Modo Demo)." };
     }
     
     case 'getClients': {
       const clients = db.Usuarios
-        .filter(u => u.rol === 'cliente')
-        .map(({ contrasena, ...c }) => c);
+        .filter(u => u.rol === 'cliente');
       return { success: true, clients };
     }
     
@@ -156,12 +157,35 @@ function handleMockAction(action, data) {
         usuario: username,
         contrasena: data.contrasena,
         rol: "cliente",
+        direccion: data.direccion || "",
+        correo: data.correo || "",
+        telefono: data.telefono || "",
         fecha_registro: new Date().toISOString().split('T')[0]
       };
       
       db.Usuarios.push(newClient);
       writeMockDB(db);
       return { success: true, message: "Cliente registrado con éxito en modo Demo.", client: { id_usuario: nextId, nombre: data.nombre } };
+    }
+    
+    case 'updateClient': {
+      const idUsuario = data.id_usuario;
+      const client = db.Usuarios.find(u => u.id_usuario === idUsuario);
+      
+      if (!client) {
+        return { success: false, message: "El cliente especificado no existe." };
+      }
+      
+      if (data.nombre !== undefined) client.nombre = data.nombre;
+      if (data.direccion !== undefined) client.direccion = data.direccion;
+      if (data.correo !== undefined) client.correo = data.correo;
+      if (data.telefono !== undefined) client.telefono = data.telefono;
+      if (data.contrasena !== undefined && data.contrasena.trim() !== "") {
+        client.contrasena = data.contrasena;
+      }
+      
+      writeMockDB(db);
+      return { success: true, message: "Perfil actualizado correctamente.", user: client };
     }
     
     case 'addResult': {
@@ -273,6 +297,67 @@ function handleMockAction(action, data) {
       return { success: true, results };
     }
     
+    case 'addAdmin': {
+      const username = data.usuario.trim().toLowerCase();
+      
+      if (db.Usuarios.some(u => u.usuario.toLowerCase() === username)) {
+        return { success: false, message: "El nombre de usuario ya existe." };
+      }
+      
+      // Generar ID
+      const lastIdNumA = db.Usuarios.reduce((max, u) => {
+        const num = parseInt(u.id_usuario.substring(1));
+        return num > max ? num : max;
+      }, 0);
+      const nextIdA = "U" + String(lastIdNumA + 1).padStart(3, '0');
+      
+      const newAdmin = {
+        id_usuario: nextIdA,
+        nombre: data.nombre,
+        identificacion: data.identificacion || "00000000",
+        usuario: username,
+        contrasena: data.contrasena,
+        rol: "admin",
+        fecha_registro: new Date().toISOString().split('T')[0]
+      };
+      
+      db.Usuarios.push(newAdmin);
+      writeMockDB(db);
+      return { success: true, message: "Administrador registrado con éxito en modo Demo.", user: { id_usuario: nextIdA, nombre: data.nombre, rol: "admin" } };
+    }
+    
+    case 'deleteClient': {
+      const idUsuario = data.id_usuario;
+      const clientIndex = db.Usuarios.findIndex(u => u.id_usuario === idUsuario);
+      
+      if (clientIndex === -1) {
+        return { success: false, message: "El cliente especificado no existe en la base de datos local." };
+      }
+      
+      // Eliminar el cliente
+      db.Usuarios.splice(clientIndex, 1);
+      
+      // Buscar todos los exámenes asociados y guardarlos en una lista para borrar los archivos físicos
+      const deletedFiles = [];
+      db.Resultados = db.Resultados.filter(r => {
+        if (r.id_usuario === idUsuario) {
+          if (r.nombre_archivo && r.nombre_archivo !== 'ejemplo_examen.pdf') {
+            deletedFiles.push(r.nombre_archivo);
+          }
+          return false; // Eliminar de la base de datos
+        }
+        return true; // Conservar
+      });
+      
+      writeMockDB(db);
+      
+      return {
+        success: true,
+        message: "Cliente y sus exámenes asociados eliminados de la base de datos local.",
+        archivos_eliminados: deletedFiles
+      };
+    }
+
     default:
       return { success: false, message: `Acción desconocida en MockDB: ${action}` };
   }
@@ -285,9 +370,12 @@ module.exports = {
   login: (username, password) => callSheetsAPI('login', { username, password }),
   getClients: () => callSheetsAPI('getClients'),
   addClient: (clientData) => callSheetsAPI('addClient', clientData),
+  addAdmin: (adminData) => callSheetsAPI('addAdmin', adminData),
+  updateClient: (clientData) => callSheetsAPI('updateClient', clientData),
   addResult: (resultData) => callSheetsAPI('addResult', resultData),
   getClientResults: (id_usuario) => callSheetsAPI('getClientResults', { id_usuario }),
   deleteResult: (id_resultado) => callSheetsAPI('deleteResult', { id_resultado }), // Exportado
+  deleteClient: (id_usuario) => callSheetsAPI('deleteClient', { id_usuario }),
   deleteAllResults: () => callSheetsAPI('deleteAllResults'),
   getAllResults: () => callSheetsAPI('getAllResults'),
   logAccess: (usuario, rol, estado) => callSheetsAPI('logAccess', { usuario, rol, estado })

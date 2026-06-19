@@ -40,103 +40,35 @@
       <span id="admin-global-alert-text"></span>
     </div>
 
-    <!-- ── Dashboard Grid ────────────────────────────────────────────── -->
-    <div class="dashboard-grid admin-layout">
+    <!-- ── Barra de Navegación del Administrador ──────────────────────── -->
+    <nav class="admin-nav">
+      <button class="nav-tab active" data-tab="tab-history">
+        <i class="fa-solid fa-folder-tree"></i>
+        <span>Historial de Exámenes</span>
+      </button>
+      <button class="nav-tab" data-tab="tab-register">
+        <i class="fa-solid fa-user-plus"></i>
+        <span>Registrar Usuario</span>
+      </button>
+      <button class="nav-tab" data-tab="tab-send">
+        <i class="fa-solid fa-share-nodes"></i>
+        <span>Enviar Resultados</span>
+      </button>
+      <button class="nav-tab" data-tab="tab-clients">
+        <i class="fa-solid fa-address-book"></i>
+        <span>Clientes y Perfiles</span>
+      </button>
+      <button class="nav-tab" data-tab="tab-danger">
+        <i class="fa-solid fa-triangle-exclamation"></i>
+        <span>Zona de Peligro</span>
+      </button>
+    </nav>
 
-      <!-- ── Columna Izquierda: Clientes ──────────────────────────── -->
-      <div style="display: flex; flex-direction: column; gap: 1.5rem;">
+    <!-- ── Contenidos de las Pestañas ────────────────────────────────── -->
 
-        <!-- Registrar Cliente -->
-        <div class="panel-card">
-          <h3 class="panel-card-title">
-            <i class="fa-solid fa-user-plus"></i> Registrar Cliente
-          </h3>
-          <p style="font-size: 0.8rem; color: var(--text-muted); margin-top: -1rem; margin-bottom: 1rem;">
-            Clínicas, veterinarios o propietarios que verán los exámenes.
-          </p>
-
-          <form id="create-client-form">
-            <div class="form-group">
-              <label for="new-client-name">Nombre / Razón Social</label>
-              <input type="text" id="new-client-name" class="form-control"
-                     placeholder="Ej: Clínica Vet. San Francisco" required>
-            </div>
-
-            <div class="form-group">
-              <label for="new-client-id">Identificación / NIT / Cédula</label>
-              <input type="text" id="new-client-id" class="form-control"
-                     placeholder="Ej: 900123456" required>
-            </div>
-
-            <div class="form-group">
-              <label for="new-client-username">Usuario de Acceso</label>
-              <input type="text" id="new-client-username" class="form-control"
-                     placeholder="Ej: vetsanfrancisco" required>
-            </div>
-
-            <div class="form-group">
-              <label for="new-client-password">Contraseña temporal</label>
-              <div style="position: relative;">
-                <input type="text" id="new-client-password" class="form-control"
-                       placeholder="Ej: sirio2026" required
-                       maxlength="15"
-                       style="padding-right: 50px;">
-                <span id="pwd-char-count"
-                      style="position: absolute; right: 12px; top: 50%; transform: translateY(-50%);
-                             font-size: 0.75rem; color: var(--text-muted); pointer-events: none; font-weight: 600;">
-                  0/15
-                </span>
-              </div>
-              <p style="font-size: 0.72rem; color: var(--text-muted); margin-top: 4px;">
-                Máximo 15 caracteres
-              </p>
-            </div>
-
-            <button type="submit" class="btn btn-accent" style="width: 100%; margin-top: 0.25rem;">
-              <i class="fa-solid fa-user-check"></i> Registrar Cliente
-            </button>
-          </form>
-        </div>
-
-        <!-- Lista de Clientes -->
-        <div class="panel-card" style="flex-grow: 1;">
-          <h3 class="panel-card-title">
-            <i class="fa-solid fa-users"></i> Clientes Registrados
-          </h3>
-
-          <div class="search-container">
-            <i class="fa-solid fa-magnifying-glass"></i>
-            <input type="text" id="search-client" placeholder="Buscar cliente por nombre o ID...">
-          </div>
-
-          <div class="client-list" id="clients-container">
-            <div style="text-align: center; color: var(--text-dark); padding: 2rem 0;">
-              <i class="fa-solid fa-circle-notch fa-spin"
-                 style="font-size: 1.5rem; margin-bottom: 0.5rem; display: block;"></i>
-              <p>Cargando clientes...</p>
-            </div>
-          </div>
-        </div>
-
-        <!-- Zona de Peligro -->
-        <div class="panel-card" style="margin-top: 1rem; border-color: rgba(239, 68, 68, 0.25);">
-          <h3 class="panel-card-title" style="color: var(--error);">
-            <i class="fa-solid fa-triangle-exclamation"></i> Zona de Peligro
-          </h3>
-          <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 1rem;">
-            Acciones críticas que afectan la integridad de los datos.
-          </p>
-          <button class="btn btn-danger" id="delete-all-btn" style="width: 100%;">
-            <i class="fa-solid fa-dumpster-fire"></i> Eliminar Todos los Exámenes
-          </button>
-        </div>
-
-      </div>
-      <!-- ── FIN Columna Izquierda ──────────────────────────────────── -->
-
-      <!-- ── Columna Derecha: Panel de Detalle ─────────────────────── -->
-      <div class="panel-card" id="detail-panel">
-
+    <!-- Pestaña 1: Historial General de Exámenes -->
+    <div id="tab-history" class="tab-content">
+      <div class="panel-card">
         <!-- Vista: Historial General (estado inicial) -->
         <div id="general-overview-view" style="display: block; height: 100%;">
           <div class="overview-header">
@@ -183,74 +115,327 @@
             </div>
           </div>
         </div>
-        <!-- FIN Vista General -->
+      </div>
+    </div>
 
-        <!-- Vista: Cliente Activo Seleccionado -->
-        <div id="active-client-view" style="display: none; height: 100%;">
-          <div class="active-client-header">
-            <div class="active-client-details">
-              <h3 id="active-client-name">Juan Pérez</h3>
-              <p>
-                <i class="fa-solid fa-id-card"></i>
-                ID/NIT: <span id="active-client-id-val">12345678</span> |
-                Usuario: <span id="active-client-username-val">juanp</span>
-              </p>
-            </div>
-            <button class="btn btn-secondary btn-icon" id="deselect-client-btn" title="Cerrar cliente">
-              <i class="fa-solid fa-xmark"></i>
+    <!-- Pestaña 2: Registrar Usuario -->
+    <div id="tab-register" class="tab-content" style="display: none;">
+      <div class="panel-card centered-panel">
+
+        <!-- Selector de Tipo de Registro -->
+        <div style="margin-bottom: 1.5rem;">
+          <p style="font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-muted); font-weight: 600; margin-bottom: 0.75rem; text-align: center;">
+            Tipo de Usuario a Registrar
+          </p>
+          <div style="display: flex; gap: 10px; border: 1px solid var(--border-light); border-radius: 12px; padding: 6px; background: rgba(255,255,255,0.02);">
+            <button type="button" id="reg-role-client-btn"
+              style="flex: 1; padding: 10px 8px; border-radius: 8px; border: none; cursor: pointer; font-family: var(--font-family); font-size: 0.88rem; font-weight: 600; transition: var(--transition-smooth); background: var(--color-primary); color: #fff; display: flex; align-items: center; justify-content: center; gap: 8px;">
+              <i class="fa-solid fa-user-injured"></i> Cliente
+            </button>
+            <button type="button" id="reg-role-admin-btn"
+              style="flex: 1; padding: 10px 8px; border-radius: 8px; border: none; cursor: pointer; font-family: var(--font-family); font-size: 0.88rem; font-weight: 600; transition: var(--transition-smooth); background: transparent; color: var(--text-muted); display: flex; align-items: center; justify-content: center; gap: 8px;">
+              <i class="fa-solid fa-user-shield"></i> Administrador
             </button>
           </div>
+        </div>
 
-          <div style="display: flex; flex-direction: column; gap: 1.5rem;">
-            <!-- Formulario de Publicación -->
-            <div>
-              <h4 style="font-size: 1rem; font-weight: 600; margin-bottom: 1rem; color: var(--color-primary);">
-                <i class="fa-solid fa-cloud-arrow-up"></i> Publicar Resultados para este Cliente
-              </h4>
+        <!-- Encabezado dinámico -->
+        <h3 class="panel-card-title" id="reg-form-title">
+          <i class="fa-solid fa-user-plus"></i> Registrar Cliente
+        </h3>
+        <p id="reg-form-subtitle" style="font-size: 0.8rem; color: var(--text-muted); margin-top: -1rem; margin-bottom: 1rem;">
+          Clínicas, veterinarios o propietarios que verán los exámenes.
+        </p>
 
-              <form id="upload-result-form">
-                <input type="hidden" id="upload-client-id">
+        <form id="create-client-form">
+          <!-- Campo: Nombre -->
+          <div class="form-group">
+            <label for="new-client-name" id="reg-label-name">Nombre / Razón Social</label>
+            <input type="text" id="new-client-name" class="form-control"
+                   placeholder="Ej: Clínica Vet. San Francisco" required>
+          </div>
 
-                <div class="form-group">
-                  <label>Archivos de Resultados (PDF)</label>
-
-                  <div class="file-upload-area" id="dropzone">
-                    <i class="fa-solid fa-file-pdf"></i>
-                    <p class="file-upload-text">Arrastra tus PDFs aquí o toca para seleccionar</p>
-                    <p class="file-upload-subtext">Puedes elegir varios archivos (máx. 10 MB c/u)</p>
-                    <input type="file" id="pdf-input" class="file-upload-input"
-                           accept="application/pdf" multiple>
-                  </div>
-
-                  <div id="file-list-container"
-                       style="display: none; flex-direction: column; gap: 8px; margin-bottom: 1rem; width: 100%;">
-                  </div>
-                </div>
-
-                <button type="submit" class="btn btn-primary" style="width: 100%;" id="submit-upload-btn">
-                  <i class="fa-solid fa-share-nodes"></i> Publicar Exámenes en el Portal
-                </button>
-              </form>
+          <!-- Campos exclusivos de Cliente -->
+          <div id="reg-client-only-fields">
+            <div class="form-group">
+              <label for="new-client-id">Identificación / NIT / Cédula</label>
+              <input type="text" id="new-client-id" class="form-control"
+                     placeholder="Ej: 900123456">
             </div>
 
-            <!-- Historial del Cliente -->
-            <div style="border-top: 1px solid var(--border-light); padding-top: 1.5rem;">
-              <h4 style="font-size: 1rem; font-weight: 600; margin-bottom: 1rem;">
-                <i class="fa-solid fa-clock-rotate-left"></i> Historial de este Cliente
-              </h4>
-              <div class="client-list" id="client-history-container" style="max-height: 240px;">
-                <p style="text-align: center; color: var(--text-dark); padding: 1.5rem 0;">
-                  No hay exámenes publicados para este cliente.
+            <div class="form-group">
+              <label for="new-client-address">Dirección Física (Opcional)</label>
+              <input type="text" id="new-client-address" class="form-control"
+                     placeholder="Ej: Calle 10 # 5-20, Envigado">
+            </div>
+
+            <div class="form-group">
+              <label for="new-client-email">Correo Electrónico (Opcional)</label>
+              <input type="email" id="new-client-email" class="form-control"
+                     placeholder="Ej: contacto@vetsanfrancisco.com">
+            </div>
+
+            <div class="form-group">
+              <label for="new-client-phone">Teléfono (Opcional)</label>
+              <input type="text" id="new-client-phone" class="form-control"
+                     placeholder="Ej: +57 300 123 4567">
+            </div>
+          </div>
+
+          <!-- Campo: Usuario -->
+          <div class="form-group">
+            <label for="new-client-username" id="reg-label-username">Usuario de Acceso</label>
+            <input type="text" id="new-client-username" class="form-control"
+                   placeholder="Ej: vetsanfrancisco" required>
+          </div>
+
+          <!-- Campo: Contraseña -->
+          <div class="form-group">
+            <label for="new-client-password">Contraseña</label>
+            <div style="position: relative;">
+              <input type="text" id="new-client-password" class="form-control"
+                     placeholder="Ej: sirio2026" required
+                     maxlength="15"
+                     style="padding-right: 50px;">
+              <span id="pwd-char-count"
+                    style="position: absolute; right: 12px; top: 50%; transform: translateY(-50%);
+                           font-size: 0.75rem; color: var(--text-muted); pointer-events: none; font-weight: 600;">
+                0/15
+              </span>
+            </div>
+            <p style="font-size: 0.72rem; color: var(--text-muted); margin-top: 4px;">
+              Máximo 15 caracteres
+            </p>
+          </div>
+
+          <button type="submit" id="reg-submit-btn" class="btn btn-accent" style="width: 100%; margin-top: 0.25rem;">
+            <i class="fa-solid fa-user-check"></i> Registrar Cliente
+          </button>
+        </form>
+      </div>
+    </div>
+
+    <!-- Pestaña 3: Enviar Resultados -->
+    <div id="tab-send" class="tab-content" style="display: none;">
+      <div class="dashboard-grid admin-layout">
+        <!-- Lista de Clientes -->
+        <div class="panel-card" style="flex-grow: 1;">
+          <h3 class="panel-card-title">
+            <i class="fa-solid fa-users"></i> Clientes Registrados
+          </h3>
+
+          <div class="search-container">
+            <i class="fa-solid fa-magnifying-glass"></i>
+            <input type="text" id="search-client" placeholder="Buscar cliente por nombre o ID...">
+          </div>
+
+          <div class="client-list" id="clients-container">
+            <div style="text-align: center; color: var(--text-dark); padding: 2rem 0;">
+              <i class="fa-solid fa-circle-notch fa-spin"
+                 style="font-size: 1.5rem; margin-bottom: 0.5rem; display: block;"></i>
+              <p>Cargando clientes...</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Panel de Detalle -->
+        <div class="panel-card" id="detail-panel">
+          <!-- Vista: Ningún Cliente Seleccionado -->
+          <div id="no-client-selected-view" style="display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 4rem 2rem; color: var(--text-muted); gap: 1.5rem; height: 100%;">
+            <div style="font-size: 3.5rem; color: var(--color-primary); opacity: 0.8;">
+              <i class="fa-solid fa-users-viewfinder"></i>
+            </div>
+            <h3 style="font-size: 1.3rem; font-weight: 600; color: var(--text-main);">Seleccione un Cliente</h3>
+            <p style="max-width: 340px; font-size: 0.9rem; line-height: 1.6;">
+              Elija un cliente de la lista de la izquierda para enviarle nuevos exámenes en formato PDF o consultar sus reportes previos de manera individual.
+            </p>
+          </div>
+
+          <!-- Vista: Cliente Activo Seleccionado -->
+          <div id="active-client-view" style="display: none; height: 100%;">
+            <div class="active-client-header">
+              <div class="active-client-details">
+                <h3 id="active-client-name">Juan Pérez</h3>
+                <p>
+                  <i class="fa-solid fa-id-card"></i>
+                  ID/NIT: <span id="active-client-id-val">12345678</span> |
+                  Usuario: <span id="active-client-username-val">juanp</span>
                 </p>
+              </div>
+              <button class="btn btn-secondary btn-icon" id="deselect-client-btn" title="Cerrar cliente">
+                <i class="fa-solid fa-xmark"></i>
+              </button>
+            </div>
+
+            <div style="display: flex; flex-direction: column; gap: 1.5rem;">
+              <!-- Formulario de Publicación -->
+              <div>
+                <h4 style="font-size: 1rem; font-weight: 600; margin-bottom: 1rem; color: var(--color-primary);">
+                  <i class="fa-solid fa-cloud-arrow-up"></i> Publicar Resultados para este Cliente
+                </h4>
+
+                <form id="upload-result-form">
+                  <input type="hidden" id="upload-client-id">
+
+                  <div class="form-group">
+                    <label>Archivos de Resultados (PDF)</label>
+
+                    <div class="file-upload-area" id="dropzone">
+                      <i class="fa-solid fa-file-pdf"></i>
+                      <p class="file-upload-text">Arrastra tus PDFs aquí o toca para seleccionar</p>
+                      <p class="file-upload-subtext">Puedes elegir varios archivos (máx. 10 MB c/u)</p>
+                      <input type="file" id="pdf-input" class="file-upload-input"
+                             accept="application/pdf" multiple>
+                    </div>
+
+                    <div id="file-list-container"
+                         style="display: none; flex-direction: column; gap: 8px; margin-bottom: 1rem; width: 100%;">
+                    </div>
+                  </div>
+
+                  <button type="submit" class="btn btn-primary" style="width: 100%;" id="submit-upload-btn">
+                    <i class="fa-solid fa-share-nodes"></i> Publicar Exámenes en el Portal
+                  </button>
+                </form>
+              </div>
+
+              <!-- Historial del Cliente -->
+              <div style="border-top: 1px solid var(--border-light); padding-top: 1.5rem;">
+                <h4 style="font-size: 1rem; font-weight: 600; margin-bottom: 1rem;">
+                  <i class="fa-solid fa-clock-rotate-left"></i> Historial de este Cliente
+                </h4>
+                <div class="client-list" id="client-history-container" style="max-height: 240px;">
+                  <p style="text-align: center; color: var(--text-dark); padding: 1.5rem 0;">
+                    No hay exámenes publicados para este cliente.
+                  </p>
+                </div>
               </div>
             </div>
           </div>
         </div>
-        <!-- FIN Vista Cliente Activo -->
-
       </div>
-      <!-- ── FIN Columna Derecha ────────────────────────────────────── -->
+    </div>
 
+    <!-- Pestaña 4: Ver Clientes y Perfiles -->
+    <div id="tab-clients" class="tab-content" style="display: none;">
+      <div class="dashboard-grid admin-layout">
+        <!-- Lista de Clientes -->
+        <div class="panel-card" style="flex-grow: 1; max-height: 600px; display: flex; flex-direction: column;">
+          <h3 class="panel-card-title" style="margin-bottom: 1rem;">
+            <i class="fa-solid fa-address-book"></i> Directorio de Clientes
+          </h3>
+          <div class="search-container" style="margin-bottom: 1rem;">
+            <i class="fa-solid fa-magnifying-glass"></i>
+            <input type="text" id="search-dir-client" placeholder="Buscar cliente por nombre o DNI...">
+          </div>
+          <div class="client-list" id="dir-clients-container" style="flex-grow: 1; overflow-y: auto;">
+            <!-- Cargar lista de clientes aquí -->
+          </div>
+        </div>
+
+        <!-- Detalle del Cliente Seleccionado -->
+        <div class="panel-card" style="flex-grow: 2; min-height: 350px;">
+          <div id="dir-no-client-selected" class="detail-view-placeholder" style="height: 100%;">
+            <i class="fa-solid fa-address-card" style="font-size: 3rem; color: var(--text-dark); opacity: 0.3; margin-bottom: 1rem;"></i>
+            <h3>Seleccione un Cliente</h3>
+            <p>Seleccione un cliente de la lista de la izquierda para ver su perfil completo e información de contacto.</p>
+          </div>
+          
+          <div id="dir-client-detail-view" style="display: none;">
+            <div class="active-client-header" style="border-color: var(--color-primary); margin-bottom: 1.5rem;">
+              <div class="active-client-details">
+                <h3 id="dir-client-name" style="font-size: 1.25rem; font-weight: 700; color: var(--color-primary);">...</h3>
+                <p><i class="fa-solid fa-passport"></i> ID/DNI: <span id="dir-client-id-val" style="font-weight: 600;">...</span></p>
+              </div>
+            </div>
+            
+            <div class="profile-details-grid" style="display: grid; grid-template-columns: 1fr; gap: 1rem; margin-bottom: 1.5rem;">
+              <div class="profile-detail-item" style="background: rgba(255, 255, 255, 0.02); padding: 12px; border-radius: 8px; border: 1px solid var(--border-light);">
+                <span style="font-size: 0.78rem; color: var(--text-muted); display: block; margin-bottom: 4px;">Usuario de Acceso</span>
+                <span id="dir-client-username-val" style="font-weight: 600; color: var(--text-main);">...</span>
+              </div>
+              <div class="profile-detail-item" style="background: rgba(255, 255, 255, 0.02); padding: 12px; border-radius: 8px; border: 1px solid var(--border-light);">
+                <span style="font-size: 0.78rem; color: var(--text-muted); display: block; margin-bottom: 4px;">Contraseña</span>
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                  <span id="dir-client-password-val" style="font-weight: 600; color: var(--text-main); font-family: monospace; letter-spacing: 2px;">••••••••</span>
+                  <button type="button" id="toggle-dir-pwd-btn" style="background: transparent; border: none; color: var(--color-primary); cursor: pointer; padding: 2px 6px;">
+                    <i class="fa-solid fa-eye"></i>
+                  </button>
+                </div>
+              </div>
+              <div class="profile-detail-item" style="background: rgba(255, 255, 255, 0.02); padding: 12px; border-radius: 8px; border: 1px solid var(--border-light);">
+                <span style="font-size: 0.78rem; color: var(--text-muted); display: block; margin-bottom: 4px;">Fecha de Registro</span>
+                <span id="dir-client-date-val" style="font-weight: 600; color: var(--text-main);">...</span>
+              </div>
+              <div class="profile-detail-item" style="background: rgba(255, 255, 255, 0.02); padding: 12px; border-radius: 8px; border: 1px solid var(--border-light);">
+                <span style="font-size: 0.78rem; color: var(--text-muted); display: block; margin-bottom: 4px;">Dirección</span>
+                <span id="dir-client-address-val" style="font-weight: 600; color: var(--text-main);">...</span>
+              </div>
+              <div class="profile-detail-item" style="background: rgba(255, 255, 255, 0.02); padding: 12px; border-radius: 8px; border: 1px solid var(--border-light);">
+                <span style="font-size: 0.78rem; color: var(--text-muted); display: block; margin-bottom: 4px;">Correo Electrónico</span>
+                <span id="dir-client-email-val" style="font-weight: 600; color: var(--text-main);">...</span>
+              </div>
+              <div class="profile-detail-item" style="background: rgba(255, 255, 255, 0.02); padding: 12px; border-radius: 8px; border: 1px solid var(--border-light);">
+                <span style="font-size: 0.78rem; color: var(--text-muted); display: block; margin-bottom: 4px;">Teléfono</span>
+                <span id="dir-client-phone-val" style="font-weight: 600; color: var(--text-main);">...</span>
+              </div>
+            </div>
+            
+            <button id="dir-edit-client-btn" class="btn btn-accent" style="width: 100%; gap: 8px; justify-content: center;">
+              <i class="fa-solid fa-user-pen"></i> Editar Información de Cliente
+            </button>
+            <button id="dir-delete-client-btn" class="btn btn-danger" style="width: 100%; gap: 8px; justify-content: center; margin-top: 0.75rem;">
+              <i class="fa-solid fa-user-slash"></i> Eliminar Cliente del Sistema
+            </button>
+            
+            <!-- Formulario de edición (inicialmente oculto) -->
+            <form id="dir-edit-client-form" style="display: none; margin-top: 1.5rem; border-top: 1px solid var(--border-light); padding-top: 1.5rem;">
+              <h4 style="margin-bottom: 1rem; color: var(--color-accent);"><i class="fa-solid fa-pen-to-square"></i> Modificar Datos del Cliente</h4>
+              
+              <div class="form-group">
+                <label for="edit-dir-name">Nombre / Razón Social</label>
+                <input type="text" id="edit-dir-name" class="form-control" required>
+              </div>
+              <div class="form-group">
+                <label for="edit-dir-address">Dirección</label>
+                <input type="text" id="edit-dir-address" class="form-control">
+              </div>
+              <div class="form-group">
+                <label for="edit-dir-email">Correo Electrónico</label>
+                <input type="email" id="edit-dir-email" class="form-control">
+              </div>
+              <div class="form-group">
+                <label for="edit-dir-phone">Teléfono</label>
+                <input type="text" id="edit-dir-phone" class="form-control">
+              </div>
+              <div class="form-group">
+                <label for="edit-dir-password">Contraseña (Dejar vacío para conservar actual)</label>
+                <input type="text" id="edit-dir-password" class="form-control" placeholder="Escribir nueva contraseña si desea cambiarla...">
+              </div>
+              
+              <div style="display: flex; gap: 10px; margin-top: 1rem;">
+                <button type="submit" class="btn btn-primary" style="flex: 1;"><i class="fa-solid fa-circle-check"></i> Guardar</button>
+                <button type="button" id="cancel-edit-dir-btn" class="btn btn-secondary" style="flex: 1;">Cancelar</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Pestaña 4: Zona de Peligro -->
+    <div id="tab-danger" class="tab-content" style="display: none;">
+      <div class="panel-card centered-panel" style="border-color: rgba(239, 68, 68, 0.25);">
+        <h3 class="panel-card-title" style="color: var(--error);">
+          <i class="fa-solid fa-triangle-exclamation"></i> Zona de Peligro
+        </h3>
+        <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 1rem;">
+          Acciones críticas que afectan la integridad de los datos.
+        </p>
+        <button class="btn btn-danger" id="delete-all-btn" style="width: 100%;">
+          <i class="fa-solid fa-dumpster-fire"></i> Eliminar Todos los Exámenes
+        </button>
+      </div>
     </div>
   </div>
 
@@ -304,6 +489,37 @@
         <button class="btn btn-secondary" id="cancel-delete-all-btn">Cancelar</button>
         <button class="btn btn-danger" id="confirm-delete-all-btn" disabled>
           <i class="fa-solid fa-dumpster-fire"></i> Confirmar Eliminación Total
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal de Confirmación de Eliminación de Cliente -->
+  <div id="delete-client-modal" class="modal-overlay" style="display: none;">
+    <div class="modal-content" style="max-width: 460px;">
+      <div class="modal-header">
+        <h3 class="modal-title" style="color: var(--error);">
+          <i class="fa-solid fa-user-slash"></i> Confirmar Eliminación de Cliente
+        </h3>
+        <button class="btn-close-modal" id="close-delete-client-modal">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+      <div class="modal-body">
+        <p style="margin-bottom: 1rem; font-size: 0.9rem;">
+          Está a punto de eliminar al cliente <strong id="delete-client-modal-name"></strong> de manera definitiva. Esto borrará su cuenta, todo su historial de exámenes y todos sus archivos PDF del servidor.
+        </p>
+        <p style="margin-bottom: 1.25rem; font-size: 0.85rem; color: var(--text-muted);">
+          Esta acción es <strong>IRREVERSIBLE</strong>. Para proceder, escriba exactamente el usuario de acceso (<strong id="delete-client-modal-username" style="color: var(--color-primary);"></strong>):
+        </p>
+        <input type="text" id="delete-client-confirm-input" class="form-control" autocomplete="off"
+               placeholder="Escriba el usuario para confirmar..."
+               style="text-align: center; font-weight: 600; text-transform: lowercase;">
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" id="cancel-delete-client-btn">Cancelar</button>
+        <button class="btn btn-danger" id="confirm-delete-client-btn" disabled>
+          <i class="fa-solid fa-trash-can"></i> Eliminar Cliente
         </button>
       </div>
     </div>
