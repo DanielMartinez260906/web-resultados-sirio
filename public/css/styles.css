@@ -1445,7 +1445,7 @@ body.light-theme .profile-detail-item:hover {
 
 .dev-credits-label {
   font-size: 0.7rem;
-  color: var(--text-dark);
+  color: #94a3b8;
   text-transform: uppercase;
   letter-spacing: 0.08em;
   font-weight: 600;
@@ -1463,28 +1463,28 @@ body.light-theme .profile-detail-item:hover {
   justify-content: center;
   gap: 12px;
   padding: 8px 16px;
-  background: rgba(15, 28, 48, 0.4);
-  border: 1px solid var(--border-light);
+  background: #0f1c30;
+  border: 1px solid rgba(14, 165, 233, 0.25);
   border-radius: 12px;
   transition: var(--transition-smooth);
 }
 
 .dev-link:hover {
-  background: rgba(15, 28, 48, 0.95);
+  background: #0f1c30;
   border-color: var(--color-primary);
   transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(14, 165, 233, 0.15);
+  box-shadow: 0 4px 16px rgba(14, 165, 233, 0.2);
 }
 
-/* Light Theme overrides for dev link background */
+/* Force dark background even in light theme */
 body.light-theme .dev-link {
-  background: rgba(15, 23, 42, 0.03);
-  border-color: rgba(15, 23, 42, 0.08);
+  background: #0f1c30;
+  border-color: rgba(14, 165, 233, 0.25);
 }
 body.light-theme .dev-link:hover {
-  background: #ffffff;
+  background: #0f1c30;
   border-color: var(--color-primary);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  box-shadow: 0 4px 16px rgba(14, 165, 233, 0.2);
 }
 
 .dev-icon {
@@ -1503,8 +1503,9 @@ body.light-theme .dev-link:hover {
   display: block;
 }
 
+/* Keep logo bright on the always-dark credits button */
 body.light-theme .dev-logo {
-  filter: invert(1) contrast(150%) brightness(0.2);
+  filter: brightness(1.2);
 }
 
 
