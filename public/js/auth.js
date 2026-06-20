@@ -209,7 +209,11 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  SirioAuth.initStatusBadge();
+  // Mostrar el badge de estado de Google Sheets solo para administradores
+  const _sessionUser = SirioAuth.getCurrentUser();
+  if (_sessionUser && _sessionUser.rol === 'admin') {
+    SirioAuth.initStatusBadge();
+  }
 });
 
 function updateThemeIcon(btn) {
