@@ -1443,6 +1443,14 @@ body.light-theme .profile-detail-item:hover {
   gap: 8px;
 }
 
+.dev-credits-tagline {
+  font-size: 0.68rem;
+  color: #64748b;
+  font-style: italic;
+  letter-spacing: 0.03em;
+  margin-top: 2px;
+}
+
 .dev-credits-label {
   font-size: 0.7rem;
   color: #94a3b8;

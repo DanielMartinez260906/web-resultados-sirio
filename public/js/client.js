@@ -125,6 +125,17 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
+  // Helper: obtener URL correcta del PDF (Cloudinary o local legacy)
+  function getPdfUrl(nombreArchivo) {
+    if (!nombreArchivo) return '';
+    // Si ya es una URL completa (Cloudinary), usarla directamente
+    if (nombreArchivo.startsWith('http://') || nombreArchivo.startsWith('https://')) {
+      return nombreArchivo;
+    }
+    // Archivo local (modo demo o legacy)
+    return `/uploads/${nombreArchivo}`;
+  }
+
   // Renderizar exámenes como tarjetas
   function renderResults(results) {
     if (!resultsContainer) return;
@@ -150,6 +161,7 @@ document.addEventListener('DOMContentLoaded', () => {
       card.className = 'result-card';
       
       const dateLabel = SirioAuth.formatDate(res.fecha_subida);
+      const pdfUrl = getPdfUrl(res.nombre_archivo);
 
       card.innerHTML = `
         <div class="result-card-header">
@@ -166,10 +178,10 @@ document.addEventListener('DOMContentLoaded', () => {
         </div>
         
         <div class="result-card-footer">
-          <a href="/uploads/${res.nombre_archivo}" target="_blank" class="btn btn-secondary">
+          <a href="${pdfUrl}" target="_blank" rel="noopener noreferrer" class="btn btn-secondary">
             <i class="fa-solid fa-eye"></i> Ver
           </a>
-          <a href="/uploads/${res.nombre_archivo}" download="${res.nombre_archivo}" class="btn btn-primary">
+          <a href="${pdfUrl}" download class="btn btn-primary">
             <i class="fa-solid fa-circle-down"></i> Descargar
           </a>
         </div>

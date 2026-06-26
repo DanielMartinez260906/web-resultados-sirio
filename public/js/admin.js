@@ -47,6 +47,19 @@ document.addEventListener('DOMContentLoaded', () => {
   const globalAlertText = document.getElementById('admin-global-alert-text');
 
   // ==========================================================================
+  // FUNCIONES AUXILIARES
+  // ==========================================================================
+
+  // Helper: obtener URL correcta del PDF (Cloudinary o local legacy)
+  function getPdfUrl(nombreArchivo) {
+    if (!nombreArchivo) return '';
+    if (nombreArchivo.startsWith('http://') || nombreArchivo.startsWith('https://')) {
+      return nombreArchivo; // URL completa de Cloudinary
+    }
+    return `/uploads/${nombreArchivo}`; // Archivo local legacy
+  }
+
+  // ==========================================================================
   // FUNCIONES DE API
   // ==========================================================================
 
@@ -137,7 +150,7 @@ document.addEventListener('DOMContentLoaded', () => {
           </td>
           <td style="padding: 12px 16px; text-align: center;">
             <div style="display: flex; gap: 6px; justify-content: center; align-items: center;">
-              <a href="/uploads/${res.nombre_archivo}" target="_blank" class="btn btn-secondary btn-icon" style="padding: 4px 8px;" title="Ver PDF">
+              <a href="${getPdfUrl(res.nombre_archivo)}" target="_blank" rel="noopener noreferrer" class="btn btn-secondary btn-icon" style="padding: 4px 8px;" title="Ver PDF">
                 <i class="fa-solid fa-eye" style="font-size: 0.85rem;"></i>
               </a>
               <button class="btn btn-danger btn-icon delete-general-result-btn" data-id="${res.id_resultado}" style="padding: 4px 8px;" title="Eliminar examen">
@@ -282,7 +295,7 @@ document.addEventListener('DOMContentLoaded', () => {
           </p>
         </div>
         <div style="display: flex; gap: 6px; align-items: center; flex-shrink: 0;">
-          <a href="/uploads/${res.nombre_archivo}" target="_blank" class="btn btn-secondary btn-icon" style="padding: 6px 10px;" title="Ver PDF">
+          <a href="${getPdfUrl(res.nombre_archivo)}" target="_blank" rel="noopener noreferrer" class="btn btn-secondary btn-icon" style="padding: 6px 10px;" title="Ver PDF">
             <i class="fa-solid fa-eye" style="font-size: 0.95rem;"></i>
           </a>
           <button class="btn btn-danger btn-icon delete-result-btn" data-id="${res.id_resultado}" style="padding: 6px 10px;" title="Eliminar examen">
