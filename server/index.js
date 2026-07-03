@@ -412,6 +412,35 @@ app.post('/api/admin/delete-all-results', async (req, res) => {
 });
 
 // ============================================================
+// ENDPOINT DE DESCARGA (PROXY)
+// ============================================================
+
+// API: Descarga forzada de PDF a través del servidor (evita restricción CORS de Cloudinary)
+app.get('/api/client/download', async (req, res) => {
+  const { url, nombre } = req.query;
+
+  if (!url) {
+    return res.status(400).json({ success: false, message: 'Falta el parámetro url.' });
+  }
+
+  try {
+    const response = await axios.get(decodeURIComponent(url), { responseType: 'stream' });
+
+    // Nombre de archivo para la descarga
+    const filename = nombre ? decodeURIComponent(nombre) : 'resultado_examen.pdf';
+    const safeFilename = filename.endsWith('.pdf') ? filename : `${filename}.pdf`;
+
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', `attachment; filename="${safeFilename}"`);
+
+    response.data.pipe(res);
+  } catch (error) {
+    console.error('Error al descargar PDF:', error.message);
+    res.status(500).json({ success: false, message: 'No se pudo descargar el archivo.' });
+  }
+});
+
+// ============================================================
 // ENDPOINTS DE CONFIGURACIÓN Y GEMINI IA
 // ============================================================
 

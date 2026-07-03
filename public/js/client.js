@@ -181,7 +181,7 @@ document.addEventListener('DOMContentLoaded', () => {
           <a href="${pdfUrl}" target="_blank" rel="noopener noreferrer" class="btn btn-secondary" style="flex: 1 1 70px; min-width: 65px;">
             <i class="fa-solid fa-eye"></i> Ver
           </a>
-          <a href="${pdfUrl}" download class="btn btn-primary" style="flex: 1 1 100px; min-width: 95px;">
+          <a href="/api/client/download?url=${encodeURIComponent(pdfUrl)}&nombre=${encodeURIComponent(res.nombre_examen)}" class="btn btn-primary" style="flex: 1 1 100px; min-width: 95px;">
             <i class="fa-solid fa-circle-down"></i> Descargar
           </a>
           <button class="btn btn-accent btn-interpret-ia" data-id="${res.id_resultado}" data-archivo="${res.nombre_archivo}" style="flex: 1 1 100%; width: 100%; margin-top: 4px; gap: 6px; justify-content: center; height: 38px; font-size: 0.82rem;">
