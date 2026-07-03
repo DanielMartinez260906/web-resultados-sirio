@@ -58,6 +58,10 @@
         <i class="fa-solid fa-address-book"></i>
         <span>Clientes y Perfiles</span>
       </button>
+      <button class="nav-tab" data-tab="tab-config">
+        <i class="fa-solid fa-gears"></i>
+        <span>Configuración</span>
+      </button>
       <button class="nav-tab" data-tab="tab-danger">
         <i class="fa-solid fa-triangle-exclamation"></i>
         <span>Zona de Peligro</span>
@@ -423,7 +427,42 @@
       </div>
     </div>
 
-    <!-- Pestaña 4: Zona de Peligro -->
+    <!-- Pestaña: Configuración del Sistema -->
+    <div id="tab-config" class="tab-content" style="display: none;">
+      <div class="panel-card centered-panel">
+        <h3 class="panel-card-title">
+          <i class="fa-solid fa-gears"></i> Configuración del Sistema
+        </h3>
+        <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 1.5rem;">
+          Gestione las claves API y parámetros del Laboratorio Clínico SIRIO.
+        </p>
+
+        <form id="system-config-form">
+          <div class="form-group">
+            <label for="config-gemini-key">Google AI Studio API Key (Gemini IA)</label>
+            <div style="position: relative;">
+              <input type="password" id="config-gemini-key" class="form-control" 
+                     placeholder="Pegue su clave API aquí (ej: AIzaSy...)" required
+                     style="padding-right: 50px;">
+              <button type="button" id="toggle-config-key-btn" 
+                      style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); 
+                             background: transparent; border: none; color: var(--color-primary); cursor: pointer; padding: 6px;">
+                <i class="fa-solid fa-eye"></i>
+              </button>
+            </div>
+            <p style="font-size: 0.72rem; color: var(--text-muted); margin-top: 6px; line-height: 1.45;">
+              Esta clave se utiliza para realizar la interpretación de exámenes en PDF por medio de Gemini 1.5 Flash. Obténgala de forma gratuita en <a href="https://aistudio.google.com/" target="_blank" rel="noopener noreferrer" style="color: var(--color-primary); text-decoration: underline;">Google AI Studio</a>.
+            </p>
+          </div>
+
+          <button type="submit" class="btn btn-accent" style="width: 100%; margin-top: 1rem; gap: 8px; justify-content: center;">
+            <i class="fa-solid fa-floppy-disk"></i> Guardar Configuración
+          </button>
+        </form>
+      </div>
+    </div>
+
+    <!-- Pestaña: Zona de Peligro -->
     <div id="tab-danger" class="tab-content" style="display: none;">
       <div class="panel-card centered-panel" style="border-color: rgba(239, 68, 68, 0.25);">
         <h3 class="panel-card-title" style="color: var(--error);">

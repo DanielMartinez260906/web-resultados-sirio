@@ -78,6 +78,8 @@ function doPost(e) {
     else if (action === "deleteAllResults")  { response = deleteAllResults(doc); }
     else if (action === "getAllResults")     { response = getAllResults(doc); }
     else if (action === "logAccess")        { response = logAccess(doc, data); }
+    else if (action === "getConfig")        { response = getConfig(doc); }
+    else if (action === "saveConfig")       { response = saveConfig(doc, data); }
     else { response.message = "Accion no reconocida: " + action; }
 
   } catch (error) {
@@ -157,7 +159,8 @@ function checkAndInitSheets(doc) {
   var sheetsConfig = {
     "Usuarios":  ["id_usuario","nombre","identificacion","usuario","contrasena","rol","fecha_registro","direccion","correo","telefono"],
     "Resultados":["id_resultado","id_usuario","nombre_examen","nombre_archivo","fecha_subida","admin_nombre"],
-    "Accesos":   ["id_log","usuario","rol","fecha_hora","estado"]
+    "Accesos":   ["id_log","usuario","rol","fecha_hora","estado"],
+    "Configuracion": ["clave", "valor"]
   };
 
   for (var name in sheetsConfig) {
@@ -174,6 +177,9 @@ function checkAndInitSheets(doc) {
       if (name === "Usuarios") {
         sheet.appendRow(["U000","Administrador Laboratorio","00000000","admin","admin123","admin",
                          new Date().toISOString().split('T')[0], "", "", ""]);
+      }
+      if (name === "Configuracion") {
+        sheet.appendRow(["gemini_api_key", "CONFIGURAR_DESDE_PANEL_ADMIN"]);
       }
     }
   }
@@ -671,4 +677,45 @@ function updateClient(doc, data) {
     }
   }
   return { success: false, message: "Usuario no encontrado." };
+}
+
+// ============================================================
+// CONFIGURACIÓN (GET)
+// ============================================================
+function getConfig(doc) {
+  var sheet = doc.getSheetByName("Configuracion");
+  if (!sheet) return { success: true, config: {} };
+  var rows = sheet.getDataRange().getValues();
+  var config = {};
+  for (var i = 1; i < rows.length; i++) {
+    var key = rows[i][0];
+    if (key) {
+      config[key.toString().trim()] = rows[i][1] ? rows[i][1].toString().trim() : "";
+    }
+  }
+  return { success: true, config: config };
+}
+
+// ============================================================
+// CONFIGURACIÓN (SAVE)
+// ============================================================
+function saveConfig(doc, data) {
+  var sheet = doc.getSheetByName("Configuracion");
+  if (!sheet) return { success: false, message: "La hoja de configuracion no existe." };
+  
+  var rows = sheet.getDataRange().getValues();
+  for (var key in data) {
+    var found = false;
+    for (var i = 1; i < rows.length; i++) {
+      if (rows[i][0] && rows[i][0].toString().trim() === key) {
+        sheet.getRange(i + 1, 2).setValue(data[key]);
+        found = true;
+        break;
+      }
+    }
+    if (!found) {
+      sheet.appendRow([key, data[key]]);
+    }
+  }
+  return { success: true, message: "Configuracion guardada correctamente." };
 }

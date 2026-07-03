@@ -30,5 +30,16 @@
       "observaciones": "Niveles de hemoglobina y plaquetas estables. Se observa leve leucocitosis."
     }
   ],
-  "Accesos": []
+  "Accesos": [
+    {
+      "id_log": "L00001",
+      "usuario": "prueba",
+      "rol": "cliente",
+      "fecha_hora": "3/7/2026, 5:25:23 a. m.",
+      "estado": "Exitoso"
+    }
+  ],
+  "Configuracion": {
+    "gemini_api_key": "CONFIGURAR_DESDE_PANEL_ADMIN"
+  }
 }

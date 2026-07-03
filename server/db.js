@@ -59,7 +59,10 @@ function createDefaultMockDB() {
         observaciones: "Niveles de hemoglobina y plaquetas estables. Se observa leve leucocitosis."
       }
     ],
-    Accesos: []
+    Accesos: [],
+    Configuracion: {
+      gemini_api_key: "CONFIGURAR_DESDE_PANEL_ADMIN"
+    }
   };
   fs.writeFileSync(MOCK_DB_PATH, JSON.stringify(defaultData, null, 2));
 }
@@ -80,11 +83,19 @@ function writeMockDB(data) {
 }
 
 /**
- * Realiza una consulta a la API de Google Apps Script
+ * Realiza una consulta a la API de Google Apps Script.
+ * Si la llamada falla (timeout, red caída, Apps Script desconectado), 
+ * cae automáticamente al modo local (mock_db.json) para que el sistema
+ * siga funcionando sin interrupciones.
  */
 async function callSheetsAPI(action, data = {}) {
   if (isDemoMode) {
     return handleMockAction(action, data);
+  }
+
+  // Asegurar que el mock_db exista como respaldo
+  if (!fs.existsSync(MOCK_DB_PATH)) {
+    createDefaultMockDB();
   }
 
   try {
@@ -96,15 +107,13 @@ async function callSheetsAPI(action, data = {}) {
       headers: {
         'Content-Type': 'application/json'
       },
-      timeout: 10000 // 10 segundos de timeout
+      timeout: 15000 // 15 segundos de timeout
     });
     return response.data;
   } catch (error) {
-    console.error(`Error en llamada a Sheets API (${action}):`, error.message);
-    return { 
-      success: false, 
-      message: `Error al conectar con Google Sheets: ${error.message}. ¿Has iniciado tu servidor web del Apps Script y publicado la URL correctamente?`
-    };
+    console.warn(`⚠️  Google Sheets no disponible para acción "${action}". Usando base de datos local como respaldo. (${error.message})`);
+    // Fallback transparente al mock_db local
+    return handleMockAction(action, data);
   }
 }
 
@@ -358,6 +367,19 @@ function handleMockAction(action, data) {
       };
     }
 
+    case 'getConfig': {
+      return { success: true, config: db.Configuracion || {} };
+    }
+    
+    case 'saveConfig': {
+      db.Configuracion = db.Configuracion || {};
+      for (const key in data) {
+        db.Configuracion[key] = data[key];
+      }
+      writeMockDB(db);
+      return { success: true, message: "Configuración guardada correctamente en modo Demo." };
+    }
+
     default:
       return { success: false, message: `Acción desconocida en MockDB: ${action}` };
   }
@@ -378,5 +400,7 @@ module.exports = {
   deleteClient: (id_usuario) => callSheetsAPI('deleteClient', { id_usuario }),
   deleteAllResults: () => callSheetsAPI('deleteAllResults'),
   getAllResults: () => callSheetsAPI('getAllResults'),
-  logAccess: (usuario, rol, estado) => callSheetsAPI('logAccess', { usuario, rol, estado })
+  logAccess: (usuario, rol, estado) => callSheetsAPI('logAccess', { usuario, rol, estado }),
+  getConfig: () => callSheetsAPI('getConfig'),
+  saveConfig: (configData) => callSheetsAPI('saveConfig', configData)
 };

@@ -177,13 +177,16 @@ document.addEventListener('DOMContentLoaded', () => {
           </h3>
         </div>
         
-        <div class="result-card-footer">
-          <a href="${pdfUrl}" target="_blank" rel="noopener noreferrer" class="btn btn-secondary">
+        <div class="result-card-footer" style="flex-wrap: wrap; gap: 8px;">
+          <a href="${pdfUrl}" target="_blank" rel="noopener noreferrer" class="btn btn-secondary" style="flex: 1 1 70px; min-width: 65px;">
             <i class="fa-solid fa-eye"></i> Ver
           </a>
-          <a href="${pdfUrl}" download class="btn btn-primary">
+          <a href="${pdfUrl}" download class="btn btn-primary" style="flex: 1 1 100px; min-width: 95px;">
             <i class="fa-solid fa-circle-down"></i> Descargar
           </a>
+          <button class="btn btn-accent btn-interpret-ia" data-id="${res.id_resultado}" data-archivo="${res.nombre_archivo}" style="flex: 1 1 100%; width: 100%; margin-top: 4px; gap: 6px; justify-content: center; height: 38px; font-size: 0.82rem;">
+            <i class="fa-solid fa-wand-magic-sparkles"></i> Interpretar (IA)
+          </button>
         </div>
       `;
       
@@ -269,6 +272,85 @@ document.addEventListener('DOMContentLoaded', () => {
     setTimeout(() => {
       globalAlert.style.display = 'none';
     }, 5000);
+  }
+
+  // ==========================================================================
+  // LÓGICA DE INTERPRETACIÓN CON IA (GEMINI)
+  // ==========================================================================
+  const interpretModal = document.getElementById('interpret-modal');
+  const closeInterpretModalBtn = document.getElementById('close-interpret-modal');
+  const closeInterpretBtn = document.getElementById('close-interpret-btn');
+  const interpretLoading = document.getElementById('interpret-loading');
+  const interpretResult = document.getElementById('interpret-result');
+  const interpretTextContent = document.getElementById('interpret-text-content');
+
+  function closeInterpretModal() {
+    if (interpretModal) interpretModal.style.display = 'none';
+  }
+
+  if (closeInterpretModalBtn) closeInterpretModalBtn.addEventListener('click', closeInterpretModal);
+  if (closeInterpretBtn) closeInterpretBtn.addEventListener('click', closeInterpretModal);
+
+  // Cerrar haciendo clic fuera del contenido
+  window.addEventListener('click', (e) => {
+    if (e.target === interpretModal) {
+      closeInterpretModal();
+    }
+  });
+
+  // Delegación de eventos para el botón "Interpretar (IA)"
+  if (resultsContainer) {
+    resultsContainer.addEventListener('click', async (e) => {
+      const btn = e.target.closest('.btn-interpret-ia');
+      if (!btn) return;
+
+      const idResultado = btn.dataset.id;
+      const nombreArchivo = btn.dataset.archivo;
+
+      if (!idResultado || !nombreArchivo) return;
+
+      // Abrir modal y mostrar pantalla de carga
+      if (interpretModal) interpretModal.style.display = 'flex';
+      if (interpretLoading) interpretLoading.style.display = 'flex';
+      if (interpretResult) interpretResult.style.display = 'none';
+      if (interpretTextContent) interpretTextContent.innerHTML = '';
+
+      try {
+        const response = await fetch(`${SirioAuth.API_BASE}/api/client/interpret-exam`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            id_resultado: idResultado,
+            nombre_archivo: nombreArchivo
+          })
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+          if (interpretLoading) interpretLoading.style.display = 'none';
+          if (interpretResult) interpretResult.style.display = 'block';
+          
+          // Formatear texto interpretativo
+          if (interpretTextContent) {
+            // Renderizado básico de Markdown simple para negritas y listas
+            let formattedText = data.interpretation
+              .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+              .replace(/\*(.*?)\*/g, '<em>$1</em>');
+            interpretTextContent.innerHTML = formattedText;
+          }
+        } else {
+          closeInterpretModal();
+          showGlobalAlert(data.message || 'Error al obtener la interpretación del examen.', 'error');
+        }
+      } catch (error) {
+        closeInterpretModal();
+        console.error('Error al solicitar interpretación por IA:', error);
+        showGlobalAlert('Error de conexión con el servidor al intentar interpretar el examen.', 'error');
+      }
+    });
   }
 
   // Inicializar cargando los resultados

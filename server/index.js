@@ -4,6 +4,7 @@ const cors = require('cors');
 const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
+const axios = require('axios');
 const db = require('./db');
 const { uploadPDF, deletePDF, extractPublicId } = require('./cloudinary');
 
@@ -407,6 +408,132 @@ app.post('/api/admin/delete-all-results', async (req, res) => {
   } catch (error) {
     console.error('Error al eliminar todos los resultados:', error);
     res.status(500).json({ success: false, message: error.message });
+  }
+});
+
+// ============================================================
+// ENDPOINTS DE CONFIGURACIÓN Y GEMINI IA
+// ============================================================
+
+// API: Obtener configuraciones del sistema (Solo Admins)
+app.get('/api/admin/config', async (req, res) => {
+  try {
+    const result = await db.getConfig();
+    res.json(result);
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
+// API: Guardar configuraciones del sistema (Solo Admins)
+app.post('/api/admin/config', async (req, res) => {
+  const configData = req.body;
+  if (!configData || typeof configData !== 'object') {
+    return res.status(400).json({ success: false, message: 'Los datos de configuración son requeridos.' });
+  }
+
+  try {
+    const result = await db.saveConfig(configData);
+    res.json(result);
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
+// API: Interpretar examen con IA de Gemini (Para Clientes)
+app.post('/api/client/interpret-exam', async (req, res) => {
+  const { id_resultado, nombre_archivo } = req.body;
+
+  if (!id_resultado || !nombre_archivo) {
+    return res.status(400).json({ success: false, message: 'El ID del resultado y el archivo son requeridos.' });
+  }
+
+  try {
+    // 1. Obtener la clave API de Gemini desde la base de datos
+    const configResult = await db.getConfig();
+    const geminiApiKey = configResult.success && configResult.config ? configResult.config.gemini_api_key : null;
+
+    if (!geminiApiKey || geminiApiKey.trim() === '') {
+      return res.status(400).json({ 
+        success: false, 
+        message: 'La Inteligencia Artificial de Gemini no está configurada. El administrador debe guardar una clave API de Google AI Studio en la pestaña Configuración del panel de administración.' 
+      });
+    }
+
+    // 2. Descargar o leer el archivo PDF en un buffer
+    let pdfBuffer;
+    if (nombre_archivo.startsWith('http://') || nombre_archivo.startsWith('https://')) {
+      // Descargar de Cloudinary
+      const downloadRes = await axios.get(nombre_archivo, { responseType: 'arraybuffer' });
+      pdfBuffer = Buffer.from(downloadRes.data);
+    } else {
+      // Leer archivo local legacy o de demostración
+      const filePath = path.join(UPLOADS_DIR, nombre_archivo);
+      if (!fs.existsSync(filePath)) {
+        return res.status(404).json({ success: false, message: 'El archivo PDF no se encuentra disponible localmente en el servidor.' });
+      }
+      pdfBuffer = fs.readFileSync(filePath);
+    }
+
+    // 3. Convertir el buffer a Base64
+    const base64Pdf = pdfBuffer.toString('base64');
+
+    // 4. Preparar la llamada a Gemini API usando axios
+    const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${geminiApiKey}`;
+
+    const promptText = "Por favor interpreta los resultados de este examen de laboratorio clínico. Explica qué significan los valores, destaca los hallazgos anormales o que requieran atención en un lenguaje sencillo que cualquier paciente o dueño de mascota entienda sin tecnicismos complejos. Divide tu explicación en secciones: 1. Resumen General, 2. Puntos Clave a Tener en Cuenta (y su significado), 3. Recomendaciones. Finaliza obligatoriamente con una advertencia en negrita que indique que esta interpretación es puramente informativa generada por IA y no sustituye de ninguna manera el criterio profesional ni la consulta presencial con el veterinario o médico clínico.";
+
+    const payload = {
+      contents: [
+        {
+          parts: [
+            {
+              inlineData: {
+                mimeType: "application/pdf",
+                data: base64Pdf
+              }
+            },
+            {
+              text: promptText
+            }
+          ]
+        }
+      ],
+      systemInstruction: {
+        parts: [
+          {
+            text: "Eres un asistente virtual de IA integrado en el Laboratorio SIRIO. Interpretas exámenes clínicos clínicos de laboratorio en español para pacientes y veterinarios/médicos. Tu tono es comprensivo, empático, formal y profesional. Estructuras siempre tu explicación con Markdown y terminas con un descargo de responsabilidad claro."
+          }
+        ]
+      }
+    };
+
+    const response = await axios.post(geminiUrl, payload, {
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      timeout: 30000 // 30 segundos de timeout
+    });
+
+    const candidate = response.data?.candidates?.[0];
+    const interpretationText = candidate?.content?.parts?.[0]?.text;
+
+    if (!interpretationText) {
+      return res.status(500).json({ success: false, message: 'El servicio de IA no retornó resultados legibles. Intenta de nuevo.' });
+    }
+
+    res.json({
+      success: true,
+      interpretation: interpretationText
+    });
+
+  } catch (error) {
+    console.error('Error al interpretar el examen con Gemini:', error);
+    let errorMsg = error.message;
+    if (error.response && error.response.data && error.response.data.error) {
+      errorMsg = error.response.data.error.message || errorMsg;
+    }
+    res.status(500).json({ success: false, message: `Error en el servicio de interpretación por IA: ${errorMsg}` });
   }
 });
 

@@ -1041,6 +1041,10 @@ document.addEventListener('DOMContentLoaded', () => {
         if (dirClientDetailView) dirClientDetailView.style.display = 'none';
         if (dirNoClientSelected) dirNoClientSelected.style.display = 'flex';
       }
+
+      if (targetTab === 'tab-config') {
+        loadSystemConfig();
+      }
     });
   });
 
@@ -1304,6 +1308,76 @@ document.addEventListener('DOMContentLoaded', () => {
     dirDeleteClientBtn.addEventListener('click', () => {
       if (selectedDirClient) {
         openDeleteClientModal(selectedDirClient);
+      }
+    });
+  }
+
+  // ==========================================================================
+  // LÓGICA DE CONFIGURACIÓN DEL SISTEMA (GEMINI IA)
+  // ==========================================================================
+  const systemConfigForm = document.getElementById('system-config-form');
+  const configGeminiKeyInput = document.getElementById('config-gemini-key');
+  const toggleConfigKeyBtn = document.getElementById('toggle-config-key-btn');
+
+  async function loadSystemConfig() {
+    try {
+      const response = await fetch(`${SirioAuth.API_BASE}/api/admin/config`);
+      const data = await response.json();
+      if (data.success && data.config) {
+        if (configGeminiKeyInput) {
+          configGeminiKeyInput.value = data.config.gemini_api_key || '';
+        }
+      } else {
+        showGlobalAlert(data.message || 'Error al cargar la configuración de IA.', 'error');
+      }
+    } catch (error) {
+      console.error('Error al cargar la configuración:', error);
+      showGlobalAlert('No se pudo conectar con el servidor para obtener la configuración.', 'error');
+    }
+  }
+
+  if (systemConfigForm) {
+    systemConfigForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      
+      const gemini_api_key = configGeminiKeyInput.value.trim();
+      
+      SirioAuth.showLoading('Guardando configuración de IA...');
+      
+      try {
+        const response = await fetch(`${SirioAuth.API_BASE}/api/admin/config`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ gemini_api_key })
+        });
+        
+        const result = await response.json();
+        SirioAuth.hideLoading();
+        
+        if (result.success) {
+          showGlobalAlert('Configuración guardada correctamente.', 'success');
+        } else {
+          showGlobalAlert(result.message || 'Error al guardar la configuración.', 'error');
+        }
+      } catch (error) {
+        SirioAuth.hideLoading();
+        console.error('Error al guardar la configuración:', error);
+        showGlobalAlert('Error de red al intentar guardar la configuración.', 'error');
+      }
+    });
+  }
+
+  if (toggleConfigKeyBtn && configGeminiKeyInput) {
+    toggleConfigKeyBtn.addEventListener('click', () => {
+      const icon = toggleConfigKeyBtn.querySelector('i');
+      if (configGeminiKeyInput.type === 'password') {
+        configGeminiKeyInput.type = 'text';
+        if (icon) icon.className = 'fa-solid fa-eye-slash';
+      } else {
+        configGeminiKeyInput.type = 'password';
+        if (icon) icon.className = 'fa-solid fa-eye';
       }
     });
   }
