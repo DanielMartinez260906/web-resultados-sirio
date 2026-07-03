@@ -185,7 +185,7 @@ document.addEventListener('DOMContentLoaded', () => {
             <i class="fa-solid fa-circle-down"></i> Descargar
           </a>
           <button class="btn btn-accent btn-interpret-ia" data-id="${res.id_resultado}" data-archivo="${res.nombre_archivo}" style="flex: 1 1 100%; width: 100%; margin-top: 4px; gap: 6px; justify-content: center; height: 38px; font-size: 0.82rem;">
-            <i class="fa-solid fa-wand-magic-sparkles"></i> Interpretar (IA)
+            <i class="fa-solid fa-wand-magic-sparkles"></i> Apoyo en Interpretación con SirIA
           </button>
         </div>
       `;

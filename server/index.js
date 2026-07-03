@@ -508,9 +508,9 @@ app.post('/api/client/interpret-exam', async (req, res) => {
     const base64Pdf = pdfBuffer.toString('base64');
 
     // 4. Preparar la llamada a Gemini API usando axios
-    const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${geminiApiKey}`;
+    const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent?key=${geminiApiKey}`;
 
-    const promptText = "Por favor interpreta los resultados de este examen de laboratorio clínico. Explica qué significan los valores, destaca los hallazgos anormales o que requieran atención en un lenguaje sencillo que cualquier paciente o dueño de mascota entienda sin tecnicismos complejos. Divide tu explicación en secciones: 1. Resumen General, 2. Puntos Clave a Tener en Cuenta (y su significado), 3. Recomendaciones. Finaliza obligatoriamente con una advertencia en negrita que indique que esta interpretación es puramente informativa generada por IA y no sustituye de ninguna manera el criterio profesional ni la consulta presencial con el veterinario o médico clínico.";
+    const promptText = "Eres SirIA, un asistente de apoyo clínico para médicos veterinarios del Laboratorio SIRIO. Tu función es analizar los resultados de exámenes de laboratorio y proporcionar un apoyo interpretativo profesional dirigido exclusivamente al médico veterinario tratante. Usa terminología clínica y veterinaria apropiada. Organiza tu respuesta en las siguientes secciones: 1. **Resumen Clínico General**: descripción objetiva de los hallazgos del examen. 2. **Hallazgos Relevantes**: parámetros fuera de rango con su posible significado clínico y diagnóstico diferencial si aplica. 3. **Consideraciones y Recomendaciones Clínicas**: sugerencias para el seguimiento, diagnósticos complementarios o ajustes terapéuticos que el médico veterinario puede considerar. Finaliza con la siguiente advertencia en negrita: **Este análisis es generado por SirIA como herramienta de apoyo diagnóstico y no reemplaza el juicio clínico del médico veterinario. La interpretación definitiva y las decisiones terapéuticas son responsabilidad exclusiva del profesional tratante.**";
 
     const payload = {
       contents: [
