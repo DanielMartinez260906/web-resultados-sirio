@@ -642,6 +642,476 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
+  // ── INGRESO DE PACIENTES ───────────────────────────────────
+  const EXAMS_COMUNES = [
+    'Perfil Prequirúrgico 1 (Hemograma + ALT + Creatinina)',
+    'Citoquímico de orina (Estudio fisicoquímico - microscópico e incluye coloración GRAM)',
+    'Coprológico (Directo + Lugol + Técnica de flotación)',
+    'Raspado de piel + Examen con luz de wood',
+    'Cultivo 1 Oído (Bacteriológico con antibiograma + Micológico)',
+    'Cultivo 2 Oídos (Bacteriológico con antibiograma + Micológico)',
+    'Cultivo de otras muestras (Bacteriológico con Antibiograma)(Aerotolerantes)',
+    'Hemograma automatizado (Extendido de sangre periférica + Proteínas plasmáticas + Reticulocitos)',
+    'Progesterona específica canina',
+    'Citología tumoral/TVT/PAAF (TVT Tumor Venéreo Transmisible - PAAF Punción Aspirada por Aguja Fina)',
+    'Coprológico seriado (3 muestras) Muestra #1',
+    'Coprológico seriado (3 muestras) Muestra #2',
+    'Coprológico seriado (3 muestras) Muestra #3',
+    'Biopsia Análisis histopatológico de 3 fragmentos de tejido por animal',
+    'Perfil Prequirúrgico 1 (HLG + ALT + CRE) JORNADA (Convenio previo con el laboratorio)'
+  ];
+
+  const EXAMS_CULTIVOS = [
+    'Cultivo bacteriológico + micológico + antibiograma (cualquier muestra)',
+    'Cultivo micológico (Hongos) de cualquier muestra',
+    'Hemocultivo + antibiograma',
+    'Urocultivo (Bacteriológico con antibiograma) + Citoquímico de Orina',
+    'Urocultivo (Bacteriológico + antibiograma)',
+    'Coprocultivo (Bacteriológico + antibiograma)',
+    'Coprocultivo (Bacteriológico - antibiograma) + Coprológico',
+    'Cultivo Micobacterias',
+    'Antibiograma Adicional',
+    'Cultivo anaerobios estrictos',
+    'Cultivo bacteriológico + antibiograma MIC (Concentración Inhibitoria Mínima) Cualquier muestra',
+    'Cultivo de secreciones (Bacteriológico + antibiograma)',
+    'Cultivo de piel (Bacteriológico + antibiograma)'
+  ];
+
+  const EXAMS_TOXICOLOGIA = [
+    'Tamizaje de intoxicación por warfarínicos',
+    'Antidepresivos tricíclicos - TCA',
+    'Anfetamina-AMP',
+    'Barbitúricos - BAR',
+    'Benzodiazepinas - BZO',
+    'Cocaína-COC',
+    'Feniciclidina - PCP',
+    'Marihuana-THC',
+    'Metadona-MTD',
+    'Metanfetamina-MET',
+    'Metilendioximetanfetamina-MDMA',
+    'Morfina-MOP',
+    'Opiato -OPI',
+    'Toxicología completa COC-AMP-THC-MTD-MET-MOP-OPI-MDMA-PCP-BAR-BZO-TCA'
+  ];
+
+  const EXAMS_PERFILES = [
+    'PREQUIRÚRGICO 2 (Hemograma + ALT  Creatinina + TP + TPT) (Comunicarse y programar con el laboratorio)',
+    'TP y TPT (Coordinar con el laboratorio la hora de recolección)',
+    'DIAGNÓSTICO PRIMARIO 1 (Hemograma + ALT + Creatinina y Citoquímico o Coprológico o Raspado de piel)',
+    'DIAGNÓSTICO PRIMARIO 2 (Hemograma + ALT + Creatinina y 2 exámenes (Coprológico + Raspado de piel o Coprológico + Citoquímico de orina o Raspado de piel + Citoquímico de orina))',
+    'DIAGNÓSTICO PRIMARIO 3 (Hemograma + ALT + FA + Creatinina + Urea + BUN)',
+    'CONVULSIVO 1 (Hemograma + ALT + Albúmina + AST + BilT+D + BUN /Urea  Creatinina + FA + GGT + Prot diferenciadas + Glucosa)',
+    'DERMATOLÓGICO 1 (Raspado de piel + Test de wood + Cultivo bacteriológico con antibiograma + Cultivo micológico)',
+    'DERMATOLÓGICO 2 (Hemograma + Raspado de piel + Cultivo bacteriológico con antibiograma + Cultivo micológico + T4 Libre + Colesterol total)',
+    'DIABÉTICO 1 (Glucosa en sangre + Glucosa en orina (Cuantitativa) Sugerido para control de diabetes)',
+    'DIABÉTICO 2 (Glucosa en sangre + Glucosa en orina (cuantitativa) + Citoquímico de orina)',
+    'DIABÉTICO 3 (Citoquímico de orina + Glucosa semicuantitativa + Glucosa en sangre + Hemoglobina glicada (HBA1C))',
+    'DIABÉTICO 4 (Citoquímico de orina + Glucosa semicuantitativa + Glucosa en sangre + Fructosamina + Hemoglobina glicada (HBA1C))',
+    'DIABÉTICO 5 (Citoquímico de orina + Glucosa semicuantitativa + Fructosamina + Insulina Sugerido para felinos)',
+    'DIABÉTICO 6 (Citoquímico de orina + Glucosa en orina (cuantitativa) + Glucosa en sangre + Fructosamina + Hemoglobina glicada (HBA1C))',
+    'GASTROINTESTINAL 1 (Coprológico + Parvovirus)',
+    'GASTROINTESTINAL 2 (Coprológico + Parvovirus + Coronavirus canino)',
+    'GASTROINTESTINAL 3 (Coprograma + Parvovirus + Coronavirus canino)',
+    'GASTROINTESTINAL 4 (Hemograma + Coprograma + Parvovirus + Coronavirus canino)',
+    'GASTROINTESTINAL 5 (Análisis completo para diarrea persistente Hemograma + Coprograma + Coloración Ziehl Neelsen/Kinyoun + Coprocultivo + Parvovirus + Coronavirus canino)',
+    'GERIÁTRICO 1 (Hemograma + ALT + AST + FA + Colesterol Total + Creatinina + Glucosa + Urea + BUN + T4L + Citoquímico de orina)',
+    'GERIÁTRICO 2 (Hemograma + ALT + AST + FA + Colesterol Total + Creatinina + Glucosa + Urea + BUN + T4L + T4T específica + Citoquímico de orina)',
+    'HEPÁTICO 1 (ALT + AST + FA + BIL T + BIL D + GGT)',
+    'HEPÁTICO 2 (ALT + AST + FA + BIL T + BIL D + Proteínas diferenciadas + GGT)',
+    'HEPÁTICO 3 (ALT + AST + FA + BIL T + BIL D + Proteínas diferenciadas + GGT + Bun + Urea)',
+    'LIPÍDICO 1 (Colesterol total + triglicéridos + HDL + LDL + VLDL)',
+    'PANCREÁTICO 1 (Lipasa pancreática específica (canina o felina) + Detección semicuantitativa de grasa neutra y ácidos grasos en heces)',
+    'PANCREÁTICO 2 (Amilasa + Glucosa en sangre + Lipasa pancreática específica (canina o felina))',
+    'PANCREÁTICO 3 (Amilasa + Glucosa en sangre + Lipasa pancreática específica (canina o felina) + Detección semicuantitativa de grasa neutra y ácidos grasos en heces)',
+    'RENAL 1 (Hemograma + BUN + Urea + Creatinina)',
+    'RENAL 2 (Hemograma + BUN + Urea + Creatinina + Fósforo)',
+    'RENAL 3 (Hemograma + BUN + Urea+ Creatinina + Fósforo + Citoquímico (UPC Semicuantitativa)',
+    'RENAL 4 (Hemograma + Creatinina + SDMA (Dimetil Arginina Simétrica))',
+    'RENAL 5 (Hemograma + Creatinina + SDMA (Dimetil arginina simétrica) + Urea + BUN + Citoquímico (UPC Semicuantitativa))',
+    'RENAL 6 (Citoquímico + BUN + Urea + Creatinina)',
+    'RENAL 7 (Citoquímico de orina + Índice UPC Cuantitativa)',
+    'RENAL 8 (Citoquímico de orina + BUN + Urea + Creatinina + Fósforo + Índice UPC Cuantitativa)',
+    'TIROIDEO 1 (T4L + Colesterol)',
+    'TIROIDEO 2 (T4L + Colesterol + Triglicéridos)',
+    'TIROIDEO 3 (T4L + T4T no específica + Colesterol +Triglicéridos)',
+    'TIROIDEO 4 (T4L + T4T no específica + TSH no específica)',
+    'TIROIDEO 5 (T4L + T4T no específica + TSH no específica + Colesterol + Triglicéridos)',
+    'TIROIDEO 6 (T4L + T4T específica + TSH específica canina)',
+    'TIROIDEO 7 (T4L + T4T específica + TSH específica + Colesterol + Triglicéridos)',
+    'ELECTROLÍTOS 1 (Ionograma 1 Sodio + Cloro + Potasio)',
+    'ELECTROLÍTOS 2 (Ionograma 2 Sodio + cloro + Potasio + Calcio ionizado + pH)',
+    'ELECTROLÍTOS  3 (Ionograma 3 Sodio + Cloro + Potasio + Ph + Calcio ionizado + Calcio sérico + Lactato + Creatinina)',
+    'ELECTROLÍTOS  4 (Ionograma 4 Sodio + Cloro + Potasio + Fósforo + pH + Calcio sérico + Calcio ionizado + Lactato + Hematocrito + Hemoglobina + Creatinina)',
+    'PCR Hemoparásitos Felino - Tiempo real (Anaplasma spp - Rickettsia spp - Ehrlichia spp - Mycoplasma spp - Hepatozoon spp - Toxoplasma gonsii - Bartonella spp)',
+    'PCR Hemoparásitos Canino - Tiempo real (Anaplasma spp - Ehrlichia spp - Mycoplasma Spp - Hepatozoon spp - Babesia spp - Toxoplasma gondii - Dirofilaria spp)',
+    'PCR Hemoparásitos Felino - Puno final Positivo o Negativo (Anaplasma sp, Cytauxzoon felis, Mycoplasma sp, Bartonella sp, Haemoplasmas)',
+    'PCR Hemoparásitos Canino - Puno final Positivo o Negativo (Anaplasma spp - Ehrlichia spp - Hepatozoon spp - Babesia sp)'
+  ];
+
+  const EXAMS_INDIVIDUALES = [
+    'Ácido Fólico/Vitamina B9', 'Ácido úrico', 'Ácidos Biliares (Una muestra)', 'Ácidos Biliares Pre - Post', 
+    'Albúmina', 'Aldosterona', 'Alanina aminotransferasa (ALT/GPT)', 'Amilasa Pancreática', 
+    'Análisis de cálculo urinario (Vejiga)', 'Análisis de cálculo vesiculares', 
+    'Análisis de líquidos corporales (Examen físico - químico - bioquímico - citológico y microbiológico)', 
+    'Análisis para diarrea persistente (Coprograma + Coloración Ziehl Neelsen/Kinyoun + Coprocultivo)', 
+    'Anticuerpos Tiroglobulina (TgAb)', 'Aspartato aminotransferasa (AST)', 'Bilirrubina directa (BD)', 
+    'Bilirrubina total (BT)', 'Brucella canis', 'BUN + Urea', 'Biopsia Análisis histopatológico de 1 fragmento adicional', 
+    'Calcio ionizado', 'Calcio sérico', 'Citología vaginal canina (Ciclo estral)', 'Coloración GRAM (Infecciosa)', 
+    'Cloro', 'Colesterol HDL', 'Colesterol total', 'Coloración Kinyoun', 'Coloración wright', 
+    'Coloración Ziehl-Neelsen', 'Coprograma (Coprológico + azucares reductores + sangre oculta + pH + coloración Gram + coloración Wright)', 
+    'Cortisol en suero (Específico canino)', 'Cortisol en suero 3 muestras (Específico canino)', 'Cortisol en suero (No específico)', 
+    'Cortisol en suero 3 muestras (No específico)', 'Cortisol en orina', 'Coronavirus felino + Índice A/G + Prueba de rivalta Peritonitis infecciosa felina', 
+    'Creatinina', 'Creatina Quinasa MB (CK-MB) (Fracción MB - específica del miocardio)', 'Creatina Quinasa Total (CK o CPK total)', 
+    'Detección semicuantitativa de grasa neutra y ácidos grasos *Se recomienda para evaluar insuficiencia pancreática enzimática', 
+    'Dímero D no específico', 'Dímero D específico canino', 'Espermograma (Examen físico - químico - morfológico - citológico - microbiológico)', 
+    'Estradiol', 'Exámen directo (cualquier muestra)', 'Fenobarbital', 'Ferritina', 'Fosfatasa alcalina (FA)', 
+    'Fósforo', 'Fructosamina', 'Gamma Glutamil Transferasa (GGT)', 'Glucosa', 'Glucosa en orina (Cuantitativa)', 
+    'Hemoglobina glicada (HBA1C)', 'Hierro', 'Hormona Adrenocorticótropica (ACTH)', 'Hormona folículo estimulante (FSH)', 
+    'Hormona de crecimiento (GH)', 'Hormona estimulante de tiroides específica canina (TSH)', 'Hormona estimulante de tiroides Inespecífica (TSH)', 
+    'Hormona luteinizante (LH)', 'Insulina', 'Lactato Deshidrogenasa (LDH)', 'Lactato (Ácido lactico)', 
+    'Lipasa pancreática especifica canina', 'Lipasa pancreática especifica felina', 
+    'Leptospira canino Ac IgG contra 4 serovares Canicola - Icterohaemorrhagiae (Copenhague y RGA) - Pomona y Grippotyphosa', 
+    'Magnesio', 'Distemper Canino', 'Parathormona', 'Parvovirus + Coronavirus Canino', 'Parvovirus + Coronavirus + Giardia Canino', 
+    'Proteína C reactiva no específica (PCR cuantitativa)', 'Proteína C reactiva específica canina (PCR cuantitativa)', 
+    'Plasma rico en plaquetas', 'Potasio', 'Prolactina', 'Proteínas diferenciadas (Albumina – Globulinas - Proteínas totales -I ndíce A/G)', 
+    'Proteínas totales séricas', 'Pruebas cruzadas de compatibilidad (mayor y menor)', 'Prueba de Coombs específica canina (Prueba de antiglobulina directa)', 
+    'Relación Proteína/Creatinina en orina (UPC)', 'Relación Cortisol/Creatinina en orina (UCCR)', 
+    'Raspado de piel + Tricograma + Examen con luz de wood', 'Dimetilarginina Simétrica (SDMA) + Creatinina', 
+    'Virus de Inmunodeficiencia Felina - Virus de la Leucemia (VIF - VLEU) Felino', 
+    'Virus de Inmunodeficiencia Felina/Leucemia/Dirofilaria IDEXX Felino', 'SNAP 4DX IDEXX (Dirofilaria - Enfermedad de Lyme – Ehrlichia - Anaplasma)', 
+    'Sodio', 'Somatomedina C', 'Suero autólogo', 'Testosterona libre', 'Testosterona total', 
+    'Títulos de rabia (Fluorescent Antibody Virus Neutralization - FAVN Test)', 
+    'Tiempo de Protrombina TP (Coordinar con el laboratorio la hora de recolección)', 
+    'Tiempo Parcial de Tromboplastina TPT (Coordinar con el laboratorio la hora de recolección)', 'Tiroxina libre T4L', 
+    'Tiroxina total específico canino o felino (T4T)', 'Tiroxina total inespecífica (T4T)', 'Toxoplasma IgG', 
+    'Toxoplasma IgM', 'Tricograma + Examen con luz de wood', 'Triglicéridos', 'Triyodotironina total T3T', 
+    'Tripsina inmunorreactiva Canina', 'Triple viral felina IgG Panleucopenia – Calicivirus - Herpesvirus (Vaccicheck)', 
+    'Troponina I', 'Vitamina B12 cianocobalamina', 'Vitamina D25', 'Vitamina D 1.25 Dihidroxi (Calcitrol)'
+  ];
+
+  let selectedIngresarExams = new Set();
+  let currentIngresarCat = 'COMUNES';
+
+  const ingresarVetInput = document.getElementById('ingresar-vet');
+  if (ingresarVetInput && currentUser) {
+    ingresarVetInput.value = currentUser.nombre;
+  }
+
+  function renderIngresarExams() {
+    const listContainer = document.getElementById('ingresar-exam-list');
+    const searchInput = document.getElementById('search-ingresar-exam');
+    if (!listContainer) return;
+
+    const query = searchInput ? searchInput.value.toLowerCase().trim() : '';
+
+    let listToRender = [];
+    if (query) {
+      const all = [...EXAMS_COMUNES, ...EXAMS_PERFILES, ...EXAMS_CULTIVOS, ...EXAMS_TOXICOLOGIA, ...EXAMS_INDIVIDUALES];
+      listToRender = [...new Set(all)].filter(name => name.toLowerCase().includes(query));
+    } else {
+      if (currentIngresarCat === 'COMUNES') listToRender = EXAMS_COMUNES;
+      else if (currentIngresarCat === 'PERFILES') listToRender = EXAMS_PERFILES;
+      else if (currentIngresarCat === 'CULTIVOS') listToRender = EXAMS_CULTIVOS;
+      else if (currentIngresarCat === 'TOXICOLOGIA') listToRender = EXAMS_TOXICOLOGIA;
+      else if (currentIngresarCat === 'INDIVIDUALES') listToRender = EXAMS_INDIVIDUALES;
+    }
+
+    if (listToRender.length === 0) {
+      listContainer.innerHTML = `<p style="padding: 1rem; color: var(--text-dark); text-align: center; font-size: 0.82rem; margin: 0;">Ningún examen coincide con la búsqueda.</p>`;
+      return;
+    }
+
+    listContainer.innerHTML = listToRender.map(examName => {
+      const isChecked = selectedIngresarExams.has(examName);
+      return `
+        <label style="display: flex; align-items: center; justify-content: space-between; padding: 10px 14px; background: rgba(255,255,255,0.03); border-radius: 6px; border: 1px solid var(--border-light); cursor: pointer; transition: all 0.2s;" class="ingresar-exam-row">
+          <span style="font-size: 0.85rem; color: var(--text-main); font-weight: 500; padding-right: 15px;">${examName}</span>
+          <input type="checkbox" class="ingresar-exam-cb" data-name="${examName}" ${isChecked ? 'checked' : ''} style="width: 18px; height: 18px; cursor: pointer;">
+        </label>
+      `;
+    }).join('');
+
+    listContainer.querySelectorAll('.ingresar-exam-cb').forEach(cb => {
+      cb.addEventListener('change', () => {
+        const name = cb.dataset.name;
+        if (cb.checked) {
+          selectedIngresarExams.add(name);
+        } else {
+          selectedIngresarExams.delete(name);
+        }
+        updateIngresarSelectedPills();
+      });
+    });
+  }
+
+  function updateIngresarSelectedPills() {
+    const container = document.getElementById('ingresar-selected-exams-pills');
+    const countSpan = document.getElementById('ingresar-selected-count');
+    if (!container) return;
+
+    countSpan.innerText = selectedIngresarExams.size;
+
+    if (selectedIngresarExams.size === 0) {
+      container.innerHTML = `<span style="font-size: 0.8rem; color: var(--text-dark);">Ningún examen seleccionado. Agregue exámenes arriba.</span>`;
+      return;
+    }
+
+    container.innerHTML = [...selectedIngresarExams].map(examName => `
+      <span style="font-size: 0.76rem; font-weight: 600; color: var(--color-accent); background: rgba(14, 165, 233, 0.1); border: 1px solid rgba(14, 165, 233, 0.2); padding: 5px 12px; border-radius: 20px; display: inline-flex; align-items: center; gap: 6px;">
+        ${examName}
+        <i class="fa-solid fa-circle-xmark" style="cursor: pointer; opacity: 0.7;" onclick="removeIngresarExam('${examName.replace(/'/g, "\\'")}')"></i>
+      </span>
+    `).join('');
+  }
+
+  window.removeIngresarExam = (examName) => {
+    selectedIngresarExams.delete(examName);
+    updateIngresarSelectedPills();
+    renderIngresarExams();
+  };
+
+  const catBtns = document.querySelectorAll('#ingresar-exam-cats button');
+  catBtns.forEach(btn => {
+    btn.addEventListener('click', () => {
+      catBtns.forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      currentIngresarCat = btn.dataset.cat;
+      const searchInput = document.getElementById('search-ingresar-exam');
+      if (searchInput) searchInput.value = '';
+      renderIngresarExams();
+    });
+  });
+
+  const searchInputIngresar = document.getElementById('search-ingresar-exam');
+  if (searchInputIngresar) {
+    searchInputIngresar.addEventListener('input', renderIngresarExams);
+  }
+
+  const datosEspecialesSelect = document.getElementById('ingresar-datos-especiales-tipo');
+  const condicionalBiopsia = document.getElementById('condicional-biopsia');
+  const condicionalPcr = document.getElementById('condicional-pcr');
+
+  if (datosEspecialesSelect) {
+    datosEspecialesSelect.addEventListener('change', () => {
+      const val = datosEspecialesSelect.value;
+      if (val === 'Biopsia') {
+        condicionalBiopsia.style.display = 'block';
+        condicionalPcr.style.display = 'none';
+      } else if (val === 'PCR') {
+        condicionalBiopsia.style.display = 'none';
+        condicionalPcr.style.display = 'block';
+      } else {
+        condicionalBiopsia.style.display = 'none';
+        condicionalPcr.style.display = 'none';
+      }
+    });
+  }
+
+  const dirHabitualCheckbox = document.getElementById('ingresar-dir-habitual');
+  const customDeliveryGrid = document.getElementById('ingresar-custom-delivery-grid');
+  if (dirHabitualCheckbox) {
+    dirHabitualCheckbox.addEventListener('change', () => {
+      customDeliveryGrid.style.display = dirHabitualCheckbox.checked ? 'none' : 'grid';
+      if (dirHabitualCheckbox.checked) {
+        document.getElementById('ingresar-direccion').value = '';
+        document.getElementById('ingresar-telefono').value = '';
+      }
+    });
+  }
+
+  window.changeStep = (from, to) => {
+    if (to > from) {
+      if (from === 1) {
+        const medico = document.getElementById('ingresar-medico');
+        const propietario = document.getElementById('ingresar-propietario');
+        const pacienteHc = document.getElementById('ingresar-paciente-hc');
+        const especie = document.getElementById('ingresar-especie');
+        const raza = document.getElementById('ingresar-raza');
+        const edad = document.getElementById('ingresar-edad');
+        const sexo = document.getElementById('ingresar-sexo');
+        
+        if (!medico.checkValidity() || !propietario.checkValidity() || !pacienteHc.checkValidity() || !especie.checkValidity() || !raza.checkValidity() || !edad.checkValidity() || !sexo.checkValidity()) {
+          showGlobalAlert('Por favor complete todos los campos obligatorios del Paso 1.', 'error');
+          document.getElementById('form-ingreso-paciente').reportValidity();
+          return;
+        }
+      }
+      
+      if (from === 2) {
+        const muestrasChecked = document.querySelectorAll('input[name="ingresar-muestra"]:checked');
+        if (muestrasChecked.length === 0) {
+          showGlobalAlert('Debe seleccionar al menos un tipo de muestra.', 'error');
+          return;
+        }
+        
+        const otros = document.getElementById('ingresar-otros').value.trim();
+        if (selectedIngresarExams.size === 0 && otros === '') {
+          showGlobalAlert('Debe seleccionar al menos un examen de la lista o indicar otro.', 'error');
+          return;
+        }
+
+        const quien = document.getElementById('ingresar-quien');
+        if (!quien.checkValidity()) {
+          showGlobalAlert('Por favor, indique quién diligencia el formulario.', 'error');
+          quien.focus();
+          return;
+        }
+      }
+    }
+
+    document.querySelectorAll('.step-panel').forEach(p => p.style.display = 'none');
+    document.getElementById(`step-panel-${to}`).style.display = 'block';
+
+    document.querySelectorAll('.step-indicator').forEach(ind => {
+      const step = parseInt(ind.getAttribute('data-step'));
+      if (step === to) {
+        ind.classList.add('active');
+        ind.querySelector('.step-num').style.background = 'var(--color-accent)';
+        ind.querySelector('.step-num').style.color = 'white';
+        ind.querySelector('span').style.color = 'var(--text-main)';
+      } else if (step < to) {
+        ind.classList.remove('active');
+        ind.querySelector('.step-num').style.background = 'var(--color-primary)';
+        ind.querySelector('.step-num').style.color = 'white';
+        ind.querySelector('span').style.color = 'var(--text-muted)';
+      } else {
+        ind.classList.remove('active');
+        ind.querySelector('.step-num').style.background = 'var(--border-light)';
+        ind.querySelector('.step-num').style.color = 'var(--text-muted)';
+        ind.querySelector('span').style.color = 'var(--text-muted)';
+      }
+    });
+
+    const progressLineFill = document.getElementById('progress-line-fill');
+    if (progressLineFill) {
+      const widthPercent = ((to - 1) / 2) * 100;
+      progressLineFill.style.width = `${widthPercent}%`;
+    }
+  };
+
+  const btnSubmit = document.getElementById('btn-submit-ingreso');
+  if (btnSubmit) {
+    btnSubmit.addEventListener('click', async () => {
+      const tipoEsp = document.getElementById('ingresar-datos-especiales-tipo').value;
+      if (tipoEsp === 'Biopsia') {
+        const muestra = document.getElementById('biopsia-tipo-muestra').value;
+        const aspecto = document.getElementById('biopsia-aspecto').value;
+        const consistencia = document.getElementById('biopsia-consistencia').value;
+        const ubicacion = document.getElementById('biopsia-ubicacion').value.trim();
+        const tiempo = document.getElementById('biopsia-tiempo').value.trim();
+        
+        if (!muestra || !aspecto || !consistencia || !ubicacion || !tiempo) {
+          showGlobalAlert('Por favor complete todos los datos obligatorios para la Biopsia.', 'error');
+          return;
+        }
+      } else if (tipoEsp === 'PCR') {
+        const pcrTipo = document.getElementById('pcr-tipo').value;
+        const pcrSintomatico = document.getElementById('pcr-sintomatico').value;
+        if (!pcrTipo || !pcrSintomatico) {
+          showGlobalAlert('Por favor complete el tipo de PCR y si el paciente es sintomático.', 'error');
+          return;
+        }
+      }
+
+      SirioAuth.showLoading('Enviando ingreso de paciente...');
+
+      const muestrasChecked = [];
+      document.querySelectorAll('input[name="ingresar-muestra"]:checked').forEach(cb => {
+        muestrasChecked.push(cb.value);
+      });
+
+      let detalleEspecial = '';
+      if (tipoEsp === 'Biopsia') {
+        detalleEspecial = JSON.stringify({
+          tipo_muestra: document.getElementById('biopsia-tipo-muestra').value,
+          aspecto: document.getElementById('biopsia-aspecto').value,
+          consistencia: document.getElementById('biopsia-consistencia').value,
+          ubicacion: document.getElementById('biopsia-ubicacion').value.trim(),
+          tiempo_evolucion: document.getElementById('biopsia-tiempo').value.trim(),
+          detalles_adicionales: document.getElementById('biopsia-detalles-adicionales').value.trim()
+        });
+      } else if (tipoEsp === 'PCR') {
+        const sintomas = [];
+        document.querySelectorAll('input[name="pcr-sintomas"]:checked').forEach(cb => {
+          sintomas.push(cb.value);
+        });
+        detalleEspecial = JSON.stringify({
+          tipo_pcr: document.getElementById('pcr-tipo').value,
+          estado_paciente: document.getElementById('pcr-sintomatico').value,
+          sintomas: sintomas,
+          observaciones_pcr: document.getElementById('pcr-observaciones').value.trim()
+        });
+      }
+
+      const payload = {
+        id_usuario: currentUser.id_usuario,
+        veterinaria: currentUser.nombre,
+        medico: document.getElementById('ingresar-medico').value.trim(),
+        propietario: document.getElementById('ingresar-propietario').value.trim(),
+        paciente_nombre: document.getElementById('ingresar-paciente-hc').value.trim(),
+        especie: document.getElementById('ingresar-especie').value,
+        raza: document.getElementById('ingresar-raza').value,
+        edad: document.getElementById('ingresar-edad').value,
+        sexo: document.getElementById('ingresar-sexo').value,
+        tipo_muestra: muestrasChecked.join(', '),
+        examenes_solicitados: [...selectedIngresarExams].join(', '),
+        otros_examenes: document.getElementById('ingresar-otros').value.trim(),
+        observaciones: document.getElementById('ingresar-observaciones').value.trim(),
+        direccion_recoleccion: document.getElementById('ingresar-dir-habitual').checked ? 'DIRECCIÓN REGISTRADA' : document.getElementById('ingresar-direccion').value.trim(),
+        contacto_recoleccion: document.getElementById('ingresar-dir-habitual').checked ? 'TELÉFONO REGISTRADO' : document.getElementById('ingresar-telefono').value.trim(),
+        quien_diligencia: document.getElementById('ingresar-quien').value.trim(),
+        datos_especiales_tipo: tipoEsp,
+        datos_especiales_detalle: detalleEspecial
+      };
+
+      try {
+        const res = await fetch(`${SirioAuth.API_BASE}/api/client/ingresar-paciente`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        const data = await res.json();
+        SirioAuth.hideLoading();
+
+        if (data.success) {
+          showGlobalAlert('Paciente ingresado con éxito y recolección programada.', 'success');
+          resetIngresarForm();
+          changeStep(3, 1);
+          const resultsTabBtn = document.querySelector('[data-tab="tab-client-results"]');
+          if (resultsTabBtn) resultsTabBtn.click();
+        } else {
+          showGlobalAlert(data.message || 'Error al ingresar paciente.', 'error');
+        }
+      } catch (err) {
+        SirioAuth.hideLoading();
+        console.error('Error al enviar paciente:', err);
+        showGlobalAlert('Error de red al intentar registrar paciente.', 'error');
+      }
+    });
+  }
+
+  function resetIngresarForm() {
+    document.getElementById('form-ingreso-paciente').reset();
+    selectedIngresarExams.clear();
+    updateIngresarSelectedPills();
+    renderIngresarExams();
+    
+    document.getElementById('condicional-biopsia').style.display = 'none';
+    document.getElementById('condicional-pcr').style.display = 'none';
+    document.getElementById('ingresar-custom-delivery-grid').style.display = 'none';
+    
+    if (ingresarVetInput && currentUser) {
+      ingresarVetInput.value = currentUser.nombre;
+    }
+  }
+
+  const ingresarTabBtn = document.querySelector('[data-tab="tab-client-ingresar"]');
+  if (ingresarTabBtn) {
+    ingresarTabBtn.addEventListener('click', () => {
+      renderIngresarExams();
+    });
+  }
+
   // Cargar portafolio INMEDIATAMENTE al iniciar (no esperar el click de tab)
   loadPortafolio();
 

@@ -298,6 +298,37 @@ app.get('/api/client/results', async (req, res) => {
   }
 });
 
+// API: Ingresar Paciente (Para Clientes)
+app.post('/api/client/ingresar-paciente', async (req, res) => {
+  const { 
+    id_usuario, veterinaria, medico, propietario, paciente_nombre, especie, raza, edad, sexo, 
+    tipo_muestra, examenes_solicitados, otros_examenes, observaciones, 
+    direccion_recoleccion, contacto_recoleccion, quien_diligencia, 
+    datos_especiales_tipo, datos_especiales_detalle 
+  } = req.body;
+
+  if (!id_usuario || !paciente_nombre || !especie || !sexo) {
+    return res.status(400).json({ success: false, message: "Los campos de usuario, nombre de paciente, especie y sexo son requeridos." });
+  }
+
+  try {
+    const result = await db.ingresarPaciente({
+      id_usuario, veterinaria, medico, propietario, paciente_nombre, especie, raza, edad, sexo,
+      tipo_muestra, examenes_solicitados, otros_examenes, observaciones,
+      direccion_recoleccion, contacto_recoleccion, quien_diligencia,
+      datos_especiales_tipo, datos_especiales_detalle
+    });
+    
+    if (result.success) {
+      res.json(result);
+    } else {
+      res.status(400).json(result);
+    }
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
 // API: Obtener todos los exámenes (Solo Admins)
 app.get('/api/admin/results', async (req, res) => {
   try {

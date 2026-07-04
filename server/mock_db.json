@@ -268,5 +268,28 @@
       "muestra": "Orina",
       "recipiente": "Frasco tapa rosca estéril"
     }
+  ],
+  "Pacientes": [
+    {
+      "fecha_ingreso": "2026-07-04T23:32:17.860Z",
+      "id_usuario": "U014",
+      "veterinaria": "PRUEBA",
+      "medico": "A",
+      "propietario": "A",
+      "paciente_nombre": "A",
+      "especie": "Felino",
+      "raza": "Bengalí",
+      "edad": "4 AÑOS",
+      "sexo": "Macho",
+      "tipo_muestra": "Sangre",
+      "examenes_solicitados": "Perfil Prequirúrgico 1 (Hemograma + ALT + Creatinina)",
+      "otros_examenes": "",
+      "observaciones": "",
+      "direccion_recoleccion": "DIRECCIÓN REGISTRADA",
+      "contacto_recoleccion": "TELÉFONO REGISTRADO",
+      "quien_diligencia": "A",
+      "datos_especiales_tipo": "No",
+      "datos_especiales_detalle": ""
+    }
   ]
 }

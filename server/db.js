@@ -3,6 +3,7 @@ const fs = require('fs');
 const path = require('path');
 
 const GOOGLE_SHEET_URL = process.env.GOOGLE_SHEET_API_URL || '';
+const GOOGLE_PACIENTES_SCRIPT_URL = process.env.GOOGLE_PACIENTES_SCRIPT_URL || '';
 const API_KEY = process.env.API_KEY || 'SIRIO_SECRET_API_KEY';
 const MOCK_DB_PATH = path.join(__dirname, 'mock_db.json');
 
@@ -91,7 +92,8 @@ function createDefaultMockDB() {
     Configuracion: {
       gemini_api_key: "CONFIGURAR_DESDE_PANEL_ADMIN"
     },
-    Portafolio: defaultPortafolio
+    Portafolio: defaultPortafolio,
+    Pacientes: []
   };
   fs.writeFileSync(MOCK_DB_PATH, JSON.stringify(defaultData, null, 2));
 }
@@ -102,7 +104,7 @@ function readMockDB() {
     const data = fs.readFileSync(MOCK_DB_PATH, 'utf8');
     return JSON.parse(data);
   } catch (err) {
-    return { Usuarios: [], Resultados: [], Accesos: [] };
+    return { Usuarios: [], Resultados: [], Accesos: [], Pacientes: [] };
   }
 }
 
@@ -142,6 +144,38 @@ async function callSheetsAPI(action, data = {}) {
   } catch (error) {
     console.warn(`⚠️  Google Sheets no disponible para acción "${action}". Usando base de datos local como respaldo. (${error.message})`);
     // Fallback transparente al mock_db local
+    return handleMockAction(action, data);
+  }
+}
+
+/**
+ * Realiza una consulta a la API del proyecto de Google Apps Script para Pacientes.
+ */
+async function callPacientesAPI(action, data = {}) {
+  const isPacientesDemoMode = !GOOGLE_PACIENTES_SCRIPT_URL || GOOGLE_PACIENTES_SCRIPT_URL.includes('xxxxxxxxx');
+  
+  if (isPacientesDemoMode) {
+    return handleMockAction(action, data);
+  }
+
+  if (!fs.existsSync(MOCK_DB_PATH)) {
+    createDefaultMockDB();
+  }
+
+  try {
+    const response = await axios.post(GOOGLE_PACIENTES_SCRIPT_URL, {
+      apiKey: API_KEY,
+      action: action,
+      data: data
+    }, {
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      timeout: 15000
+    });
+    return response.data;
+  } catch (error) {
+    console.warn(`⚠️  Google Sheets de Pacientes no disponible para acción "${action}". Usando base de datos local como respaldo. (${error.message})`);
     return handleMockAction(action, data);
   }
 }
@@ -264,6 +298,17 @@ function handleMockAction(action, data) {
           : `${items.length} exámenes publicados en base de datos local correctamente.`, 
         ids: addedIds 
       };
+    }
+
+    case 'ingresarPaciente': {
+      db.Pacientes = db.Pacientes || [];
+      const newPaciente = {
+        fecha_ingreso: new Date().toISOString(),
+        ...data
+      };
+      db.Pacientes.push(newPaciente);
+      writeMockDB(db);
+      return { success: true, message: "Paciente ingresado localmente (Modo Demo)." };
     }
     
     case 'getClientResults': {
@@ -513,5 +558,6 @@ module.exports = {
   getPortafolio: () => callSheetsAPI('getPortafolio'),
   savePortafolioPrecios: (preciosData) => callSheetsAPI('savePortafolioPrecios', preciosData),
   addPortafolioExamen: (examenData) => callSheetsAPI('addPortafolioExamen', examenData),
-  deletePortafolioExamen: (id_examen) => callSheetsAPI('deletePortafolioExamen', { id_examen })
+  deletePortafolioExamen: (id_examen) => callSheetsAPI('deletePortafolioExamen', { id_examen }),
+  ingresarPaciente: (pacienteData) => callPacientesAPI('ingresarPaciente', pacienteData)
 };

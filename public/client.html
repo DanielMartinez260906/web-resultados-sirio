@@ -50,6 +50,10 @@
         <i class="fa-solid fa-book-medical"></i>
         <span>Portafolio de Servicios</span>
       </button>
+      <button class="nav-tab" data-tab="tab-client-ingresar">
+        <i class="fa-solid fa-file-signature"></i>
+        <span>Ingresar Paciente</span>
+      </button>
       <button class="nav-tab" data-tab="tab-client-profile">
         <i class="fa-solid fa-user-gear"></i>
         <span>Mi Perfil</span>
@@ -125,6 +129,453 @@
           <p>Buscando tus resultados de laboratorio...</p>
         </div>
       </div>
+    </div>
+
+    <!-- Pestaña 4: Ingresar Paciente -->
+    <div id="tab-client-ingresar" class="tab-content" style="display: none;">
+      <!-- Banner con el Logo de SIRIO -->
+      <div class="panel-card" style="margin-bottom: 1.5rem; display: flex; align-items: center; gap: 1.5rem; padding: 1.25rem 2rem; background: linear-gradient(135deg, rgba(14, 165, 233, 0.08) 0%, rgba(14, 165, 233, 0.02) 100%); border-left: 5px solid var(--color-accent);">
+        <img src="img/logo.png" alt="SIRIO Logo" style="height: 52px; object-fit: contain;">
+        <div>
+          <h2 style="font-size: 1.35rem; font-weight: 700; color: var(--color-accent); margin: 0; display: flex; align-items: center; gap: 8px;">
+            <i class="fa-solid fa-file-signature"></i> Ingresar Paciente y Programar Recolección
+          </h2>
+          <p style="font-size: 0.8rem; color: var(--text-muted); margin: 4px 0 0 0;">
+            Registre a sus pacientes y solicite la recogida de muestras en el área metropolitana de forma rápida y sencilla.
+          </p>
+        </div>
+      </div>
+
+      <!-- Indicador de Pasos -->
+      <div class="panel-card" style="margin-bottom: 1.5rem; padding: 1.25rem;">
+        <div style="display: flex; justify-content: space-around; align-items: center; position: relative;">
+          <div style="position: absolute; top: 22px; left: 10%; right: 10%; height: 2px; background: var(--border-light); z-index: 1;" id="progress-line">
+            <div id="progress-line-fill" style="width: 0%; height: 100%; background: var(--color-accent); transition: width 0.3s;"></div>
+          </div>
+          
+          <div class="step-indicator active" data-step="1" style="z-index: 2; text-align: center; cursor: pointer;">
+            <div class="step-num" style="width: 44px; height: 44px; border-radius: 50%; background: var(--color-accent); color: white; display: flex; align-items: center; justify-content: center; font-weight: 700; margin: 0 auto 6px auto; border: 3px solid var(--panel-bg); transition: all 0.3s;">1</div>
+            <span style="font-size: 0.72rem; font-weight: 600; color: var(--text-main);">Paciente y Propietario</span>
+          </div>
+
+          <div class="step-indicator" data-step="2" style="z-index: 2; text-align: center;">
+            <div class="step-num" style="width: 44px; height: 44px; border-radius: 50%; background: var(--border-light); color: var(--text-muted); display: flex; align-items: center; justify-content: center; font-weight: 700; margin: 0 auto 6px auto; border: 3px solid var(--panel-bg); transition: all 0.3s;">2</div>
+            <span style="font-size: 0.72rem; font-weight: 600; color: var(--text-muted);">Muestras y Exámenes</span>
+          </div>
+
+          <div class="step-indicator" data-step="3" style="z-index: 2; text-align: center;">
+            <div class="step-num" style="width: 44px; height: 44px; border-radius: 50%; background: var(--border-light); color: var(--text-muted); display: flex; align-items: center; justify-content: center; font-weight: 700; margin: 0 auto 6px auto; border: 3px solid var(--panel-bg); transition: all 0.3s;">3</div>
+            <span style="font-size: 0.72rem; font-weight: 600; color: var(--text-muted);">Detalles Especiales</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Contenedor de Formularios por Pasos -->
+      <form id="form-ingreso-paciente" onsubmit="return false;">
+        
+        <!-- PASO 1: Identificación -->
+        <div class="panel-card step-panel" id="step-panel-1" style="padding: 2rem;">
+          <h3 style="font-size: 1.05rem; font-weight: 600; color: var(--color-accent); margin-bottom: 1.5rem; display: flex; align-items: center; gap: 8px;">
+            <i class="fa-solid fa-paw"></i> Paso 1: Datos de la Veterinaria, Médico y Paciente
+          </h3>
+
+          <div class="form-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.5rem; margin-bottom: 1.5rem;">
+            <div class="form-group">
+              <label style="font-weight: 600;">Centro Veterinario / Veterinaria</label>
+              <input type="text" id="ingresar-vet" class="form-control" readonly style="background: rgba(255, 255, 255, 0.05); color: var(--text-muted);">
+            </div>
+            <div class="form-group">
+              <label style="font-weight: 600;">Médico Veterinario Solicitante *</label>
+              <input type="text" id="ingresar-medico" class="form-control" placeholder="Nombre completo del médico veterinario" required>
+            </div>
+            <div class="form-group">
+              <label style="font-weight: 600;">Propietario de la Mascota *</label>
+              <input type="text" id="ingresar-propietario" class="form-control" placeholder="Nombre del propietario" required>
+            </div>
+            <div class="form-group">
+              <label style="font-weight: 600;">Nombre del Paciente y N° Historia Clínica *</label>
+              <input type="text" id="ingresar-paciente-hc" class="form-control" placeholder="Ej: Toby - HC: 12345" required>
+            </div>
+            <div class="form-group">
+              <label style="font-weight: 600;">Especie *</label>
+              <select id="ingresar-especie" class="form-control" required style="height: 46px;">
+                <option value="" disabled selected>Seleccione la especie</option>
+                <option value="Canino">Canino</option>
+                <option value="Felino">Felino</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label style="font-weight: 600;">Raza *</label>
+              <select id="ingresar-raza" class="form-control" required style="height: 46px;">
+                <option value="" disabled selected>Seleccione la raza</option>
+                <option value="Criollo">Criollo</option>
+                <option value="Mestizo">Mestizo</option>
+                <option value="Cruce">Cruce</option>
+                <option value="No indica">No indica</option>
+                <option value="Afgano">Afgano</option>
+                <option value="Akita">Akita</option>
+                <option value="Alaska Malamute">Alaska Malamute</option>
+                <option value="American Bully">American Bully</option>
+                <option value="Angora">Angora</option>
+                <option value="Australian Shepherd">Australian Shepherd</option>
+                <option value="Azul Ruso">Azul Ruso</option>
+                <option value="Basset hound">Basset hound</option>
+                <option value="Balinés">Balinés</option>
+                <option value="Beagle">Beagle</option>
+                <option value="Bernes de la Montaña">Bernes de la Montaña</option>
+                <option value="Bengalí">Bengalí</option>
+                <option value="Border Collie">Border Collie</option>
+                <option value="Boston Terrier">Boston Terrier</option>
+                <option value="Bull Terrier">Bull Terrier</option>
+                <option value="Bulldog Francés">Bulldog Francés</option>
+                <option value="Bulldog Inglés">Bulldog Inglés</option>
+                <option value="Boxer">Boxer</option>
+                <option value="Caniche">Caniche</option>
+                <option value="Cavalier">Cavalier</option>
+                <option value="Chihuahua">Chihuahua</option>
+                <option value="Chow chow">Chow chow</option>
+                <option value="Cocker">Cocker</option>
+                <option value="Dachshund (Teckel)">Dachshund (Teckel)</option>
+                <option value="Dalmata">Dalmata</option>
+                <option value="Doberman">Doberman</option>
+                <option value="Dogo de Burdeos">Dogo de Burdeos</option>
+                <option value="Golden Retriever">Golden Retriever</option>
+                <option value="Golden doodle">Golden doodle</option>
+                <option value="Husky">Husky</option>
+                <option value="Jack Russell terrier">Jack Russell terrier</option>
+                <option value="Labrador">Labrador</option>
+                <option value="Maltés">Maltés</option>
+                <option value="Maine Coon">Maine Coon</option>
+                <option value="Maltipoo">Maltipoo</option>
+                <option value="Pastor Alemán">Pastor Alemán</option>
+                <option value="Pastor Belga Malinois">Pastor Belga Malinois</option>
+                <option value="Persa">Persa</option>
+                <option value="Pinscher">Pinscher</option>
+                <option value="Pitbull">Pitbull</option>
+                <option value="Pomerania">Pomerania</option>
+                <option value="Poodle (French poodle)">Poodle (French poodle)</option>
+                <option value="Pug">Pug</option>
+                <option value="Ragdoll">Ragdoll</option>
+                <option value="Rottweiler">Rottweiler</option>
+                <option value="Schnauzer">Schnauzer</option>
+                <option value="Shih Tzu">Shih Tzu</option>
+                <option value="Siames">Siames</option>
+                <option value="Yorkshire">Yorkshire</option>
+                <option value="OTRO">OTRO (Especificar abajo en Observaciones)</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label style="font-weight: 600;">Edad *</label>
+              <select id="ingresar-edad" class="form-control" required style="height: 46px;">
+                <option value="" disabled selected>Seleccione la edad</option>
+                <option value="1 MES">1 Mes</option>
+                <option value="2 MESES">2 Meses</option>
+                <option value="3 MESES">3 Meses</option>
+                <option value="4 MESES">4 Meses</option>
+                <option value="5 MESES">5 Meses</option>
+                <option value="6 MESES">6 Meses</option>
+                <option value="7 MESES">7 Meses</option>
+                <option value="8 MESES">8 Meses</option>
+                <option value="9 MESES">9 Meses</option>
+                <option value="10 MESES">10 Meses</option>
+                <option value="11 MESES">11 Meses</option>
+                <option value="1 AÑO">1 Año</option>
+                <option value="2 AÑOS">2 Años</option>
+                <option value="3 AÑOS">3 Años</option>
+                <option value="4 AÑOS">4 Años</option>
+                <option value="5 AÑOS">5 Años</option>
+                <option value="6 AÑOS">6 Años</option>
+                <option value="7 AÑOS">7 Años</option>
+                <option value="8 AÑOS">8 Años</option>
+                <option value="9 AÑOS">9 Años</option>
+                <option value="10 AÑOS">10 Años</option>
+                <option value="11 AÑOS">11 Años</option>
+                <option value="12 AÑOS">12 Años</option>
+                <option value="13 AÑOS">13 Años</option>
+                <option value="14 AÑOS">14 Años</option>
+                <option value="15 AÑOS">15 Años</option>
+                <option value="16 AÑOS">16 Años</option>
+                <option value="17 AÑOS">17 Años</option>
+                <option value="18 AÑOS">18 Años</option>
+                <option value="19 AÑOS">19 Años</option>
+                <option value="20 AÑOS">20 Años</option>
+                <option value="NO INDICA">No indica</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label style="font-weight: 600;">Sexo *</label>
+              <select id="ingresar-sexo" class="form-control" required style="height: 46px;">
+                <option value="" disabled selected>Seleccione el sexo</option>
+                <option value="Macho">Macho</option>
+                <option value="Hembra">Hembra</option>
+              </select>
+            </div>
+          </div>
+
+          <div style="text-align: right;">
+            <button type="button" class="btn btn-primary" onclick="changeStep(1, 2)" style="gap: 8px;">
+              Siguiente Paso <i class="fa-solid fa-arrow-right"></i>
+            </button>
+          </div>
+        </div>
+
+        <!-- PASO 2: Muestras y Exámenes -->
+        <div class="panel-card step-panel" id="step-panel-2" style="padding: 2rem; display: none;">
+          <h3 style="font-size: 1.05rem; font-weight: 600; color: var(--color-accent); margin-bottom: 1.5rem; display: flex; align-items: center; gap: 8px;">
+            <i class="fa-solid fa-microscope"></i> Paso 2: Selección de Exámenes y Muestra
+          </h3>
+
+          <!-- Tipo de Muestra -->
+          <div class="form-group" style="margin-bottom: 1.5rem;">
+            <label style="font-weight: 700; margin-bottom: 0.5rem; display: block;">Tipo de muestra enviada (Seleccione todas las que apliquen) *</label>
+            <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 0.75rem;">
+              <label class="checkbox-label" style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                <input type="checkbox" name="ingresar-muestra" value="Sangre" style="width: 18px; height: 18px;"> Sangre
+              </label>
+              <label class="checkbox-label" style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                <input type="checkbox" name="ingresar-muestra" value="Orina" style="width: 18px; height: 18px;"> Orina
+              </label>
+              <label class="checkbox-label" style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                <input type="checkbox" name="ingresar-muestra" value="Materia Fecal" style="width: 18px; height: 18px;"> Materia Fecal
+              </label>
+              <label class="checkbox-label" style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                <input type="checkbox" name="ingresar-muestra" value="Secreción 1 oído" style="width: 18px; height: 18px;"> Secreción 1 oído
+              </label>
+              <label class="checkbox-label" style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                <input type="checkbox" name="ingresar-muestra" value="Secreción 2 Oídos (OD-OI)" style="width: 18px; height: 18px;"> Secreción 2 Oídos (OD-OI)
+              </label>
+              <label class="checkbox-label" style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                <input type="checkbox" name="ingresar-muestra" value="Secreción de piel" style="width: 18px; height: 18px;"> Secreción de piel
+              </label>
+              <label class="checkbox-label" style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                <input type="checkbox" name="ingresar-muestra" value="Pelos y escamas" style="width: 18px; height: 18px;"> Pelos y escamas
+              </label>
+            </div>
+          </div>
+
+          <div style="border-top: 1px solid var(--border-light); margin: 1.5rem 0; padding-top: 1.5rem;">
+            <label style="font-weight: 700; margin-bottom: 0.75rem; display: block;">Exámenes Solicitados *</label>
+            
+            <!-- Buscador rápido de exámenes -->
+            <div style="position: relative; margin-bottom: 1.5rem;">
+              <input type="text" id="search-ingresar-exam" class="form-control" placeholder="Buscar examen por nombre... (ej: Hemograma, Perfil, Cultivo)" style="padding-left: 45px; height: 46px;">
+              <i class="fa-solid fa-magnifying-glass" style="position: absolute; left: 16px; top: 50%; transform: translateY(-50%); color: var(--text-dark); opacity: 0.6; font-size: 1.1rem;"></i>
+            </div>
+
+            <!-- Listas Dinámicas por pestañas de categorías para ahorrar espacio -->
+            <div class="view-toggle" id="ingresar-exam-cats" style="display: flex; gap: 6px; overflow-x: auto; padding-bottom: 8px; scrollbar-width: thin; -webkit-overflow-scrolling: touch; margin-bottom: 1rem;">
+              <button type="button" class="btn btn-secondary active" data-cat="COMUNES">Comunes</button>
+              <button type="button" class="btn btn-secondary" data-cat="PERFILES">Perfiles</button>
+              <button type="button" class="btn btn-secondary" data-cat="INDIVIDUALES">Individuales A-Z</button>
+              <button type="button" class="btn btn-secondary" data-cat="CULTIVOS">Cultivos</button>
+              <button type="button" class="btn btn-secondary" data-cat="TOXICOLOGIA">Toxicología</button>
+            </div>
+
+            <!-- Contenedor de Exámenes de la Categoría seleccionada -->
+            <div id="ingresar-exam-list" style="max-height: 250px; overflow-y: auto; padding: 10px; background: rgba(0,0,0,0.2); border-radius: 8px; border: 1px solid var(--border-light); margin-bottom: 1.5rem; display: flex; flex-direction: column; gap: 8px;">
+              <!-- Se cargará por JS -->
+            </div>
+
+            <!-- Resumen de Exámenes Seleccionados (Carrito) -->
+            <div style="background: rgba(14, 165, 233, 0.04); border: 1.5px dashed rgba(14, 165, 233, 0.25); padding: 1rem; border-radius: 8px; margin-bottom: 1.5rem;">
+              <h4 style="margin: 0 0 0.5rem 0; font-size: 0.85rem; color: var(--color-accent); font-weight: 700; text-transform: uppercase;">Exámenes Agregados (<span id="ingresar-selected-count">0</span>)</h4>
+              <div id="ingresar-selected-exams-pills" style="display: flex; flex-wrap: wrap; gap: 8px;">
+                <span style="font-size: 0.8rem; color: var(--text-dark);">Ningún examen seleccionado. Agregue exámenes arriba.</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label style="font-weight: 600;">Otros Exámenes (Si no se encuentran arriba)</label>
+            <input type="text" id="ingresar-otros" class="form-control" placeholder="Escriba otros exámenes separados por coma">
+          </div>
+
+          <div class="form-group">
+            <label style="font-weight: 600;">Observaciones Clínicas / Datos de Interés</label>
+            <textarea id="ingresar-observaciones" class="form-control" rows="3" placeholder="Sintomatología, antecedentes, sospecha diagnóstica..."></textarea>
+          </div>
+
+          <!-- Dirección y Contacto de Recogida -->
+          <div style="border-top: 1px solid var(--border-light); margin: 1.5rem 0; padding-top: 1.5rem;">
+            <h4 style="font-size: 0.95rem; font-weight: 700; color: var(--color-accent); margin-bottom: 1rem;">
+              <i class="fa-solid fa-truck-ramp-box"></i> Programación de la Recolección
+            </h4>
+            
+            <div style="margin-bottom: 1rem; display: flex; align-items: center; gap: 8px;">
+              <input type="checkbox" id="ingresar-dir-habitual" checked style="width: 18px; height: 18px; cursor: pointer;">
+              <label for="ingresar-dir-habitual" style="font-weight: 600; cursor: pointer; margin: 0;">Recoger en la dirección registrada de la veterinaria</label>
+            </div>
+
+            <div class="form-grid" id="ingresar-custom-delivery-grid" style="display: none; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.5rem; margin-bottom: 1.5rem; animation: floatIn 0.3s ease;">
+              <div class="form-group">
+                <label style="font-weight: 600;">Dirección y Barrio de Recolección (Punto Alterno)</label>
+                <input type="text" id="ingresar-direccion" class="form-control" placeholder="Indicar dirección exacta y barrio">
+              </div>
+              <div class="form-group">
+                <label style="font-weight: 600;">Número de Contacto del Punto Alterno</label>
+                <input type="text" id="ingresar-telefono" class="form-control" placeholder="Teléfono o Celular para coordinar">
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label style="font-weight: 600;">Nombre de quién diligencia este formulario *</label>
+              <input type="text" id="ingresar-quien" class="form-control" placeholder="Nombre completo" required>
+            </div>
+          </div>
+
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+            <button type="button" class="btn btn-secondary" onclick="changeStep(2, 1)" style="gap: 8px;">
+              <i class="fa-solid fa-arrow-left"></i> Anterior
+            </button>
+            <button type="button" class="btn btn-primary" onclick="changeStep(2, 3)" style="gap: 8px;">
+              Siguiente Paso <i class="fa-solid fa-arrow-right"></i>
+            </button>
+          </div>
+        </div>
+
+        <!-- PASO 3: Datos Especiales -->
+        <div class="panel-card step-panel" id="step-panel-3" style="padding: 2rem; display: none;">
+          <h3 style="font-size: 1.05rem; font-weight: 600; color: var(--color-accent); margin-bottom: 1.5rem; display: flex; align-items: center; gap: 8px;">
+            <i class="fa-solid fa-vial-circle-check"></i> Paso 3: Histopatología, Citología o PCR
+          </h3>
+
+          <div class="form-group" style="margin-bottom: 1.5rem;">
+            <label style="font-weight: 700; margin-bottom: 0.5rem; display: block;">¿Ha solicitado alguna Histopatología (Biopsia), Citología tumoral, PAAF o PCR? *</label>
+            <select id="ingresar-datos-especiales-tipo" class="form-control" style="height: 46px;">
+              <option value="No" selected>No, ninguno de estos exámenes aplica</option>
+              <option value="Biopsia">Sí (Biopsia / Citología tumoral / PAAF)</option>
+              <option value="PCR">Sí (PCR - Reacción en Cadena de la Polimerasa)</option>
+            </select>
+          </div>
+
+          <!-- Campos condicionales para BIOPSIA -->
+          <div id="condicional-biopsia" style="display: none; border-top: 1.5px dashed var(--border-light); padding-top: 1.5rem; margin-top: 1.5rem; animation: floatIn 0.3s ease;">
+            <h4 style="font-size: 0.95rem; font-weight: 700; color: var(--color-accent); margin-bottom: 1rem;">
+              <i class="fa-solid fa-stethoscope"></i> Información Adicional para Patología y Citología
+            </h4>
+            <div class="form-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.5rem;">
+              <div class="form-group">
+                <label style="font-weight: 600;">Tipo de muestra</label>
+                <select id="biopsia-tipo-muestra" class="form-control">
+                  <option value="" disabled selected>Seleccione tipo de muestra</option>
+                  <option value="Punción">Punción</option>
+                  <option value="Aspirado">Aspirado</option>
+                  <option value="Impronta">Impronta</option>
+                  <option value="Hisopado">Hisopado</option>
+                  <option value="Tejido">Tejido</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label style="font-weight: 600;">Aspecto de la lesión</label>
+                <select id="biopsia-aspecto" class="form-control">
+                  <option value="" disabled selected>Seleccione aspecto</option>
+                  <option value="Cerrada">Cerrada</option>
+                  <option value="Ulcerada">Ulcerada</option>
+                  <option value="Alopécica">Alopécica</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label style="font-weight: 600;">Consistencia</label>
+                <select id="biopsia-consistencia" class="form-control">
+                  <option value="" disabled selected>Seleccione consistencia</option>
+                  <option value="Blanda">Blanda</option>
+                  <option value="Dura">Dura</option>
+                  <option value="Semidura">Semidura</option>
+                  <option value="Líquida">Líquida</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label style="font-weight: 600;">Ubicación anatómica de la lesión</label>
+                <input type="text" id="biopsia-ubicacion" class="form-control" placeholder="Ej: Miembro anterior izquierdo">
+              </div>
+              <div class="form-group">
+                <label style="font-weight: 600;">Tiempo de evolución de la lesión</label>
+                <input type="text" id="biopsia-tiempo" class="form-control" placeholder="Ej: 3 meses">
+              </div>
+            </div>
+            <div class="form-group" style="margin-top: 1.2rem;">
+              <label style="font-weight: 600;">Datos adicionales respecto a esta lesión</label>
+              <textarea id="biopsia-detalles-adicionales" class="form-control" rows="2" placeholder="Velocidad de crecimiento, sintomatología de dolor, ganglios linfáticos afectados..."></textarea>
+            </div>
+          </div>
+
+          <!-- Campos condicionales para PCR -->
+          <div id="condicional-pcr" style="display: none; border-top: 1.5px dashed var(--border-light); padding-top: 1.5rem; margin-top: 1.5rem; animation: floatIn 0.3s ease;">
+            <h4 style="font-size: 0.95rem; font-weight: 700; color: var(--color-accent); margin-bottom: 1rem;">
+              <i class="fa-solid fa-dna"></i> Información Adicional para Diagnósticos de PCR
+            </h4>
+            <div class="form-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.5rem; margin-bottom: 1rem;">
+              <div class="form-group">
+                <label style="font-weight: 600;">Selecciona el tipo de PCR</label>
+                <select id="pcr-tipo" class="form-control">
+                  <option value="" disabled selected>Seleccione tipo de PCR</option>
+                  <option value="PCR Punto Final (Positivo o negativo)">PCR Punto Final (Positivo o negativo)</option>
+                  <option value="PCR Tiempo Real (Copias/ul)">PCR Tiempo Real (Copias/ul)</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label style="font-weight: 600;">¿El paciente es sintomático o asintomático?</label>
+                <select id="pcr-sintomatico" class="form-control">
+                  <option value="" disabled selected>Seleccione respuesta</option>
+                  <option value="Sintomático">Sintomático</option>
+                  <option value="Asintomático">Asintomático</option>
+                </select>
+              </div>
+            </div>
+            
+            <div class="form-group">
+              <label style="font-weight: 700; margin-bottom: 0.5rem; display: block;">Sintomatología clínica presente (Marque todas las que apliquen)</label>
+              <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 0.5rem;">
+                <label class="checkbox-label" style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 0.82rem;">
+                  <input type="checkbox" name="pcr-sintomas" value="Anemia" style="width: 16px; height: 16px;"> Anemia
+                </label>
+                <label class="checkbox-label" style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 0.82rem;">
+                  <input type="checkbox" name="pcr-sintomas" value="Mucosas palidas" style="width: 16px; height: 16px;"> Mucosas pálidas
+                </label>
+                <label class="checkbox-label" style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 0.82rem;">
+                  <input type="checkbox" name="pcr-sintomas" value="Mucosas ictéricas" style="width: 16px; height: 16px;"> Mucosas ictéricas
+                </label>
+                <label class="checkbox-label" style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 0.82rem;">
+                  <input type="checkbox" name="pcr-sintomas" value="Fiebre" style="width: 16px; height: 16px;"> Fiebre
+                </label>
+                <label class="checkbox-label" style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 0.82rem;">
+                  <input type="checkbox" name="pcr-sintomas" value="Linfadenopatia generalizada" style="width: 16px; height: 16px;"> Linfadenopatía generalizada
+                </label>
+                <label class="checkbox-label" style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 0.82rem;">
+                  <input type="checkbox" name="pcr-sintomas" value="Hepatomegalia" style="width: 16px; height: 16px;"> Hepatomegalia
+                </label>
+                <label class="checkbox-label" style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 0.82rem;">
+                  <input type="checkbox" name="pcr-sintomas" value="Esplenomegalia" style="width: 16px; height: 16px;"> Esplenomegalia
+                </label>
+                <label class="checkbox-label" style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 0.82rem;">
+                  <input type="checkbox" name="pcr-sintomas" value="Anorexia" style="width: 16px; height: 16px;"> Anorexia
+                </label>
+                <label class="checkbox-label" style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 0.82rem;">
+                  <input type="checkbox" name="pcr-sintomas" value="Trombocitopenia" style="width: 16px; height: 16px;"> Trombocitopenia
+                </label>
+                <label class="checkbox-label" style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 0.82rem;">
+                  <input type="checkbox" name="pcr-sintomas" value="Decaimiento" style="width: 16px; height: 16px;"> Decaimiento
+                </label>
+              </div>
+            </div>
+
+            <div class="form-group" style="margin-top: 1rem;">
+              <label style="font-weight: 600;">PCR a Solicitar y Observaciones adicionales</label>
+              <textarea id="pcr-observaciones" class="form-control" rows="2" placeholder="Describa el PCR específico o agregue detalles del cuadro sintomático"></textarea>
+            </div>
+          </div>
+
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 2rem;">
+            <button type="button" class="btn btn-secondary" onclick="changeStep(3, 2)" style="gap: 8px;">
+              <i class="fa-solid fa-arrow-left"></i> Anterior
+            </button>
+            <button type="button" class="btn btn-primary" id="btn-submit-ingreso" style="gap: 8px; background: var(--color-accent);">
+              <i class="fa-solid fa-circle-check"></i> Enviar Ingreso de Paciente
+            </button>
+          </div>
+        </div>
+
+      </form>
     </div>
 
     <!-- Pestaña 2: Mi Perfil -->
