@@ -161,7 +161,7 @@ app.post('/api/admin/clients', async (req, res) => {
 
 // API: Actualizar perfil de cliente (Solo permitido si lo solicita el Administrador)
 app.post('/api/client/update-profile', async (req, res) => {
-  const { id_usuario, nombre, direccion, correo, telefono, contrasena, requested_by_admin } = req.body;
+  const { id_usuario, nombre, direccion, correo, telefono, contrasena, moroso, requested_by_admin } = req.body;
   
   if (!id_usuario) {
     return res.status(400).json({ success: false, message: "El ID de usuario es requerido." });
@@ -176,8 +176,16 @@ app.post('/api/client/update-profile', async (req, res) => {
   }
   
   try {
-    const result = await db.updateClient({ id_usuario, nombre, direccion, correo, telefono, contrasena });
+    const result = await db.updateClient({ id_usuario, nombre, direccion, correo, telefono, contrasena, moroso });
     if (result.success) {
+      // Si se desmarca como moroso, liberar resultados retenidos automáticamente
+      if (moroso === false || moroso === 'false') {
+        try {
+          await db.releaseRetainedResults(id_usuario);
+        } catch (err) {
+          console.error("Error al liberar resultados retenidos:", err);
+        }
+      }
       res.json(result);
     } else {
       res.status(400).json(result);
@@ -198,6 +206,16 @@ app.post('/api/admin/upload', upload.array('pdf', 20), async (req, res) => {
 
     if (!id_usuario) {
       return res.status(400).json({ success: false, message: "El ID de usuario (cliente) es requerido." });
+    }
+
+    // Verificar si el cliente es moroso para marcar resultados como retenidos
+    let clienteEsMoroso = false;
+    const clientsRes = await db.getClients();
+    if (clientsRes.success) {
+      const client = clientsRes.clients.find(c => c.id_usuario === id_usuario);
+      if (client && client.moroso) {
+        clienteEsMoroso = true;
+      }
     }
 
     if (!cloudinaryConfigured) {
@@ -232,7 +250,8 @@ app.post('/api/admin/upload', upload.array('pdf', 20), async (req, res) => {
       nombre_archivo: f.cloudinary_url,  // URL completa de Cloudinary
       observaciones:  '',
       admin_id:       admin_id || '',
-      admin_nombre:   admin_nombre || ''
+      admin_nombre:   admin_nombre || '',
+      retenido:       clienteEsMoroso
     }));
 
     // Registrar en Google Sheets / MockDB
@@ -240,11 +259,13 @@ app.post('/api/admin/upload', upload.array('pdf', 20), async (req, res) => {
 
     if (result.success) {
       console.log(`☁️  ${uploadedFiles.length} PDF(s) subidos a Cloudinary correctamente.`);
+      const morosoNote = clienteEsMoroso ? ' (retenidos hasta que el cliente esté al día)' : '';
       res.status(200).json({
         success: true,
+        retenido: clienteEsMoroso,
         message: req.files.length === 1
-          ? 'Examen publicado con éxito.'
-          : `${req.files.length} exámenes publicados con éxito.`,
+          ? `Examen publicado con éxito${morosoNote}.`
+          : `${req.files.length} exámenes publicados con éxito${morosoNote}.`,
         filenames: uploadedFiles.map(f => f.cloudinary_url)
       });
     } else {

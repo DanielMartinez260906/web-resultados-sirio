@@ -113,6 +113,36 @@ document.addEventListener('DOMContentLoaded', () => {
 
       if (data.success) {
         allResults = data.results;
+        
+        // Mostrar aviso de resultados retenidos si aplica
+        const alertContainer = document.getElementById('client-debt-alert-container');
+        if (alertContainer) {
+          if (data.has_retained) {
+            alertContainer.innerHTML = `
+              <div class="panel-card" style="background: linear-gradient(135deg, rgba(245, 158, 11, 0.08) 0%, rgba(217, 119, 6, 0.04) 100%); border: 1px dashed rgba(245, 158, 11, 0.35); border-radius: 12px; padding: 1.25rem 1.5rem; margin-bottom: 1.5rem; display: flex; gap: 1.25rem; align-items: center; justify-content: space-between; flex-wrap: wrap; animation: floatIn 0.3s ease;">
+                <div style="display: flex; gap: 1rem; align-items: center; min-width: 280px; flex: 1;">
+                  <div style="width: 44px; height: 44px; border-radius: 50%; background: rgba(245, 158, 11, 0.12); display: flex; align-items: center; justify-content: center; flex-shrink: 0; color: #fbbf24; border: 1px solid rgba(245, 158, 11, 0.2);">
+                    <i class="fa-solid fa-clock-rotate-left" style="font-size: 1.15rem;"></i>
+                  </div>
+                  <div>
+                    <h4 style="margin: 0 0 3px 0; color: #fbbf24; font-weight: 700; font-size: 0.92rem; text-transform: uppercase; letter-spacing: 0.5px;">Estimado Médico Veterinario</h4>
+                    <p style="margin: 0; color: var(--text-muted); font-size: 0.82rem; line-height: 1.45;">
+                      Le informamos que disponemos de <strong>nuevos resultados de laboratorio listos</strong> para su consulta. Estos serán publicados en su portal una vez que se regularice el estado de cuenta de su veterinaria. Agradecemos su comprensión.
+                    </p>
+                  </div>
+                </div>
+                <div style="display: flex; gap: 8px; align-items: center; flex-shrink: 0;">
+                  <span style="font-size: 0.72rem; font-weight: 700; color: #fca5a5; padding: 4px 10px; border-radius: 20px; background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.2); text-transform: uppercase; letter-spacing: 0.5px;">
+                    <i class="fa-solid fa-circle-exclamation"></i> Pendiente de Pago
+                  </span>
+                </div>
+              </div>
+            `;
+          } else {
+            alertContainer.innerHTML = '';
+          }
+        }
+
         renderResults(allResults);
       } else {
         showGlobalAlert(data.message || 'Error al obtener tus resultados.', 'error');
@@ -389,27 +419,26 @@ document.addEventListener('DOMContentLoaded', () => {
       
       if (data.success) {
         const portafolioTabBtn = document.querySelector('[data-tab="tab-client-portafolio"]');
+        const maintenanceView = document.getElementById('portafolio-maintenance-view');
+        const mainContent = document.getElementById('portafolio-main-content');
         
-        if (data.visible === false) {
-          // Hide navigation tab button
-          if (portafolioTabBtn) {
-            portafolioTabBtn.style.setProperty('display', 'none', 'important');
-            
-            // Redirect to results tab if currently on portafolio tab
-            if (portafolioTabBtn.classList.contains('active')) {
-              const resultsTabBtn = document.querySelector('[data-tab="tab-client-results"]');
-              if (resultsTabBtn) resultsTabBtn.click();
-            }
-          }
-          return;
-        }
-
-        // Show button if visible
+        // El botón de la pestaña siempre permanece visible
         if (portafolioTabBtn) {
           portafolioTabBtn.style.setProperty('display', 'flex', 'important');
         }
 
+        if (data.visible === false) {
+          if (maintenanceView) maintenanceView.style.display = 'block';
+          if (mainContent) mainContent.style.display = 'none';
+          if (downloadPortafolioBtn) downloadPortafolioBtn.style.display = 'none';
+          return;
+        }
+
+        // Si está habilitado, mostrar el contenido normal
+        if (maintenanceView) maintenanceView.style.display = 'none';
+        if (mainContent) mainContent.style.display = 'block';
         if (downloadPortafolioBtn) downloadPortafolioBtn.style.display = 'flex';
+
         const filterCard = document.querySelector('#tab-client-portafolio .panel-card:nth-of-type(2)');
         if (filterCard) filterCard.style.display = 'block';
 

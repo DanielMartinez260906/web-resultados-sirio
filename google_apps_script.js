@@ -84,6 +84,7 @@ function doPost(e) {
     else if (action === "savePortafolioPrecios") { response = savePortafolioPrecios(doc, data); }
     else if (action === "addPortafolioExamen") { response = addPortafolioExamen(doc, data); }
     else if (action === "deletePortafolioExamen") { response = deletePortafolioExamen(doc, data); }
+    else if (action === "releaseRetainedResults") { response = releaseRetainedResults(doc, data); }
     else { response.message = "Accion no reconocida: " + action; }
 
   } catch (error) {
@@ -124,6 +125,17 @@ function migrateSheets(doc) {
         cell.setFontColor("#ffffff");
         SpreadsheetApp.flush();
       }
+
+      // Agregar columna retenido si no existe
+      if (!("retenido" in colMap)) {
+        var newCol2 = sheet.getLastColumn() + 1;
+        var cell2   = sheet.getRange(1, newCol2);
+        cell2.setValue("retenido");
+        cell2.setFontWeight("bold");
+        cell2.setBackground("#0a192f");
+        cell2.setFontColor("#ffffff");
+        SpreadsheetApp.flush();
+      }
     }
   }
 
@@ -138,7 +150,7 @@ function migrateSheets(doc) {
         uColMap[uHeaders[i].toString().trim().toLowerCase()] = i;
       }
 
-      var colsToAdd = ["direccion", "correo", "telefono"];
+      var colsToAdd = ["direccion", "correo", "telefono", "moroso"];
       for (var j = 0; j < colsToAdd.length; j++) {
         var colName = colsToAdd[j];
         if (!(colName in uColMap)) {
@@ -161,10 +173,11 @@ function migrateSheets(doc) {
 // ============================================================
 function checkAndInitSheets(doc) {
   var sheetsConfig = {
-    "Usuarios":  ["id_usuario","nombre","identificacion","usuario","contrasena","rol","fecha_registro","direccion","correo","telefono"],
-    "Resultados":["id_resultado","id_usuario","nombre_examen","nombre_archivo","fecha_subida","admin_nombre"],
+    "Usuarios":  ["id_usuario","nombre","identificacion","usuario","contrasena","rol","fecha_registro","direccion","correo","telefono","moroso"],
+    "Resultados":["id_resultado","id_usuario","nombre_examen","nombre_archivo","fecha_subida","admin_nombre","retenido"],
     "Accesos":   ["id_log","usuario","rol","fecha_hora","estado"],
     "Configuracion": ["clave", "valor"],
+    "Estado_Portafolio": ["clave", "valor"],
     "Portafolio": ["id_examen", "seccion", "examen", "precio", "tiempo_reporte", "muestra", "recipiente"]
   };
 
@@ -185,6 +198,10 @@ function checkAndInitSheets(doc) {
       }
       if (name === "Configuracion") {
         sheet.appendRow(["gemini_api_key", "CONFIGURAR_DESDE_PANEL_ADMIN"]);
+      }
+      if (name === "Estado_Portafolio") {
+        sheet.appendRow(["portafolio_visible", "true"]);
+        sheet.appendRow(["categorias_adicionales", ""]);
       }
       if (name === "Portafolio") {
         var defaultPortafolio = [
@@ -269,7 +286,8 @@ function handleLogin(doc, data) {
           contrasena: r[colMap["contrasena"]],
           direccion: colMap["direccion"] !== undefined ? r[colMap["direccion"]] : "",
           correo: colMap["correo"] !== undefined ? r[colMap["correo"]] : "",
-          telefono: colMap["telefono"] !== undefined ? r[colMap["telefono"]] : ""
+          telefono: colMap["telefono"] !== undefined ? r[colMap["telefono"]] : "",
+          moroso: colMap["moroso"] !== undefined ? (r[colMap["moroso"]].toString().trim() === "true") : false
         }
       };
     }
@@ -297,7 +315,8 @@ function getClients(doc) {
         direccion: colMap["direccion"] !== undefined ? rows[i][colMap["direccion"]] : "",
         correo: colMap["correo"] !== undefined ? rows[i][colMap["correo"]] : "",
         telefono: colMap["telefono"] !== undefined ? rows[i][colMap["telefono"]] : "",
-        fecha_registro: rows[i][colMap["fecha_registro"]]
+        fecha_registro: rows[i][colMap["fecha_registro"]],
+        moroso: colMap["moroso"] !== undefined ? (rows[i][colMap["moroso"]].toString().trim() === "true") : false
       });
     }
   }
@@ -427,6 +446,7 @@ function addResult(doc, data) {
     if ("nombre_archivo"in colMap) newRow[colMap["nombre_archivo"]]= item.nombre_archivo|| "";
     if ("fecha_subida"  in colMap) newRow[colMap["fecha_subida"]]  = today;
     if ("admin_nombre"  in colMap) newRow[colMap["admin_nombre"]]  = item.admin_nombre  || "";
+    if ("retenido"     in colMap) newRow[colMap["retenido"]]     = item.retenido ? "true" : "false";
 
     sheet.appendRow(newRow);
     ids.push(nextId);
@@ -454,12 +474,19 @@ function getClientResults(doc, data) {
   var idxExamen   = colMap["nombre_examen"];
   var idxArchivo  = colMap["nombre_archivo"];
   var idxFecha    = colMap["fecha_subida"];
+  var idxRetenido = colMap["retenido"];
   var results     = [];
+  var hasRetained = false;
 
   for (var i = 1; i < rows.length; i++) {
     var row = rows[i];
     if (idxIdUser === undefined) continue;
     if (row[idxIdUser].toString().trim() !== idCliente.toString().trim()) continue;
+    
+    if (idxRetenido !== undefined && row[idxRetenido] && row[idxRetenido].toString().trim() === "true") {
+      hasRetained = true;
+      continue;
+    }
 
     var nombreExamen  = idxExamen  !== undefined && row[idxExamen]  ? row[idxExamen].toString().trim()  : "";
     var nombreArchivo = idxArchivo !== undefined && row[idxArchivo] ? row[idxArchivo].toString().trim() : "";
@@ -476,7 +503,41 @@ function getClientResults(doc, data) {
   }
 
   results.sort(function(a, b) { return new Date(b.fecha_subida) - new Date(a.fecha_subida); });
-  return { success: true, results: results };
+  return { success: true, results: results, has_retained: hasRetained };
+}
+
+// ============================================================
+// LIBERAR RESULTADOS RETENIDOS DE UN CLIENTE
+// ============================================================
+function releaseRetainedResults(doc, data) {
+  var sheet   = doc.getSheetByName("Resultados");
+  var rows    = sheet.getDataRange().getValues();
+  var headers = rows[0];
+  var colMap  = buildColMap(headers);
+
+  var idCliente   = data.id_usuario;
+  var idxIdUser   = colMap["id_usuario"];
+  var idxRetenido = colMap["retenido"];
+  var count = 0;
+
+  if (idxRetenido === undefined || idxIdUser === undefined) {
+    return { success: true, message: "No hay columna retenido. Sin cambios.", released: 0 };
+  }
+
+  for (var i = 1; i < rows.length; i++) {
+    var row = rows[i];
+    if (row[idxIdUser].toString().trim() === idCliente.toString().trim() &&
+        row[idxRetenido] && row[idxRetenido].toString().trim() === "true") {
+      sheet.getRange(i + 1, idxRetenido + 1).setValue("false");
+      count++;
+    }
+  }
+
+  return {
+    success: true,
+    message: count > 0 ? count + " resultado(s) liberado(s) correctamente." : "No habia resultados retenidos.",
+    released: count
+  };
 }
 
 // ============================================================
@@ -698,6 +759,9 @@ function updateClient(doc, data) {
       if (data.contrasena !== undefined && data.contrasena.trim() !== "") {
         sheet.getRange(i + 1, colMap["contrasena"] + 1).setValue(data.contrasena);
       }
+      if (colMap["moroso"] !== undefined && data.moroso !== undefined) {
+        sheet.getRange(i + 1, colMap["moroso"] + 1).setValue(data.moroso === true || data.moroso === "true" ? "true" : "false");
+      }
 
       var updatedUser = {
         id_usuario: idUsuario,
@@ -707,7 +771,8 @@ function updateClient(doc, data) {
         rol: rows[i][colMap["rol"]],
         direccion: data.direccion !== undefined ? data.direccion : (colMap["direccion"] !== undefined ? rows[i][colMap["direccion"]] : ""),
         correo: data.correo !== undefined ? data.correo : (colMap["correo"] !== undefined ? rows[i][colMap["correo"]] : ""),
-        telefono: data.telefono !== undefined ? data.telefono : (colMap["telefono"] !== undefined ? rows[i][colMap["telefono"]] : "")
+        telefono: data.telefono !== undefined ? data.telefono : (colMap["telefono"] !== undefined ? rows[i][colMap["telefono"]] : ""),
+        moroso: data.moroso !== undefined ? (data.moroso === true || data.moroso === "true") : (colMap["moroso"] !== undefined ? (rows[i][colMap["moroso"]].toString().trim() === "true") : false)
       };
 
       return { success: true, message: "Perfil actualizado correctamente.", user: updatedUser };
@@ -720,16 +785,32 @@ function updateClient(doc, data) {
 // CONFIGURACIÓN (GET)
 // ============================================================
 function getConfig(doc) {
-  var sheet = doc.getSheetByName("Configuracion");
-  if (!sheet) return { success: true, config: {} };
-  var rows = sheet.getDataRange().getValues();
   var config = {};
-  for (var i = 1; i < rows.length; i++) {
-    var key = rows[i][0];
-    if (key) {
-      config[key.toString().trim()] = rows[i][1] ? rows[i][1].toString().trim() : "";
+  
+  // 1. Leer Configuracion
+  var sheet = doc.getSheetByName("Configuracion");
+  if (sheet) {
+    var rows = sheet.getDataRange().getValues();
+    for (var i = 1; i < rows.length; i++) {
+      var key = rows[i][0];
+      if (key) {
+        config[key.toString().trim()] = rows[i][1] ? rows[i][1].toString().trim() : "";
+      }
     }
   }
+  
+  // 2. Leer Estado_Portafolio
+  var sheetEP = doc.getSheetByName("Estado_Portafolio");
+  if (sheetEP) {
+    var rowsEP = sheetEP.getDataRange().getValues();
+    for (var j = 1; j < rowsEP.length; j++) {
+      var keyEP = rowsEP[j][0];
+      if (keyEP) {
+        config[keyEP.toString().trim()] = rowsEP[j][1] ? rowsEP[j][1].toString().trim() : "";
+      }
+    }
+  }
+  
   return { success: true, config: config };
 }
 
@@ -737,21 +818,28 @@ function getConfig(doc) {
 // CONFIGURACIÓN (SAVE)
 // ============================================================
 function saveConfig(doc, data) {
-  var sheet = doc.getSheetByName("Configuracion");
-  if (!sheet) return { success: false, message: "La hoja de configuracion no existe." };
+  var sheetConfig = doc.getSheetByName("Configuracion");
+  var sheetEP = doc.getSheetByName("Estado_Portafolio");
   
-  var rows = sheet.getDataRange().getValues();
   for (var key in data) {
+    var targetSheet = sheetConfig;
+    if (key === "portafolio_visible" || key === "categorias_adicionales") {
+      targetSheet = sheetEP;
+    }
+    
+    if (!targetSheet) continue;
+    
+    var rows = targetSheet.getDataRange().getValues();
     var found = false;
     for (var i = 1; i < rows.length; i++) {
       if (rows[i][0] && rows[i][0].toString().trim() === key) {
-        sheet.getRange(i + 1, 2).setValue(data[key]);
+        targetSheet.getRange(i + 1, 2).setValue(data[key]);
         found = true;
         break;
       }
     }
     if (!found) {
-      sheet.appendRow([key, data[key]]);
+      targetSheet.appendRow([key, data[key]]);
     }
   }
   return { success: true, message: "Configuracion guardada correctamente." };

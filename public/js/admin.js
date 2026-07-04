@@ -258,8 +258,11 @@ document.addEventListener('DOMContentLoaded', () => {
       
       div.innerHTML = `
         <div class="client-item-info" style="flex-grow: 1; min-width: 0; padding-right: 8px;">
-          <h4 style="text-overflow: ellipsis; overflow: hidden; white-space: nowrap;">${client.nombre}</h4>
-          <p><i class="fa-solid fa-id-card"></i> ID/NIT: ${client.identificacion}</p>
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <h4 style="text-overflow: ellipsis; overflow: hidden; white-space: nowrap; margin: 0;">${client.nombre}</h4>
+            ${client.moroso ? '<span style="background: rgba(239, 68, 68, 0.15); color: #f87171; font-size: 0.6rem; padding: 1px 5px; border-radius: 3px; font-weight: 700; border: 1px solid rgba(239, 68, 68, 0.2); text-transform: uppercase; flex-shrink: 0;">MOROSO</span>' : ''}
+          </div>
+          <p style="margin-top: 4px;"><i class="fa-solid fa-id-card"></i> ID/NIT: ${client.identificacion}</p>
         </div>
         <div style="display: flex; gap: 8px; align-items: center; flex-shrink: 0;">
           <span class="client-item-badge">${client.id_usuario}</span>
@@ -327,6 +330,12 @@ document.addEventListener('DOMContentLoaded', () => {
     // Mostrar panel
     if (noClientSelectedView) noClientSelectedView.style.display = 'none';
     activeClientView.style.display = 'block';
+
+    // Mostrar alerta informativa si el cliente es moroso (no ocultar el formulario)
+    const debtWarning = document.getElementById('active-client-debt-warning');
+    if (debtWarning) {
+      debtWarning.style.display = client.moroso ? 'block' : 'none';
+    }
 
     // Cambiar a la pestaña de enviar resultados si no estamos allí
     switchTab('tab-send');
@@ -1089,8 +1098,11 @@ document.addEventListener('DOMContentLoaded', () => {
       
       item.innerHTML = `
         <div class="client-item-info">
-          <h4>${client.nombre}</h4>
-          <p><i class="fa-solid fa-passport"></i> DNI: ${client.identificacion}</p>
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <h4 style="margin: 0;">${client.nombre}</h4>
+            ${client.moroso ? '<span style="background: rgba(239, 68, 68, 0.15); color: #f87171; font-size: 0.6rem; padding: 1px 5px; border-radius: 3px; font-weight: 700; border: 1px solid rgba(239, 68, 68, 0.2); text-transform: uppercase;">MOROSO</span>' : ''}
+          </div>
+          <p style="margin-top: 4px;"><i class="fa-solid fa-passport"></i> DNI: ${client.identificacion}</p>
         </div>
         <span class="client-item-badge">${client.id_usuario}</span>
       `;
@@ -1122,6 +1134,26 @@ document.addEventListener('DOMContentLoaded', () => {
     if (dirClientEmailVal) dirClientEmailVal.innerText = client.correo || 'No registrado';
     if (dirClientPhoneVal) dirClientPhoneVal.innerText = client.telefono || 'No registrado';
     
+    // Configure badge and toggle button
+    const debtBadge = document.getElementById('dir-client-debt-badge');
+    const toggleDebtBtn = document.getElementById('dir-toggle-debt-btn');
+    if (debtBadge) {
+      debtBadge.style.display = client.moroso ? 'inline-block' : 'none';
+    }
+    if (toggleDebtBtn) {
+      if (client.moroso) {
+        toggleDebtBtn.innerHTML = '<i class="fa-solid fa-user-check"></i> Habilitar Envío / Al Día';
+        toggleDebtBtn.style.background = 'rgba(34, 197, 94, 0.15)';
+        toggleDebtBtn.style.color = '#86efac';
+        toggleDebtBtn.style.border = '1px solid rgba(34, 197, 94, 0.3)';
+      } else {
+        toggleDebtBtn.innerHTML = '<i class="fa-solid fa-hand-holding-dollar"></i> Restringir Envío / Moroso';
+        toggleDebtBtn.style.background = 'rgba(239, 68, 68, 0.15)';
+        toggleDebtBtn.style.color = '#fca5a5';
+        toggleDebtBtn.style.border = '1px solid rgba(239, 68, 68, 0.3)';
+      }
+    }
+
     const dirPwdVal = document.getElementById('dir-client-password-val');
     if (dirPwdVal) {
       dirPwdVal.setAttribute('data-password', client.contrasena || '');
@@ -1155,6 +1187,70 @@ document.addEventListener('DOMContentLoaded', () => {
           dirPwdVal.innerText = '••••••••';
           icon.className = 'fa-solid fa-eye';
         }
+      }
+    });
+  }
+
+  // Botón para alternar estado de morosidad del cliente
+  const dirToggleDebtBtn = document.getElementById('dir-toggle-debt-btn');
+  if (dirToggleDebtBtn) {
+    dirToggleDebtBtn.addEventListener('click', async () => {
+      if (!selectedDirClient) return;
+
+      const newStatus = !selectedDirClient.moroso;
+      const confirmMsg = newStatus
+        ? `¿Está seguro de que desea marcar a "${selectedDirClient.nombre}" como MOROSO?\n\nLos nuevos resultados que suba para este cliente quedarán retenidos y no serán visibles en su cuenta hasta que se ponga al día.`
+        : `¿Está seguro de que desea marcar a "${selectedDirClient.nombre}" como AL DÍA?\n\nSe liberarán todos los resultados retenidos y serán visibles inmediatamente para el cliente.`;
+
+      if (!confirm(confirmMsg)) return;
+
+      SirioAuth.showLoading(newStatus ? 'Restringiendo cliente...' : 'Habilitando cliente...');
+
+      try {
+        const response = await fetch(`${SirioAuth.API_BASE}/api/client/update-profile`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            id_usuario: selectedDirClient.id_usuario,
+            moroso: newStatus,
+            requested_by_admin: true
+          })
+        });
+        const result = await response.json();
+        SirioAuth.hideLoading();
+
+        if (result.success) {
+          showGlobalAlert(
+            newStatus
+              ? `Cliente "${selectedDirClient.nombre}" marcado como MOROSO. Envíos restringidos.`
+              : `Cliente "${selectedDirClient.nombre}" marcado como AL DÍA. Funciones habilitadas.`,
+            'success'
+          );
+
+          // Recargar clientes para refrescar ambas pestañas
+          await loadClients();
+
+          // Re-seleccionar el cliente actualizado
+          const updated = allClients.find(c => c.id_usuario === selectedDirClient.id_usuario);
+          if (updated) {
+            selectDirClient(updated);
+          }
+
+          // Renderizar lista filtrada si hay búsqueda activa
+          const query = searchDirClientInput ? searchDirClientInput.value.toLowerCase().trim() : '';
+          const filtered = allClients.filter(c =>
+            c.nombre.toLowerCase().includes(query) ||
+            c.identificacion.toString().includes(query) ||
+            c.id_usuario.toLowerCase().includes(query)
+          );
+          renderDirClients(filtered);
+        } else {
+          showGlobalAlert(result.message || 'Error al actualizar el estado del cliente.', 'error');
+        }
+      } catch (err) {
+        SirioAuth.hideLoading();
+        console.error('Error al cambiar estado de morosidad:', err);
+        showGlobalAlert('Error de red al intentar cambiar el estado del cliente.', 'error');
       }
     });
   }

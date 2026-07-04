@@ -218,6 +218,7 @@ function handleMockAction(action, data) {
       if (data.direccion !== undefined) client.direccion = data.direccion;
       if (data.correo !== undefined) client.correo = data.correo;
       if (data.telefono !== undefined) client.telefono = data.telefono;
+      if (data.moroso !== undefined) client.moroso = (data.moroso === true || data.moroso === 'true');
       if (data.contrasena !== undefined && data.contrasena.trim() !== "") {
         client.contrasena = data.contrasena;
       }
@@ -248,7 +249,8 @@ function handleMockAction(action, data) {
           fecha_subida: today,
           observaciones: "",
           admin_id: item.admin_id || "",
-          admin_nombre: item.admin_nombre || ""
+          admin_nombre: item.admin_nombre || "",
+          retenido: item.retenido || false
         };
         db.Resultados.push(newResult);
         addedIds.push(nextId);
@@ -266,9 +268,10 @@ function handleMockAction(action, data) {
     
     case 'getClientResults': {
       const idCliente = data.id_usuario;
-      const results = db.Resultados.filter(r => r.id_usuario === idCliente);
+      const results = db.Resultados.filter(r => r.id_usuario === idCliente && !r.retenido);
+      const hasRetained = db.Resultados.some(r => r.id_usuario === idCliente && r.retenido);
       results.sort((a, b) => new Date(b.fecha_subida) - new Date(a.fecha_subida));
-      return { success: true, results };
+      return { success: true, results, has_retained: hasRetained };
     }
 
     case 'deleteResult': {
@@ -300,6 +303,23 @@ function handleMockAction(action, data) {
         success: true,
         message: "Todos los examenes fueron eliminados de la base de datos local.",
         archivos_eliminados: deletedFiles
+      };
+    }
+
+    case 'releaseRetainedResults': {
+      const clientId = data.id_usuario;
+      let count = 0;
+      db.Resultados.forEach(r => {
+        if (r.id_usuario === clientId && r.retenido) {
+          r.retenido = false;
+          count++;
+        }
+      });
+      writeMockDB(db);
+      return {
+        success: true,
+        message: count > 0 ? `${count} resultado(s) liberado(s) correctamente.` : 'No había resultados retenidos.',
+        released: count
       };
     }
     
@@ -482,6 +502,7 @@ module.exports = {
   updateClient: (clientData) => callSheetsAPI('updateClient', clientData),
   addResult: (resultData) => callSheetsAPI('addResult', resultData),
   getClientResults: (id_usuario) => callSheetsAPI('getClientResults', { id_usuario }),
+  releaseRetainedResults: (id_usuario) => callSheetsAPI('releaseRetainedResults', { id_usuario }),
   deleteResult: (id_resultado) => callSheetsAPI('deleteResult', { id_resultado }),
   deleteClient: (id_usuario) => callSheetsAPI('deleteClient', { id_usuario }),
   deleteAllResults: () => callSheetsAPI('deleteAllResults'),

@@ -115,6 +115,9 @@
         </div>
       </div>
 
+      <!-- Contenedor para Avisos de Cartera -->
+      <div id="client-debt-alert-container"></div>
+
       <!-- ── Grilla de Resultados ───────────────────────────────────────── -->
       <div class="results-grid" id="results-container">
         <div style="grid-column: 1 / -1; text-align: center; color: var(--text-dark); padding: 4rem 0;">
@@ -160,8 +163,23 @@
 
     <!-- Pestaña 3: Portafolio de Servicios -->
     <div id="tab-client-portafolio" class="tab-content" style="display: none;">
-      <!-- Barra superior de acciones -->
-      <div class="panel-card" style="margin-bottom: 1.5rem; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; padding: 1.25rem 2rem;">
+      <!-- Mensaje de actualización/mantenimiento -->
+      <div id="portafolio-maintenance-view" style="display: none; padding: 5rem 2rem; text-align: center; animation: floatIn 0.3s ease;">
+        <div style="width: 80px; height: 80px; border-radius: 50%; background: rgba(245, 158, 11, 0.08); border: 2.5px solid rgba(245, 158, 11, 0.2); display: flex; align-items: center; justify-content: center; margin: 0 auto 1.5rem auto; color: #fbbf24;">
+          <i class="fa-solid fa-screwdriver-wrench" style="font-size: 2.2rem;"></i>
+        </div>
+        <h3 style="font-size: 1.35rem; font-weight: 700; color: #fbbf24; margin: 0 0 0.5rem 0;">PORTAFOLIO EN ACTUALIZACIÓN</h3>
+        <p style="color: var(--text-muted); max-width: 480px; margin: 0 auto; line-height: 1.55; font-size: 0.9rem;">
+          Estimado Médico Veterinario, en este momento nos encontramos actualizando las tarifas y el catálogo de nuestros servicios para ofrecerle la información más precisa.
+        </p>
+        <p style="color: var(--text-dark); max-width: 480px; margin: 0.5rem auto 0 auto; font-size: 0.8rem; line-height: 1.4;">
+          Disculpe las molestias. Esta sección estará disponible nuevamente en unos instantes.
+        </p>
+      </div>
+
+      <div id="portafolio-main-content" style="display: block;">
+        <!-- Barra superior de acciones -->
+        <div class="panel-card" style="margin-bottom: 1.5rem; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; padding: 1.25rem 2rem;">
         <div>
           <h2 style="font-size: 1.35rem; font-weight: 700; color: var(--color-accent); display: flex; align-items: center; gap: 10px; margin: 0;">
             <i class="fa-solid fa-book-medical"></i> Portafolio de Servicios 2025
@@ -239,6 +257,7 @@
           </button>
         </div>
 
+      </div>
       </div>
     </div>
 

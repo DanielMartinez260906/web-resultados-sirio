@@ -261,7 +261,7 @@
 
           <!-- Vista: Cliente Activo Seleccionado -->
           <div id="active-client-view" style="display: none; height: 100%;">
-            <div class="active-client-header">
+            <div class="active-client-header" style="margin-bottom: 1rem;">
               <div class="active-client-details">
                 <h3 id="active-client-name">Juan Pérez</h3>
                 <p>
@@ -273,6 +273,19 @@
               <button class="btn btn-secondary btn-icon" id="deselect-client-btn" title="Cerrar cliente">
                 <i class="fa-solid fa-xmark"></i>
               </button>
+            </div>
+
+            <!-- Alerta Moroso (Informativa) -->
+            <div id="active-client-debt-warning" style="display: none; background: rgba(245, 158, 11, 0.08); border: 1.5px solid rgba(245, 158, 11, 0.3); border-radius: 8px; padding: 12px 18px; margin-bottom: 1.25rem; animation: floatIn 0.3s ease;">
+              <div style="display: flex; align-items: center; gap: 10px; color: #fbbf24;">
+                <i class="fa-solid fa-clock-rotate-left" style="font-size: 1.4rem;"></i>
+                <div>
+                  <h4 style="margin: 0; font-weight: 700; font-size: 0.88rem;">CLIENTE EN MORA — RESULTADOS RETENIDOS</h4>
+                  <p style="margin: 3px 0 0 0; font-size: 0.78rem; color: var(--text-muted); line-height: 1.4;">
+                    Los resultados que envíe serán almacenados pero <strong style="color: #fbbf24;">no serán visibles para el cliente</strong> hasta que sea marcado como "Al Día". Se liberarán automáticamente al desactivar la restricción.
+                  </p>
+                </div>
+              </div>
             </div>
 
             <div style="display: flex; flex-direction: column; gap: 1.5rem;">
@@ -350,11 +363,15 @@
           </div>
           
           <div id="dir-client-detail-view" style="display: none;">
-            <div class="active-client-header" style="border-color: var(--color-primary); margin-bottom: 1.5rem;">
+            <div class="active-client-header" style="border-color: var(--color-primary); margin-bottom: 1.5rem; display: flex; justify-content: space-between; align-items: center; gap: 15px; flex-wrap: wrap; padding-bottom: 0.75rem;">
               <div class="active-client-details">
-                <h3 id="dir-client-name" style="font-size: 1.25rem; font-weight: 700; color: var(--color-primary);">...</h3>
-                <p><i class="fa-solid fa-passport"></i> ID/DNI: <span id="dir-client-id-val" style="font-weight: 600;">...</span></p>
+                <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 4px;">
+                  <h3 id="dir-client-name" style="font-size: 1.25rem; font-weight: 700; color: var(--color-primary); margin: 0;">...</h3>
+                  <span id="dir-client-debt-badge" class="badge" style="display: none; background: rgba(239, 68, 68, 0.15); color: #f87171; border: 1.5px solid rgba(239, 68, 68, 0.3); font-size: 0.68rem; padding: 2px 7px; border-radius: 4px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;">MOROSO</span>
+                </div>
+                <p style="margin: 0;"><i class="fa-solid fa-passport"></i> ID/DNI: <span id="dir-client-id-val" style="font-weight: 600;">...</span></p>
               </div>
+              <button id="dir-toggle-debt-btn" class="btn" style="gap: 6px; padding: 6px 14px; font-size: 0.75rem; height: auto; font-weight: 600; border-radius: 6px; transition: all 0.2s;"></button>
             </div>
             
             <div class="profile-details-grid" style="display: grid; grid-template-columns: 1fr; gap: 1rem; margin-bottom: 1.5rem;">
