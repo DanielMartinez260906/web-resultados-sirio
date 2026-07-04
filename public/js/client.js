@@ -385,8 +385,35 @@ document.addEventListener('DOMContentLoaded', () => {
       const response = await fetch(`${SirioAuth.API_BASE}/api/client/portafolio`);
       if (!response.ok) throw new Error(`HTTP ${response.status}`);
       const data = await response.json();
-      if (data.success && Array.isArray(data.portafolio) && data.portafolio.length > 0) {
-        allExams = data.portafolio;
+      
+      if (data.success) {
+        if (data.visible === false) {
+          if (downloadPortafolioBtn) downloadPortafolioBtn.style.display = 'none';
+          const filterCard = document.querySelector('#tab-client-portafolio .panel-card:nth-of-type(2)');
+          if (filterCard) filterCard.style.display = 'none';
+          
+          const grid = document.getElementById('portafolio-layout-grid');
+          if (grid) {
+            grid.style.gridTemplateColumns = '1fr';
+            grid.innerHTML = `
+              <div class="panel-card" style="padding: 4rem 2rem; text-align: center; max-width: 600px; margin: 2rem auto; border: 1px solid rgba(234, 179, 8, 0.2); background: rgba(234, 179, 8, 0.03); border-radius: 12px; animation: floatIn 0.3s ease;">
+                <i class="fa-solid fa-clock-rotate-left" style="font-size: 3rem; color: var(--color-accent); margin-bottom: 1.5rem; display: block;"></i>
+                <h3 style="color: var(--text-main); font-size: 1.25rem; font-weight: 700; margin-bottom: 0.75rem;">Portafolio en Mantenimiento</h3>
+                <p style="color: var(--text-muted); font-size: 0.85rem; line-height: 1.6; margin-bottom: 0;">
+                  Estimado Doctor/a: Actualmente nos encontramos actualizando nuestras tarifas y catálogo de exámenes. Por favor, consulte directamente con el laboratorio para cotizaciones inmediatas. Disculpe las molestias.
+                </p>
+              </div>
+            `;
+          }
+          return;
+        }
+
+        // Restore if visible
+        if (downloadPortafolioBtn) downloadPortafolioBtn.style.display = 'flex';
+        const filterCard = document.querySelector('#tab-client-portafolio .panel-card:nth-of-type(2)');
+        if (filterCard) filterCard.style.display = 'block';
+
+        allExams = data.portafolio || [];
         initCategories();
         renderPortafolioTable();
       } else {

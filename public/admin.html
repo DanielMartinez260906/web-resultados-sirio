@@ -592,7 +592,20 @@
           Edite precios, tiempos de reporte y requisitos de muestra. Los cambios se reflejan al instante para todos los clientes.
         </p>
       </div>
-      <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+      <div style="display: flex; gap: 10px; flex-wrap: wrap; align-items: center;">
+        
+        <!-- Switch de visibilidad -->
+        <div style="display: flex; align-items: center; gap: 8px; background: rgba(255,255,255,0.03); padding: 6px 12px; border-radius: 20px; border: 1px solid var(--border-light);">
+          <span style="font-size: 0.75rem; font-weight: 600; color: var(--text-main);">Visibilidad Clientes:</span>
+          <label class="switch-container" style="position: relative; display: inline-block; width: 34px; height: 20px; vertical-align: middle;">
+            <input type="checkbox" id="admin-portafolio-visibility-toggle" style="opacity: 0; width: 0; height: 0;" checked>
+            <span class="switch-slider" style="position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: rgba(255,255,255,0.15); transition: .3s; border-radius: 20px;"></span>
+          </label>
+        </div>
+
+        <button class="btn btn-secondary" id="admin-add-examen-btn" style="gap: 6px; background: rgba(14,165,233,0.1); border-color: rgba(14,165,233,0.25); color: var(--color-accent);">
+          <i class="fa-solid fa-circle-plus"></i> Añadir Examen
+        </button>
         <button class="btn btn-secondary" id="admin-download-portafolio-btn" style="gap: 8px;">
           <i class="fa-solid fa-file-pdf"></i> Descargar PDF
         </button>
@@ -633,6 +646,7 @@
               <th style="padding: 10px; width: 100px;">Tiempo</th>
               <th style="padding: 10px;">Muestra</th>
               <th style="padding: 10px;">Recipiente</th>
+              <th style="padding: 10px; text-align: center; width: 80px;">Acción</th>
             </tr>
           </thead>
           <tbody id="admin-portafolio-table-body">
@@ -644,6 +658,77 @@
 
   </div>
   <!-- ===== FIN PORTAFOLIO ADMIN ===== -->
+
+  <!-- Modal: Añadir Examen al Portafolio -->
+  <div id="add-examen-modal" class="modal-overlay" style="display: none;">
+    <div class="modal-content" style="max-width: 500px; width: 90%;">
+      <div class="modal-header">
+        <h3 class="modal-title" style="color: var(--color-accent); display: flex; align-items: center; gap: 8px;">
+          <i class="fa-solid fa-circle-plus"></i> Añadir Nuevo Examen / Perfil
+        </h3>
+        <button class="btn-close-modal" id="close-add-examen-modal">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+      <div class="modal-body">
+        <form id="add-examen-form">
+          <div class="form-group" style="margin-bottom: 1rem;">
+            <label style="display: block; font-size: 0.8rem; margin-bottom: 6px; color: var(--text-main); font-weight: 600;">Nombre del Examen / Perfil</label>
+            <input type="text" id="new-exam-name" class="form-control" placeholder="Ej: Hemograma, Perfil Tiroideo..." required autocomplete="off">
+          </div>
+          
+          <div class="form-group" style="margin-bottom: 1rem;">
+            <label style="display: block; font-size: 0.8rem; margin-bottom: 6px; color: var(--text-main); font-weight: 600;">Sección / Categoría</label>
+            <input type="text" id="new-exam-section" class="form-control" placeholder="Ej: HEMATOLOGÍA, HORMONAS, PERFILES..." required autocomplete="off" list="sections-datalist">
+            <datalist id="sections-datalist">
+              <option value="MICROBIOLOGÍA"></option>
+              <option value="HEMATOLOGÍA"></option>
+              <option value="COAGULACIÓN"></option>
+              <option value="QUÍMICA SANGUÍNEA"></option>
+              <option value="VITAMINAS"></option>
+              <option value="UROANÁLISIS"></option>
+              <option value="COPROLOGÍA"></option>
+              <option value="ANÁLISIS OTRAS MUESTRAS"></option>
+              <option value="PATOLOGÍA"></option>
+              <option value="HORMONAS"></option>
+              <option value="PERFILES"></option>
+              <option value="BIOLOGÍA MOLECULAR"></option>
+              <option value="INMUNOLOGÍA"></option>
+              <option value="TOXICOLOGÍA"></option>
+            </datalist>
+          </div>
+
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem;">
+            <div class="form-group">
+              <label style="display: block; font-size: 0.8rem; margin-bottom: 6px; color: var(--text-main); font-weight: 600;">Precio (COP)</label>
+              <input type="number" id="new-exam-price" class="form-control" placeholder="Ej: 25000" required min="0">
+            </div>
+            <div class="form-group">
+              <label style="display: block; font-size: 0.8rem; margin-bottom: 6px; color: var(--text-main); font-weight: 600;">Tiempo de Reporte</label>
+              <input type="text" id="new-exam-time" class="form-control" placeholder="Ej: 1 día, 2-3 días..." required autocomplete="off">
+            </div>
+          </div>
+
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem;">
+            <div class="form-group">
+              <label style="display: block; font-size: 0.8rem; margin-bottom: 6px; color: var(--text-main); font-weight: 600;">Tipo de Muestra</label>
+              <input type="text" id="new-exam-sample" class="form-control" placeholder="Ej: Sangre total, Suero..." autocomplete="off">
+            </div>
+            <div class="form-group">
+              <label style="display: block; font-size: 0.8rem; margin-bottom: 6px; color: var(--text-main); font-weight: 600;">Recipiente</label>
+              <input type="text" id="new-exam-container" class="form-control" placeholder="Ej: Tubo lila, tapa roja..." autocomplete="off">
+            </div>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" id="cancel-add-examen-btn">Cancelar</button>
+        <button class="btn btn-primary" id="confirm-add-examen-btn" type="submit" form="add-examen-form">
+          <i class="fa-solid fa-floppy-disk"></i> Guardar Examen
+        </button>
+      </div>
+    </div>
+  </div>
 
   <footer>
     <p>&copy; 2026 Laboratorio de Investigación y Análisis Veterinario SIRIO. Todos los derechos reservados.</p>

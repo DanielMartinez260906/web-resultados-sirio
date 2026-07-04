@@ -1406,6 +1406,13 @@ document.addEventListener('DOMContentLoaded', () => {
       const data = await res.json();
       if (data.success) {
         adminAllExams = data.portafolio;
+        
+        // Cargar estado de visibilidad
+        const visibilityToggle = document.getElementById('admin-portafolio-visibility-toggle');
+        if (visibilityToggle) {
+          visibilityToggle.checked = data.visible !== false;
+        }
+
         adminInitCategories();
         renderAdminPortafolioTable();
       }
@@ -1456,17 +1463,17 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     if (filtered.length === 0) {
-      adminPortafolioTableBody.innerHTML = `<tr><td colspan="5" style="text-align:center;padding:2.5rem 0;color:var(--text-dark);">No se encontraron exámenes.</td></tr>`;
+      adminPortafolioTableBody.innerHTML = `<tr><td colspan="6" style="text-align:center;padding:2.5rem 0;color:var(--text-dark);">No se encontraron exámenes.</td></tr>`;
       return;
     }
 
-    // Group by section when showing ALL
+    // Group by section when showing ALL (6 columns)
     if (adminPortafolioCategory === 'TODOS') {
       const sections = [...new Set(filtered.map(i => i.seccion))];
       adminPortafolioTableBody.innerHTML = sections.map(sec => {
         const items = filtered.filter(i => i.seccion === sec);
         const rows = items.map(item => buildAdminRow(item)).join('');
-        return `<tr><td colspan="5" style="padding:12px 10px 4px;background:rgba(14,165,233,0.06);border-bottom:none;">
+        return `<tr><td colspan="6" style="padding:12px 10px 4px;background:rgba(14,165,233,0.06);border-bottom:none;">
           <span style="font-size:0.7rem;font-weight:700;text-transform:uppercase;letter-spacing:0.8px;color:var(--color-primary);">${sec}</span>
         </td></tr>${rows}`;
       }).join('');
@@ -1488,6 +1495,47 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (adminSaveBtn) adminSaveBtn.disabled = false;
         cell.closest('tr').style.background = 'rgba(234,179,8,0.06)';
+      });
+    });
+
+    // Attach delete events
+    adminPortafolioTableBody.querySelectorAll('.admin-delete-exam-btn').forEach(btn => {
+      btn.addEventListener('click', async (e) => {
+        e.stopPropagation();
+        const idExamen = btn.dataset.id;
+        const row = btn.closest('tr');
+        const examName = row.cells[0].innerText;
+        
+        if (!confirm(`¿Está seguro de que desea eliminar el examen "${examName}" del portafolio?`)) {
+          return;
+        }
+
+        try {
+          const res = await fetch(`${SirioAuth.API_BASE}/api/admin/portafolio/delete`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${SirioAuth.getToken()}` },
+            body: JSON.stringify({ id_examen: idExamen })
+          });
+          const result = await res.json();
+          if (result.success) {
+            // Remove from local memory
+            adminAllExams = adminAllExams.filter(item => item.id_examen !== idExamen);
+            renderAdminPortafolioTable();
+            
+            if (adminPortafolioAlert) {
+              adminPortafolioAlert.style.display = 'block';
+              adminPortafolioAlert.style.background = 'rgba(34,197,94,0.1)';
+              adminPortafolioAlert.style.border = '1px solid rgba(34,197,94,0.3)';
+              adminPortafolioAlert.style.color = '#86efac';
+              adminPortafolioAlert.innerHTML = `<i class="fa-solid fa-circle-check" style="margin-right:6px;"></i>¡Examen eliminado correctamente!`;
+              setTimeout(() => { if (adminPortafolioAlert) adminPortafolioAlert.style.display = 'none'; }, 4000);
+            }
+          } else {
+            alert(result.message || 'Error al eliminar el examen.');
+          }
+        } catch (err) {
+          console.error('Error al eliminar examen:', err);
+        }
       });
     });
   }
@@ -1524,11 +1572,106 @@ document.addEventListener('DOMContentLoaded', () => {
           style="display:inline-block;min-width:80px;padding:4px 8px;border-radius:5px;border:1px solid var(--border-light);
                  background:rgba(255,255,255,0.03);color:var(--text-muted);font-size:0.78rem;"
           spellcheck="false">${recipiente}</span>
+      <td style="padding:10px;text-align:center;">
+        <button class="admin-delete-exam-btn" data-id="${item.id_examen}" style="background:transparent;border:none;color:var(--error);cursor:pointer;font-size:0.95rem;padding:4px;" title="Eliminar examen del portafolio">
+          <i class="fa-solid fa-trash-can"></i>
+        </button>
       </td>
     </tr>`;
   }
 
   if (adminSearchPortafolio) adminSearchPortafolio.addEventListener('input', renderAdminPortafolioTable);
+
+  // Switch de Visibilidad del Portafolio para Clientes
+  const visibilityToggle = document.getElementById('admin-portafolio-visibility-toggle');
+  if (visibilityToggle) {
+    visibilityToggle.addEventListener('change', async () => {
+      try {
+        const visible = visibilityToggle.checked;
+        const res = await fetch(`${SirioAuth.API_BASE}/api/admin/portafolio/visibility`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${SirioAuth.getToken()}` },
+          body: JSON.stringify({ visible })
+        });
+        const data = await res.json();
+        
+        if (adminPortafolioAlert) {
+          adminPortafolioAlert.style.display = 'block';
+          adminPortafolioAlert.style.background = data.success ? 'rgba(34,197,94,0.1)' : 'rgba(239,68,68,0.1)';
+          adminPortafolioAlert.style.border = `1px solid ${data.success ? 'rgba(34,197,94,0.3)' : 'rgba(239,68,68,0.3)'}`;
+          adminPortafolioAlert.style.color = data.success ? '#86efac' : '#fca5a5';
+          adminPortafolioAlert.innerHTML = `<i class="fa-solid ${data.success ? 'fa-circle-check' : 'fa-circle-xmark'}" style="margin-right:6px;"></i>Visibilidad del portafolio actualizada: ${visible ? 'Visible para Clientes' : 'Oculto en Mantenimiento'}`;
+          setTimeout(() => { if (adminPortafolioAlert) adminPortafolioAlert.style.display = 'none'; }, 4000);
+        }
+      } catch (err) {
+        console.error('Error al cambiar visibilidad:', err);
+      }
+    });
+  }
+
+  // Modal para Añadir Examen
+  const addExamenModal  = document.getElementById('add-examen-modal');
+  const addExamenBtn    = document.getElementById('admin-add-examen-btn');
+  const closeExamenBtn  = document.getElementById('close-add-examen-modal');
+  const cancelExamenBtn = document.getElementById('cancel-add-examen-btn');
+  const addExamenForm   = document.getElementById('add-examen-form');
+
+  if (addExamenBtn && addExamenModal) {
+    addExamenBtn.addEventListener('click', () => {
+      if (addExamenForm) addExamenForm.reset();
+      addExamenModal.style.display = 'flex';
+    });
+  }
+
+  const hideAddExamenModal = () => {
+    if (addExamenModal) addExamenModal.style.display = 'none';
+  };
+
+  if (closeExamenBtn) closeExamenBtn.addEventListener('click', hideAddExamenModal);
+  if (cancelExamenBtn) cancelExamenBtn.addEventListener('click', hideAddExamenModal);
+
+  if (addExamenForm) {
+    addExamenForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      
+      const newExam = {
+        examen: document.getElementById('new-exam-name').value.trim(),
+        seccion: document.getElementById('new-exam-section').value.trim(),
+        precio: parseFloat(document.getElementById('new-exam-price').value) || 0,
+        tiempo_reporte: document.getElementById('new-exam-time').value.trim(),
+        muestra: document.getElementById('new-exam-sample').value.trim(),
+        recipiente: document.getElementById('new-exam-container').value.trim()
+      };
+
+      try {
+        const res = await fetch(`${SirioAuth.API_BASE}/api/admin/portafolio/add`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${SirioAuth.getToken()}` },
+          body: JSON.stringify(newExam)
+        });
+        const data = await res.json();
+        
+        if (data.success) {
+          hideAddExamenModal();
+          // Volver a cargar el portafolio
+          loadAdminPortafolio();
+          
+          if (adminPortafolioAlert) {
+            adminPortafolioAlert.style.display = 'block';
+            adminPortafolioAlert.style.background = 'rgba(34,197,94,0.1)';
+            adminPortafolioAlert.style.border = '1px solid rgba(34,197,94,0.3)';
+            adminPortafolioAlert.style.color = '#86efac';
+            adminPortafolioAlert.innerHTML = `<i class="fa-solid fa-circle-check" style="margin-right:6px;"></i>¡Examen "${newExam.examen}" añadido exitosamente!`;
+            setTimeout(() => { if (adminPortafolioAlert) adminPortafolioAlert.style.display = 'none'; }, 5000);
+          }
+        } else {
+          alert(data.message || 'Error al añadir el examen.');
+        }
+      } catch (err) {
+        console.error('Error al añadir examen:', err);
+      }
+    });
+  }
 
   if (adminSaveBtn) {
     adminSaveBtn.addEventListener('click', async () => {

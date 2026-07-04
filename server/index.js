@@ -469,6 +469,76 @@ app.post('/api/admin/config', async (req, res) => {
   }
 });
 
+// API: Obtener el portafolio de servicios (Para Admins y Clientes)
+app.get('/api/client/portafolio', async (req, res) => {
+  try {
+    const result = await db.getPortafolio();
+    const configRes = await db.getConfig();
+    const config = configRes.config || {};
+    const visible = config.portafolio_visible !== 'false';
+    res.json({
+      success: result.success,
+      portafolio: result.portafolio,
+      visible: visible
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
+// API: Cambiar visibilidad del portafolio (Solo Admins)
+app.post('/api/admin/portafolio/visibility', async (req, res) => {
+  const { visible } = req.body;
+  try {
+    const result = await db.saveConfig({ portafolio_visible: String(visible) });
+    res.json(result);
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
+// API: Guardar los precios del portafolio (Solo Admins)
+app.post('/api/admin/portafolio/precios', async (req, res) => {
+  const preciosData = req.body;
+  if (!preciosData || !preciosData.precios) {
+    return res.status(400).json({ success: false, message: 'Se requiere el mapa de precios.' });
+  }
+  try {
+    const result = await db.savePortafolioPrecios(preciosData);
+    res.json(result);
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
+// API: Añadir examen al portafolio (Solo Admins)
+app.post('/api/admin/portafolio/add', async (req, res) => {
+  const examData = req.body;
+  if (!examData || !examData.examen || !examData.seccion) {
+    return res.status(400).json({ success: false, message: 'El nombre del examen y la sección son obligatorios.' });
+  }
+  try {
+    const result = await db.addPortafolioExamen(examData);
+    res.json(result);
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
+// API: Eliminar examen del portafolio (Solo Admins)
+app.post('/api/admin/portafolio/delete', async (req, res) => {
+  const { id_examen } = req.body;
+  if (!id_examen) {
+    return res.status(400).json({ success: false, message: 'Se requiere el id_examen.' });
+  }
+  try {
+    const result = await db.deletePortafolioExamen(id_examen);
+    res.json(result);
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
 // API: Interpretar examen con IA de Gemini (Para Clientes)
 app.post('/api/client/interpret-exam', async (req, res) => {
   const { id_resultado, nombre_archivo } = req.body;

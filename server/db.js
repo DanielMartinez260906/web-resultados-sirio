@@ -23,6 +23,34 @@ if (isDemoMode) {
   console.log(`URL: ${GOOGLE_SHEET_URL}`);
 }
 
+const defaultPortafolio = [
+  { id_examen: "E001", seccion: "MICROBIOLOGÍA", examen: "Cultivo 1 Oído (Bacteriológico con antibiograma + Micológico)", precio: 58000, tiempo_reporte: "2-5 días", muestra: "Hisopado", recipiente: "Hisopado en medio de transporte" },
+  { id_examen: "E002", seccion: "MICROBIOLOGÍA", examen: "Cultivo 2 Oídos (Bacteriológico con antibiograma + Micológico)", precio: 68000, tiempo_reporte: "2-5 días", muestra: "Hisopado", recipiente: "Hisopado en medio de transporte" },
+  { id_examen: "E003", seccion: "MICROBIOLOGÍA", examen: "Urocultivo (Bacteriológico + antibiograma)", precio: 58000, tiempo_reporte: "2-5 días", muestra: "Orina", recipiente: "Tubo tapa gris (Ácido Bórico)" },
+  { id_examen: "E004", seccion: "MICROBIOLOGÍA", examen: "Coprocultivo (Bacteriológico + antibiograma)", precio: 58000, tiempo_reporte: "2-5 días", muestra: "Materia fecal", recipiente: "Frasco tapa rosca estéril" },
+  { id_examen: "E005", seccion: "HEMATOLOGÍA", examen: "Hemograma automatizado (Extendido de sangre periférica, Proteínas, Reticulocitos)", precio: 14000, tiempo_reporte: "1 día", muestra: "300 ul Sangre total", recipiente: "Tubo tapa lila (EDTA)" },
+  { id_examen: "E006", seccion: "COAGULACIÓN", examen: "Tiempo de Protrombina TP", precio: 14500, tiempo_reporte: "1 día", muestra: "a. 1 ml Sangre / b. 500 ul Plasma", recipiente: "a. Tubo celeste (Citrato)" },
+  { id_examen: "E007", seccion: "COAGULACIÓN", examen: "Tiempo Parcial de Tromboplastina TPT", precio: 14500, tiempo_reporte: "1 día", muestra: "a. 1 ml Sangre / b. 500 ul Plasma", recipiente: "a. Tubo celeste (Citrato)" },
+  { id_examen: "E008", seccion: "QUÍMICA SANGUÍNEA", examen: "Ácidos Biliares (Una muestra)", precio: 85000, tiempo_reporte: "1 día", muestra: "a. 500 ul Sangre / b. 500 ul Suero", recipiente: "Tubo tapa roja o amarilla" },
+  { id_examen: "E009", seccion: "QUÍMICA SANGUÍNEA", examen: "Alanina aminotransferasa (ALT/GPT)", precio: 10500, tiempo_reporte: "1 día", muestra: "a. 500 ul Sangre / b. 500 ul Suero", recipiente: "Tubo tapa roja o amarilla" },
+  { id_examen: "E010", seccion: "QUÍMICA SANGUÍNEA", examen: "Creatinina", precio: 10500, tiempo_reporte: "1 día", muestra: "a. 500 ul Sangre / b. 500 ul Suero", recipiente: "Tubo tapa roja o amarilla" },
+  { id_examen: "E011", seccion: "QUÍMICA SANGUÍNEA", examen: "Dimetilarginina Simétrica (SDMA) + Creatinina", precio: 155000, tiempo_reporte: "1 día", muestra: "a. 500 ul Sangre / b. 500 ul Suero", recipiente: "Tubo tapa roja o amarilla" },
+  { id_examen: "E012", seccion: "VITAMINAS", examen: "Ácido Fólico/Vitamina B9", precio: 50000, tiempo_reporte: "2-3 días", muestra: "a. 1 ml Sangre / b. 500 ul Suero", recipiente: "Tubo tapa roja o amarilla" },
+  { id_examen: "E013", seccion: "UROANÁLISIS", examen: "Citoquímico de orina (Fisicoquímico, microscópico + GRAM)", precio: 11000, tiempo_reporte: "1 día", muestra: "Orina", recipiente: "Jeringa o frasco estéril" },
+  { id_examen: "E014", seccion: "UROANÁLISIS", examen: "Relación Proteína/Creatinina en orina (UPC)", precio: 20000, tiempo_reporte: "1 día", muestra: "Orina", recipiente: "Jeringa o frasco estéril" },
+  { id_examen: "E015", seccion: "COPROLOGÍA", examen: "Coprológico (Directo + Lugol + Flotación)", precio: 12000, tiempo_reporte: "1 día", muestra: "Materia fecal", recipiente: "Frasco tapa rosca estéril" },
+  { id_examen: "E016", seccion: "COPROLOGÍA", examen: "Coprograma (Coprológico, azúcares, sangre oculta, pH, Gram, Wright)", precio: 25000, tiempo_reporte: "1 día", muestra: "Materia fecal", recipiente: "Frasco tapa rosca estéril" },
+  { id_examen: "E017", seccion: "ANÁLISIS OTRAS MUESTRAS", examen: "Citología vaginal canina (Ciclo estral)", precio: 25000, tiempo_reporte: "1 día", muestra: "Extendido de muestra", recipiente: "Placas portaobjetos (protegidas)" },
+  { id_examen: "E018", seccion: "PATOLOGÍA", examen: "Biopsia (Histopatológico de 3 fragmentos de tejido por animal)", precio: 135000, tiempo_reporte: "3-5 días", muestra: "Fragmento de tejido", recipiente: "Frasco con formol al 10%" },
+  { id_examen: "E019", seccion: "HORMONAS", examen: "Cortisol en suero (Específico canino)", precio: 59000, tiempo_reporte: "1-2 días", muestra: "a. 500 ul Sangre / b. 500 ul Suero", recipiente: "Tubo tapa roja o amarilla" },
+  { id_examen: "E020", seccion: "HORMONAS", examen: "Hormona estimulante de tiroides TSH específica canina", precio: 58000, tiempo_reporte: "1-2 días", muestra: "a. 500 ul Sangre / b. 500 ul Suero", recipiente: "Tubo tapa roja" },
+  { id_examen: "E021", seccion: "PERFILES", examen: "Perfil Prequirúrgico 1 (Hemograma, ALT, Creatinina)", precio: 25000, tiempo_reporte: "1 día", muestra: "500 ul Sangre EDTA + 500 ul Sangre total", recipiente: "Tubo lila (EDTA) + Tubo tapa roja" },
+  { id_examen: "E022", seccion: "PERFILES", examen: "Perfil Renal 1 (Hemograma + BUN + Urea + Creatinina)", precio: 28000, tiempo_reporte: "1 día", muestra: "500 ul Sangre EDTA + 1 ml Sangre total", recipiente: "Tubo lila (EDTA) + Tubo tapa roja" },
+  { id_examen: "E023", seccion: "BIOLOGÍA MOLECULAR", examen: "PCR Hemoparásitos Felino - Tiempo Real (7 patógenos)", precio: 170000, tiempo_reporte: "2-4 días", muestra: "1 ml Sangre Total", recipiente: "Tubo tapa lila (EDTA)" },
+  { id_examen: "E024", seccion: "INMUNOLOGÍA", examen: "Distemper Canino", precio: 35000, tiempo_reporte: "1 día", muestra: "Sangre total o Hisopado Ocular/Nasal", recipiente: "Tubo lila, roja o Frasco estéril" },
+  { id_examen: "E025", seccion: "TOXICOLOGÍA", examen: "Antidepresivos tricíclicos - TCA", precio: 25000, tiempo_reporte: "1 día", muestra: "Orina", recipiente: "Frasco tapa rosca estéril" }
+];
+
 function createDefaultMockDB() {
   const defaultData = {
     Usuarios: [
@@ -62,7 +90,8 @@ function createDefaultMockDB() {
     Accesos: [],
     Configuracion: {
       gemini_api_key: "CONFIGURAR_DESDE_PANEL_ADMIN"
-    }
+    },
+    Portafolio: defaultPortafolio
   };
   fs.writeFileSync(MOCK_DB_PATH, JSON.stringify(defaultData, null, 2));
 }
@@ -380,6 +409,63 @@ function handleMockAction(action, data) {
       return { success: true, message: "Configuración guardada correctamente en modo Demo." };
     }
 
+    case 'getPortafolio': {
+      if (!db.Portafolio) {
+        db.Portafolio = defaultPortafolio;
+        writeMockDB(db);
+      }
+      return { success: true, portafolio: db.Portafolio };
+    }
+    
+    case 'savePortafolioPrecios': {
+      db.Portafolio = db.Portafolio || defaultPortafolio;
+      const preciosMap = data.precios || {};
+      db.Portafolio.forEach(item => {
+        if (preciosMap[item.id_examen] !== undefined) {
+          item.precio = parseFloat(preciosMap[item.id_examen]);
+        }
+      });
+      writeMockDB(db);
+      return { success: true, message: "Precios del portafolio actualizados correctamente en modo Demo." };
+    }
+
+    case 'addPortafolioExamen': {
+      db.Portafolio = db.Portafolio || defaultPortafolio;
+      let maxId = 0;
+      db.Portafolio.forEach(item => {
+        const num = parseInt(item.id_examen.replace(/[^0-9]/g, '')) || 0;
+        if (num > maxId) maxId = num;
+      });
+      const nextId = "E" + String(maxId + 1).padStart(3, '0');
+
+      const newItem = {
+        id_examen: nextId,
+        seccion: data.seccion.toUpperCase().trim(),
+        examen: data.examen.trim(),
+        precio: parseFloat(data.precio) || 0,
+        tiempo_reporte: data.tiempo_reporte.trim(),
+        muestra: data.muestra.trim(),
+        recipiente: data.recipiente.trim()
+      };
+      
+      db.Portafolio.push(newItem);
+      writeMockDB(db);
+      return { success: true, message: "Examen añadido correctamente en modo Demo.", id_examen: nextId, examen: newItem };
+    }
+
+    case 'deletePortafolioExamen': {
+      db.Portafolio = db.Portafolio || defaultPortafolio;
+      const initialCount = db.Portafolio.length;
+      db.Portafolio = db.Portafolio.filter(item => item.id_examen !== data.id_examen);
+      
+      if (db.Portafolio.length === initialCount) {
+        return { success: false, message: "Examen no encontrado." };
+      }
+      
+      writeMockDB(db);
+      return { success: true, message: "Examen eliminado correctamente en modo Demo." };
+    }
+
     default:
       return { success: false, message: `Acción desconocida en MockDB: ${action}` };
   }
@@ -396,11 +482,15 @@ module.exports = {
   updateClient: (clientData) => callSheetsAPI('updateClient', clientData),
   addResult: (resultData) => callSheetsAPI('addResult', resultData),
   getClientResults: (id_usuario) => callSheetsAPI('getClientResults', { id_usuario }),
-  deleteResult: (id_resultado) => callSheetsAPI('deleteResult', { id_resultado }), // Exportado
+  deleteResult: (id_resultado) => callSheetsAPI('deleteResult', { id_resultado }),
   deleteClient: (id_usuario) => callSheetsAPI('deleteClient', { id_usuario }),
   deleteAllResults: () => callSheetsAPI('deleteAllResults'),
   getAllResults: () => callSheetsAPI('getAllResults'),
   logAccess: (usuario, rol, estado) => callSheetsAPI('logAccess', { usuario, rol, estado }),
   getConfig: () => callSheetsAPI('getConfig'),
-  saveConfig: (configData) => callSheetsAPI('saveConfig', configData)
+  saveConfig: (configData) => callSheetsAPI('saveConfig', configData),
+  getPortafolio: () => callSheetsAPI('getPortafolio'),
+  savePortafolioPrecios: (preciosData) => callSheetsAPI('savePortafolioPrecios', preciosData),
+  addPortafolioExamen: (examenData) => callSheetsAPI('addPortafolioExamen', examenData),
+  deletePortafolioExamen: (id_examen) => callSheetsAPI('deletePortafolioExamen', { id_examen })
 };

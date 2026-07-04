@@ -80,6 +80,10 @@ function doPost(e) {
     else if (action === "logAccess")        { response = logAccess(doc, data); }
     else if (action === "getConfig")        { response = getConfig(doc); }
     else if (action === "saveConfig")       { response = saveConfig(doc, data); }
+    else if (action === "getPortafolio")    { response = getPortafolio(doc); }
+    else if (action === "savePortafolioPrecios") { response = savePortafolioPrecios(doc, data); }
+    else if (action === "addPortafolioExamen") { response = addPortafolioExamen(doc, data); }
+    else if (action === "deletePortafolioExamen") { response = deletePortafolioExamen(doc, data); }
     else { response.message = "Accion no reconocida: " + action; }
 
   } catch (error) {
@@ -160,7 +164,8 @@ function checkAndInitSheets(doc) {
     "Usuarios":  ["id_usuario","nombre","identificacion","usuario","contrasena","rol","fecha_registro","direccion","correo","telefono"],
     "Resultados":["id_resultado","id_usuario","nombre_examen","nombre_archivo","fecha_subida","admin_nombre"],
     "Accesos":   ["id_log","usuario","rol","fecha_hora","estado"],
-    "Configuracion": ["clave", "valor"]
+    "Configuracion": ["clave", "valor"],
+    "Portafolio": ["id_examen", "seccion", "examen", "precio", "tiempo_reporte", "muestra", "recipiente"]
   };
 
   for (var name in sheetsConfig) {
@@ -180,6 +185,38 @@ function checkAndInitSheets(doc) {
       }
       if (name === "Configuracion") {
         sheet.appendRow(["gemini_api_key", "CONFIGURAR_DESDE_PANEL_ADMIN"]);
+      }
+      if (name === "Portafolio") {
+        var defaultPortafolio = [
+          ["E001", "MICROBIOLOGÍA", "Cultivo 1 Oído (Bacteriológico con antibiograma + Micológico)", 58000, "2-5 días", "Hisopado", "Hisopado en medio de transporte"],
+          ["E002", "MICROBIOLOGÍA", "Cultivo 2 Oídos (Bacteriológico con antibiograma + Micológico)", 68000, "2-5 días", "Hisopado", "Hisopado en medio de transporte"],
+          ["E003", "MICROBIOLOGÍA", "Urocultivo (Bacteriológico + antibiograma)", 58000, "2-5 días", "Orina", "Tubo tapa gris (Ácido Bórico)"],
+          ["E004", "MICROBIOLOGÍA", "Coprocultivo (Bacteriológico + antibiograma)", 58000, "2-5 días", "Materia fecal", "Frasco tapa rosca estéril"],
+          ["E005", "HEMATOLOGÍA", "Hemograma automatizado (Extendido de sangre periférica, Proteínas, Reticulocitos)", 14000, "1 día", "300 ul Sangre total", "Tubo tapa lila (EDTA)"],
+          ["E006", "COAGULACIÓN", "Tiempo de Protrombina TP", 14500, "1 día", "a. 1 ml Sangre / b. 500 ul Plasma", "a. Tubo celeste (Citrato)"],
+          ["E007", "COAGULACIÓN", "Tiempo Parcial de Tromboplastina TPT", 14500, "1 día", "a. 1 ml Sangre / b. 500 ul Plasma", "a. Tubo celeste (Citrato)"],
+          ["E008", "QUÍMICA SANGUÍNEA", "Ácidos Biliares (Una muestra)", 85000, "1 día", "a. 500 ul Sangre / b. 500 ul Suero", "Tubo tapa roja o amarilla"],
+          ["E009", "QUÍMICA SANGUÍNEA", "Alanina aminotransferasa (ALT/GPT)", 10500, "1 día", "a. 500 ul Sangre / b. 500 ul Suero", "Tubo tapa roja o amarilla"],
+          ["E010", "QUÍMICA SANGUÍNEA", "Creatinina", 10500, "1 día", "a. 500 ul Sangre / b. 500 ul Suero", "Tubo tapa roja o amarilla"],
+          ["E011", "QUÍMICA SANGUÍNEA", "Dimetilarginina Simétrica (SDMA) + Creatinina", 155000, "1 día", "a. 500 ul Sangre / b. 500 ul Suero", "Tubo tapa roja o amarilla"],
+          ["E012", "VITAMINAS", "Ácido Fólico/Vitamina B9", 50000, "2-3 días", "a. 1 ml Sangre / b. 500 ul Suero", "Tubo tapa roja o amarilla"],
+          ["E013", "UROANÁLISIS", "Citoquímico de orina (Fisicoquímico, microscópico + GRAM)", 11000, "1 día", "Orina", "Jeringa o frasco estéril"],
+          ["E014", "UROANÁLISIS", "Relación Proteína/Creatinina en orina (UPC)", 20000, "1 día", "Orina", "Jeringa o frasco estéril"],
+          ["E015", "COPROLOGÍA", "Coprológico (Directo + Lugol + Flotación)", 12000, "1 día", "Materia fecal", "Frasco tapa rosca estéril"],
+          ["E016", "COPROLOGÍA", "Coprograma (Coprológico, azúcares, sangre oculta, pH, Gram, Wright)", 25000, "1 día", "Materia fecal", "Frasco tapa rosca estéril"],
+          ["E017", "ANÁLISIS OTRAS MUESTRAS", "Citología vaginal canina (Ciclo estral)", 25000, "1 día", "Extendido de muestra", "Placas portaobjetos (protegidas)"],
+          ["E018", "PATOLOGÍA", "Biopsia (Histopatológico de 3 fragmentos de tejido por animal)", 135000, "3-5 días", "Fragmento de tejido", "Frasco con formol al 10%"],
+          ["E019", "HORMONAS", "Cortisol en suero (Específico canino)", 59000, "1-2 días", "a. 500 ul Sangre / b. 500 ul Suero", "Tubo tapa roja o amarilla"],
+          ["E020", "HORMONAS", "Hormona estimulante de tiroides TSH específica canina", 58000, "1-2 días", "a. 500 ul Sangre / b. 500 ul Suero", "Tubo tapa roja"],
+          ["E021", "PERFILES", "Perfil Prequirúrgico 1 (Hemograma, ALT, Creatinina)", 25000, "1 día", "500 ul Sangre EDTA + 500 ul Sangre total", "Tubo lila (EDTA) + Tubo tapa roja"],
+          ["E022", "PERFILES", "Perfil Renal 1 (Hemograma + BUN + Urea + Creatinina)", 28000, "1 día", "500 ul Sangre EDTA + 1 ml Sangre total", "Tubo lila (EDTA) + Tubo tapa roja"],
+          ["E023", "BIOLOGÍA MOLECULAR", "PCR Hemoparásitos Felino - Tiempo Real (7 patógenos)", 170000, "2-4 días", "1 ml Sangre Total", "Tubo tapa lila (EDTA)"],
+          ["E024", "INMUNOLOGÍA", "Distemper Canino", 35000, "1 día", "Sangre total o Hisopado Ocular/Nasal", "Tubo lila, roja o Frasco estéril"],
+          ["E025", "TOXICOLOGÍA", "Antidepresivos tricíclicos - TCA", 25000, "1 día", "Orina", "Frasco tapa rosca estéril"]
+        ];
+        for (var i = 0; i < defaultPortafolio.length; i++) {
+          sheet.appendRow(defaultPortafolio[i]);
+        }
       }
     }
   }
@@ -719,3 +756,110 @@ function saveConfig(doc, data) {
   }
   return { success: true, message: "Configuracion guardada correctamente." };
 }
+
+// ============================================================
+// PORTAFOLIO (GET)
+// ============================================================
+function getPortafolio(doc) {
+  var sheet = doc.getSheetByName("Portafolio");
+  if (!sheet) return { success: false, message: "La hoja de Portafolio no existe." };
+  
+  var rows = sheet.getDataRange().getValues();
+  var headers = rows[0];
+  var colMap = buildColMap(headers);
+  var list = [];
+  
+  for (var i = 1; i < rows.length; i++) {
+    list.push({
+      id_examen: rows[i][colMap["id_examen"]].toString().trim(),
+      seccion: rows[i][colMap["seccion"]].toString().trim(),
+      examen: rows[i][colMap["examen"]].toString().trim(),
+      precio: parseFloat(rows[i][colMap["precio"]]),
+      tiempo_reporte: rows[i][colMap["tiempo_reporte"]].toString().trim(),
+      muestra: rows[i][colMap["muestra"]].toString().trim(),
+      recipiente: rows[i][colMap["recipiente"]].toString().trim()
+    });
+  }
+  return { success: true, portafolio: list };
+}
+
+// ============================================================
+// PORTAFOLIO (SAVE PRECIOS)
+// ============================================================
+function savePortafolioPrecios(doc, data) {
+  var sheet = doc.getSheetByName("Portafolio");
+  if (!sheet) return { success: false, message: "La hoja de Portafolio no existe." };
+  
+  var rows = sheet.getDataRange().getValues();
+  var headers = rows[0];
+  var colMap = buildColMap(headers);
+  var precioColIdx = colMap["precio"] + 1;
+  
+  var preciosMap = data.precios || {}; // Objeto { E001: 59000, E002: 69000 }
+  
+  for (var i = 1; i < rows.length; i++) {
+    var idExamen = rows[i][colMap["id_examen"]].toString().trim();
+    if (preciosMap[idExamen] !== undefined) {
+      sheet.getRange(i + 1, precioColIdx).setValue(parseFloat(preciosMap[idExamen]));
+    }
+  }
+  return { success: true, message: "Precios del portafolio actualizados correctamente." };
+}
+
+// ============================================================
+// PORTAFOLIO (ADD EXAMEN)
+// ============================================================
+function addPortafolioExamen(doc, data) {
+  var sheet = doc.getSheetByName("Portafolio");
+  if (!sheet) return { success: false, message: "La hoja de Portafolio no existe." };
+  
+  var rows = sheet.getDataRange().getValues();
+  var headers = rows[0];
+  var colMap = buildColMap(headers);
+  
+  var maxId = 0;
+  for (var i = 1; i < rows.length; i++) {
+    var idVal = rows[i][colMap["id_examen"]].toString();
+    var num = parseInt(idVal.replace(/[^0-9]/g, '')) || 0;
+    if (num > maxId) maxId = num;
+  }
+  var nextId = "E" + String(maxId + 1).padStart(3, '0');
+  
+  var newRow = [];
+  for (var j = 0; j < headers.length; j++) {
+    var header = headers[j];
+    if (header === "id_examen") newRow.push(nextId);
+    else if (header === "seccion") newRow.push(data.seccion.toUpperCase().trim());
+    else if (header === "examen") newRow.push(data.examen.trim());
+    else if (header === "precio") newRow.push(parseFloat(data.precio) || 0);
+    else if (header === "tiempo_reporte") newRow.push(data.tiempo_reporte.trim());
+    else if (header === "muestra") newRow.push(data.muestra.trim());
+    else if (header === "recipiente") newRow.push(data.recipiente.trim());
+    else newRow.push("");
+  }
+  
+  sheet.appendRow(newRow);
+  return { success: true, message: "Examen añadido correctamente.", id_examen: nextId };
+}
+
+// ============================================================
+// PORTAFOLIO (DELETE EXAMEN)
+// ============================================================
+function deletePortafolioExamen(doc, data) {
+  var sheet = doc.getSheetByName("Portafolio");
+  if (!sheet) return { success: false, message: "La hoja de Portafolio no existe." };
+  
+  var rows = sheet.getDataRange().getValues();
+  var headers = rows[0];
+  var colMap = buildColMap(headers);
+  
+  var idExamen = data.id_examen.toString().trim();
+  for (var i = 1; i < rows.length; i++) {
+    if (rows[i][colMap["id_examen"]].toString().trim() === idExamen) {
+      sheet.deleteRow(i + 1);
+      return { success: true, message: "Examen eliminado correctamente." };
+    }
+  }
+  return { success: false, message: "Examen no encontrado." };
+}
+
