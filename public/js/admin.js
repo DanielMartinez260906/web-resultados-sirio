@@ -1390,6 +1390,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // ADMIN: GESTIÓN DEL PORTAFOLIO DE SERVICIOS
   // ==========================================================================
   let adminAllExams = [];
+  let adminCustomCategories = [];
   let adminPendingChanges = {};
   let adminPortafolioCategory = 'TODOS';
 
@@ -1405,7 +1406,8 @@ document.addEventListener('DOMContentLoaded', () => {
       const res = await fetch(`${SirioAuth.API_BASE}/api/client/portafolio`);
       const data = await res.json();
       if (data.success) {
-        adminAllExams = data.portafolio;
+        adminAllExams = data.portafolio || [];
+        adminCustomCategories = data.categorias_adicionales || [];
         
         // Cargar estado de visibilidad
         const visibilityToggle = document.getElementById('admin-portafolio-visibility-toggle');
@@ -1414,6 +1416,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         adminInitCategories();
+        updateSectionsDatalist();
         renderAdminPortafolioTable();
       }
     } catch (err) {
@@ -1421,9 +1424,16 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
+  function updateSectionsDatalist() {
+    const listEl = document.getElementById('sections-datalist');
+    if (!listEl) return;
+    const sections = [...new Set([...adminAllExams.map(i => i.seccion), ...adminCustomCategories])];
+    listEl.innerHTML = sections.map(sec => `<option value="${sec}"></option>`).join('');
+  }
+
   function adminInitCategories() {
     if (!adminPortafolioCats) return;
-    const sections = ['TODOS', ...new Set(adminAllExams.map(i => i.seccion))];
+    const sections = ['TODOS', ...new Set([...adminAllExams.map(i => i.seccion), ...adminCustomCategories])];
     adminPortafolioCats.innerHTML = sections.map(sec => {
       const active = sec === adminPortafolioCategory;
       return `<button class="admin-cat-pill" data-cat="${sec}" style="
@@ -1722,6 +1732,62 @@ document.addEventListener('DOMContentLoaded', () => {
   if (portafolioAdminTabBtn) {
     portafolioAdminTabBtn.addEventListener('click', () => {
       if (adminAllExams.length === 0) loadAdminPortafolio();
+    });
+  }
+
+  // Modal para Añadir Categoría
+  const addCategoriaModal  = document.getElementById('add-categoria-modal');
+  const addCategoriaBtn    = document.getElementById('admin-add-category-btn');
+  const closeCategoriaBtn  = document.getElementById('close-add-categoria-modal');
+  const cancelCategoriaBtn = document.getElementById('cancel-add-categoria-btn');
+  const addCategoriaForm   = document.getElementById('add-categoria-form');
+
+  if (addCategoriaBtn && addCategoriaModal) {
+    addCategoriaBtn.addEventListener('click', () => {
+      if (addCategoriaForm) addCategoriaForm.reset();
+      addCategoriaModal.style.display = 'flex';
+    });
+  }
+
+  const hideAddCategoriaModal = () => {
+    if (addCategoriaModal) addCategoriaModal.style.display = 'none';
+  };
+
+  if (closeCategoriaBtn) closeCategoriaBtn.addEventListener('click', hideAddCategoriaModal);
+  if (cancelCategoriaBtn) cancelCategoriaBtn.addEventListener('click', hideAddCategoriaModal);
+
+  if (addCategoriaForm) {
+    addCategoriaForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const categoryName = document.getElementById('new-category-name').value.trim();
+
+      try {
+        const res = await fetch(`${SirioAuth.API_BASE}/api/admin/portafolio/category`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${SirioAuth.getToken()}` },
+          body: JSON.stringify({ category: categoryName })
+        });
+        const data = await res.json();
+        
+        if (data.success) {
+          hideAddCategoriaModal();
+          // Recargar el portafolio para ver la nueva categoría reflejada en las pills y datalist
+          loadAdminPortafolio();
+          
+          if (adminPortafolioAlert) {
+            adminPortafolioAlert.style.display = 'block';
+            adminPortafolioAlert.style.background = 'rgba(34,197,94,0.1)';
+            adminPortafolioAlert.style.border = '1px solid rgba(34,197,94,0.3)';
+            adminPortafolioAlert.style.color = '#86efac';
+            adminPortafolioAlert.innerHTML = `<i class="fa-solid fa-circle-check" style="margin-right:6px;"></i>¡Categoría "${categoryName.toUpperCase()}" añadida exitosamente!`;
+            setTimeout(() => { if (adminPortafolioAlert) adminPortafolioAlert.style.display = 'none'; }, 5000);
+          }
+        } else {
+          alert(data.message || 'Error al añadir la categoría.');
+        }
+      } catch (err) {
+        console.error('Error al añadir categoría:', err);
+      }
     });
   }
 

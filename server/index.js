@@ -476,10 +476,12 @@ app.get('/api/client/portafolio', async (req, res) => {
     const configRes = await db.getConfig();
     const config = configRes.config || {};
     const visible = config.portafolio_visible !== 'false';
+    const customCats = config.categorias_adicionales ? config.categorias_adicionales.split(',') : [];
     res.json({
       success: result.success,
       portafolio: result.portafolio,
-      visible: visible
+      visible: visible,
+      categorias_adicionales: customCats
     });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
@@ -534,6 +536,29 @@ app.post('/api/admin/portafolio/delete', async (req, res) => {
   try {
     const result = await db.deletePortafolioExamen(id_examen);
     res.json(result);
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
+// API: Añadir categoría al portafolio (Solo Admins)
+app.post('/api/admin/portafolio/category', async (req, res) => {
+  const { category } = req.body;
+  if (!category || !category.trim()) {
+    return res.status(400).json({ success: false, message: 'El nombre de la categoría es obligatorio.' });
+  }
+  try {
+    const configRes = await db.getConfig();
+    const config = configRes.config || {};
+    let customCats = config.categorias_adicionales ? config.categorias_adicionales.split(',') : [];
+    
+    const newCat = category.toUpperCase().trim();
+    if (!customCats.includes(newCat)) {
+      customCats.push(newCat);
+      await db.saveConfig({ categorias_adicionales: customCats.join(',') });
+    }
+    
+    res.json({ success: true, message: 'Categoría añadida exitosamente.' });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }

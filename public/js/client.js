@@ -360,6 +360,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // PORTAFOLIO DE SERVICIOS INTERACTIVO
   // ==========================================================================
   let allExams = [];
+  let customCategories = [];
   let selectedExams = new Set();
   let currentPortafolioCategory = 'TODOS';
 
@@ -387,33 +388,33 @@ document.addEventListener('DOMContentLoaded', () => {
       const data = await response.json();
       
       if (data.success) {
+        const portafolioTabBtn = document.querySelector('[data-tab="tab-client-portafolio"]');
+        
         if (data.visible === false) {
-          if (downloadPortafolioBtn) downloadPortafolioBtn.style.display = 'none';
-          const filterCard = document.querySelector('#tab-client-portafolio .panel-card:nth-of-type(2)');
-          if (filterCard) filterCard.style.display = 'none';
-          
-          const grid = document.getElementById('portafolio-layout-grid');
-          if (grid) {
-            grid.style.gridTemplateColumns = '1fr';
-            grid.innerHTML = `
-              <div class="panel-card" style="padding: 4rem 2rem; text-align: center; max-width: 600px; margin: 2rem auto; border: 1px solid rgba(234, 179, 8, 0.2); background: rgba(234, 179, 8, 0.03); border-radius: 12px; animation: floatIn 0.3s ease;">
-                <i class="fa-solid fa-clock-rotate-left" style="font-size: 3rem; color: var(--color-accent); margin-bottom: 1.5rem; display: block;"></i>
-                <h3 style="color: var(--text-main); font-size: 1.25rem; font-weight: 700; margin-bottom: 0.75rem;">Portafolio en Mantenimiento</h3>
-                <p style="color: var(--text-muted); font-size: 0.85rem; line-height: 1.6; margin-bottom: 0;">
-                  Estimado Doctor/a: Actualmente nos encontramos actualizando nuestras tarifas y catálogo de exámenes. Por favor, consulte directamente con el laboratorio para cotizaciones inmediatas. Disculpe las molestias.
-                </p>
-              </div>
-            `;
+          // Hide navigation tab button
+          if (portafolioTabBtn) {
+            portafolioTabBtn.style.setProperty('display', 'none', 'important');
+            
+            // Redirect to results tab if currently on portafolio tab
+            if (portafolioTabBtn.classList.contains('active')) {
+              const resultsTabBtn = document.querySelector('[data-tab="tab-client-results"]');
+              if (resultsTabBtn) resultsTabBtn.click();
+            }
           }
           return;
         }
 
-        // Restore if visible
+        // Show button if visible
+        if (portafolioTabBtn) {
+          portafolioTabBtn.style.setProperty('display', 'flex', 'important');
+        }
+
         if (downloadPortafolioBtn) downloadPortafolioBtn.style.display = 'flex';
         const filterCard = document.querySelector('#tab-client-portafolio .panel-card:nth-of-type(2)');
         if (filterCard) filterCard.style.display = 'block';
 
         allExams = data.portafolio || [];
+        customCategories = data.categorias_adicionales || [];
         initCategories();
         renderPortafolioTable();
       } else {
@@ -433,7 +434,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   function initCategories() {
     if (!portafolioCatsContainer) return;
-    const sections = ['TODOS', ...new Set(allExams.map(item => item.seccion))];
+    const sections = ['TODOS', ...new Set([...allExams.map(item => item.seccion), ...customCategories])];
     portafolioCatsContainer.innerHTML = sections.map(sec => {
       const isActive = sec === currentPortafolioCategory;
       return `<button class="category-pill" data-category="${sec}" style="
