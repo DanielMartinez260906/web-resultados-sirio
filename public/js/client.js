@@ -374,16 +374,33 @@ document.addEventListener('DOMContentLoaded', () => {
   const downloadPortafolioBtn = document.getElementById('download-portafolio-btn');
 
   async function loadPortafolio() {
+    // Show loading state
+    if (portafolioTableBody) {
+      portafolioTableBody.innerHTML = `<tr><td colspan="6" style="text-align:center;padding:2.5rem 0;color:var(--text-muted);">
+        <i class="fa-solid fa-spinner fa-spin" style="font-size:1.4rem;margin-bottom:0.5rem;display:block;"></i>
+        Cargando portafolio...
+      </td></tr>`;
+    }
     try {
       const response = await fetch(`${SirioAuth.API_BASE}/api/client/portafolio`);
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
       const data = await response.json();
-      if (data.success) {
+      if (data.success && Array.isArray(data.portafolio) && data.portafolio.length > 0) {
         allExams = data.portafolio;
         initCategories();
         renderPortafolioTable();
+      } else {
+        throw new Error('Portafolio vacío o sin datos');
       }
     } catch (error) {
       console.error('Error al cargar portafolio:', error);
+      if (portafolioTableBody) {
+        portafolioTableBody.innerHTML = `<tr><td colspan="6" style="text-align:center;padding:3rem 0;color:var(--error);">
+          <i class="fa-solid fa-triangle-exclamation" style="font-size:1.8rem;display:block;margin-bottom:0.6rem;opacity:0.7;"></i>
+          No se pudo cargar el portafolio.<br>
+          <span style="font-size:0.75rem;color:var(--text-muted);margin-top:6px;display:block;">Verifique que el servidor esté activo e intente recargar la página.</span>
+        </td></tr>`;
+      }
     }
   }
 
@@ -555,7 +572,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
   if (printQuoteBtn) {
     printQuoteBtn.addEventListener('click', () => {
-      // Guardar IDs seleccionados e info del cliente en localStorage para la página de impresión
       localStorage.setItem('sirio_quote_exams', JSON.stringify([...selectedExams]));
       const userData = SirioAuth.getUser ? SirioAuth.getUser() : {};
       localStorage.setItem('sirio_client_info', JSON.stringify(userData || {}));
@@ -569,7 +585,10 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // Cargar portafolio en cuanto se haga click en la pestaña
+  // Cargar portafolio INMEDIATAMENTE al iniciar (no esperar el click de tab)
+  loadPortafolio();
+
+  // También recargar si la tab se activa y está vacía (por si acaso)
   const portafolioTabBtn = document.querySelector('[data-tab="tab-client-portafolio"]');
   if (portafolioTabBtn) {
     portafolioTabBtn.addEventListener('click', () => {
