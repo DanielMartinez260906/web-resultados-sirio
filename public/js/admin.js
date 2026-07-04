@@ -1385,4 +1385,201 @@ document.addEventListener('DOMContentLoaded', () => {
   // Inicialización
   loadClients();
   loadGeneralOverview();
+
+  // ==========================================================================
+  // ADMIN: GESTIÓN DEL PORTAFOLIO DE SERVICIOS
+  // ==========================================================================
+  let adminAllExams = [];
+  let adminPendingChanges = {};
+  let adminPortafolioCategory = 'TODOS';
+
+  const adminPortafolioTableBody = document.getElementById('admin-portafolio-table-body');
+  const adminSearchPortafolio    = document.getElementById('admin-search-portafolio');
+  const adminPortafolioCats      = document.getElementById('admin-portafolio-cats');
+  const adminSaveBtn             = document.getElementById('admin-save-portafolio-btn');
+  const adminDownloadBtn         = document.getElementById('admin-download-portafolio-btn');
+  const adminPortafolioAlert     = document.getElementById('admin-portafolio-alert');
+
+  async function loadAdminPortafolio() {
+    try {
+      const res = await fetch(`${SirioAuth.API_BASE}/api/client/portafolio`);
+      const data = await res.json();
+      if (data.success) {
+        adminAllExams = data.portafolio;
+        adminInitCategories();
+        renderAdminPortafolioTable();
+      }
+    } catch (err) {
+      console.error('Error al cargar portafolio (admin):', err);
+    }
+  }
+
+  function adminInitCategories() {
+    if (!adminPortafolioCats) return;
+    const sections = ['TODOS', ...new Set(adminAllExams.map(i => i.seccion))];
+    adminPortafolioCats.innerHTML = sections.map(sec => {
+      const active = sec === adminPortafolioCategory;
+      return `<button class="admin-cat-pill" data-cat="${sec}" style="
+        padding: 6px 14px; font-size: 0.78rem; border-radius: 20px; white-space: nowrap; height: 32px;
+        border: 1px solid ${active ? 'var(--color-primary)' : 'var(--border-light)'};
+        background: ${active ? 'var(--color-primary)' : 'rgba(255,255,255,0.03)'};
+        color: ${active ? '#fff' : 'var(--text-muted)'}; cursor: pointer; transition: all 0.2s;
+        font-family: inherit; font-weight: ${active ? '600' : '400'};
+      ">${sec}</button>`;
+    }).join('');
+
+    adminPortafolioCats.querySelectorAll('.admin-cat-pill').forEach(btn => {
+      btn.addEventListener('click', () => {
+        adminPortafolioCategory = btn.dataset.cat;
+        adminPortafolioCats.querySelectorAll('.admin-cat-pill').forEach(b => {
+          b.style.background = 'rgba(255,255,255,0.03)';
+          b.style.color = 'var(--text-muted)';
+          b.style.border = '1px solid var(--border-light)';
+          b.style.fontWeight = '400';
+        });
+        btn.style.background = 'var(--color-primary)';
+        btn.style.color = '#fff';
+        btn.style.border = '1px solid var(--color-primary)';
+        btn.style.fontWeight = '600';
+        renderAdminPortafolioTable();
+      });
+    });
+  }
+
+  function renderAdminPortafolioTable() {
+    if (!adminPortafolioTableBody) return;
+    const query = adminSearchPortafolio ? adminSearchPortafolio.value.toLowerCase().trim() : '';
+    const filtered = adminAllExams.filter(item => {
+      const matchCat = adminPortafolioCategory === 'TODOS' || item.seccion === adminPortafolioCategory;
+      const matchSearch = item.examen.toLowerCase().includes(query) || item.seccion.toLowerCase().includes(query);
+      return matchCat && matchSearch;
+    });
+
+    if (filtered.length === 0) {
+      adminPortafolioTableBody.innerHTML = `<tr><td colspan="5" style="text-align:center;padding:2.5rem 0;color:var(--text-dark);">No se encontraron exámenes.</td></tr>`;
+      return;
+    }
+
+    // Group by section when showing ALL
+    if (adminPortafolioCategory === 'TODOS') {
+      const sections = [...new Set(filtered.map(i => i.seccion))];
+      adminPortafolioTableBody.innerHTML = sections.map(sec => {
+        const items = filtered.filter(i => i.seccion === sec);
+        const rows = items.map(item => buildAdminRow(item)).join('');
+        return `<tr><td colspan="5" style="padding:12px 10px 4px;background:rgba(14,165,233,0.06);border-bottom:none;">
+          <span style="font-size:0.7rem;font-weight:700;text-transform:uppercase;letter-spacing:0.8px;color:var(--color-primary);">${sec}</span>
+        </td></tr>${rows}`;
+      }).join('');
+    } else {
+      adminPortafolioTableBody.innerHTML = filtered.map(item => buildAdminRow(item)).join('');
+    }
+
+    // Attach edit events
+    adminPortafolioTableBody.querySelectorAll('[contenteditable="true"]').forEach(cell => {
+      cell.addEventListener('input', () => {
+        const id = cell.closest('tr').dataset.id;
+        const field = cell.dataset.field;
+        if (!adminPendingChanges[id]) adminPendingChanges[id] = {};
+
+        let value = cell.innerText.trim();
+        // Clean price if needed
+        if (field === 'precio') value = parseFloat(value.replace(/[^0-9.]/g, '')) || 0;
+        adminPendingChanges[id][field] = value;
+
+        if (adminSaveBtn) adminSaveBtn.disabled = false;
+        cell.closest('tr').style.background = 'rgba(234,179,8,0.06)';
+      });
+    });
+  }
+
+  function buildAdminRow(item) {
+    const saved = adminPendingChanges[item.id_examen] || {};
+    const precio = saved.precio !== undefined ? saved.precio : item.precio;
+    const tiempo = saved.tiempo_reporte !== undefined ? saved.tiempo_reporte : item.tiempo_reporte;
+    const muestra = saved.muestra !== undefined ? saved.muestra : item.muestra;
+    const recipiente = saved.recipiente !== undefined ? saved.recipiente : (item.recipiente || '');
+
+    return `<tr data-id="${item.id_examen}" style="border-bottom:1px solid var(--border-light);transition:background 0.15s;">
+      <td style="padding:10px;font-weight:600;color:var(--text-main);font-size:0.85rem;">${item.examen}</td>
+      <td style="padding:10px;text-align:right;">
+        <span contenteditable="true" data-field="precio"
+          style="display:inline-block;min-width:90px;padding:4px 8px;border-radius:5px;border:1px solid var(--border-light);
+                 background:rgba(255,255,255,0.03);font-weight:700;color:var(--color-accent);text-align:right;font-size:0.9rem;"
+          spellcheck="false">${precio}</span>
+      </td>
+      <td style="padding:10px;">
+        <span contenteditable="true" data-field="tiempo_reporte"
+          style="display:inline-block;min-width:80px;padding:4px 8px;border-radius:5px;border:1px solid var(--border-light);
+                 background:rgba(255,255,255,0.03);color:var(--text-main);font-size:0.82rem;"
+          spellcheck="false">${tiempo}</span>
+      </td>
+      <td style="padding:10px;">
+        <span contenteditable="true" data-field="muestra"
+          style="display:inline-block;min-width:80px;padding:4px 8px;border-radius:5px;border:1px solid var(--border-light);
+                 background:rgba(255,255,255,0.03);color:var(--text-main);font-size:0.82rem;"
+          spellcheck="false">${muestra}</span>
+      </td>
+      <td style="padding:10px;">
+        <span contenteditable="true" data-field="recipiente"
+          style="display:inline-block;min-width:80px;padding:4px 8px;border-radius:5px;border:1px solid var(--border-light);
+                 background:rgba(255,255,255,0.03);color:var(--text-muted);font-size:0.78rem;"
+          spellcheck="false">${recipiente}</span>
+      </td>
+    </tr>`;
+  }
+
+  if (adminSearchPortafolio) adminSearchPortafolio.addEventListener('input', renderAdminPortafolioTable);
+
+  if (adminSaveBtn) {
+    adminSaveBtn.addEventListener('click', async () => {
+      if (Object.keys(adminPendingChanges).length === 0) return;
+      adminSaveBtn.disabled = true;
+      adminSaveBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Guardando...';
+
+      // Apply pending changes to in-memory data
+      adminAllExams = adminAllExams.map(item => {
+        if (adminPendingChanges[item.id_examen]) {
+          return { ...item, ...adminPendingChanges[item.id_examen] };
+        }
+        return item;
+      });
+
+      try {
+        const res = await fetch(`${SirioAuth.API_BASE}/api/admin/portafolio/precios`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${SirioAuth.getToken()}` },
+          body: JSON.stringify({ precios: adminPendingChanges })
+        });
+        const data = await res.json();
+        adminPendingChanges = {};
+
+        if (adminPortafolioAlert) {
+          adminPortafolioAlert.style.display = 'block';
+          adminPortafolioAlert.style.background = data.success ? 'rgba(34,197,94,0.1)' : 'rgba(239,68,68,0.1)';
+          adminPortafolioAlert.style.border = `1px solid ${data.success ? 'rgba(34,197,94,0.3)' : 'rgba(239,68,68,0.3)'}`;
+          adminPortafolioAlert.style.color = data.success ? '#86efac' : '#fca5a5';
+          adminPortafolioAlert.innerHTML = `<i class="fa-solid ${data.success ? 'fa-circle-check' : 'fa-circle-xmark'}" style="margin-right:6px;"></i>${data.message || (data.success ? '¡Precios actualizados exitosamente!' : 'Error al guardar.')}`;
+          setTimeout(() => { if (adminPortafolioAlert) adminPortafolioAlert.style.display = 'none'; }, 5000);
+        }
+        renderAdminPortafolioTable();
+      } catch (err) {
+        console.error('Error guardando portafolio:', err);
+      }
+
+      adminSaveBtn.innerHTML = '<i class="fa-solid fa-floppy-disk"></i> Guardar Cambios';
+    });
+  }
+
+  if (adminDownloadBtn) {
+    adminDownloadBtn.addEventListener('click', () => window.open('/portafolio-print.html', '_blank'));
+  }
+
+  // Cargar el portafolio al hacer click en la pestaña
+  const portafolioAdminTabBtn = document.querySelector('[data-tab="tab-portafolio-admin"]');
+  if (portafolioAdminTabBtn) {
+    portafolioAdminTabBtn.addEventListener('click', () => {
+      if (adminAllExams.length === 0) loadAdminPortafolio();
+    });
+  }
+
 });

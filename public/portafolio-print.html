@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Portafolio de Servicios - Laboratorio SIRIO</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --primary: #0ea5e9;
+      --accent: #38bdf8;
+      --text: #1e293b;
+      --muted: #64748b;
+      --border: #e2e8f0;
+      --bg: #f8fafc;
+      --card: #ffffff;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      font-size: 13px;
+      line-height: 1.5;
+    }
+
+    /* ── Screen wrapper ── */
+    .page-wrapper {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 24px 20px 60px;
+    }
+
+    /* ── Header ── */
+    .print-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 20px 24px;
+      background: var(--card);
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      margin-bottom: 18px;
+      gap: 16px;
+    }
+    .header-brand { display: flex; align-items: center; gap: 14px; }
+    .brand-logo-circle {
+      width: 50px; height: 50px; border-radius: 50%;
+      background: linear-gradient(135deg, #0ea5e9, #0369a1);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.6rem; color: #fff; flex-shrink: 0;
+    }
+    .brand-name { font-size: 1.25rem; font-weight: 800; color: var(--text); }
+    .brand-sub { font-size: 0.72rem; color: var(--muted); margin-top: 2px; }
+    .header-meta { text-align: right; font-size: 0.72rem; color: var(--muted); }
+    .header-meta strong { display: block; font-size: 0.85rem; color: var(--text); font-weight: 600; }
+
+    /* ── Quote banner ── */
+    .quote-banner {
+      background: linear-gradient(90deg, rgba(14,165,233,0.08), rgba(56,189,248,0.05));
+      border: 1px solid rgba(14,165,233,0.25);
+      border-radius: 10px; padding: 14px 18px;
+      margin-bottom: 18px;
+      display: flex; justify-content: space-between; align-items: center; gap: 12px;
+    }
+    .quote-banner h2 { font-size: 1.05rem; font-weight: 700; color: var(--primary); }
+    .quote-banner .client-name { font-size: 0.8rem; color: var(--muted); margin-top: 3px; }
+    .total-box { text-align: right; flex-shrink: 0; }
+    .total-label { font-size: 0.7rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; }
+    .total-amount { font-size: 1.55rem; font-weight: 800; color: var(--primary); }
+
+    /* ── Section title ── */
+    .section-title {
+      font-size: 0.65rem; font-weight: 700; text-transform: uppercase;
+      letter-spacing: 1px; color: var(--primary);
+      padding: 10px 12px 4px;
+      border-bottom: 1px solid rgba(14,165,233,0.15);
+      margin-top: 12px;
+    }
+    .section-title:first-of-type { margin-top: 0; }
+
+    /* ── Table ── */
+    .portafolio-table {
+      width: 100%; border-collapse: collapse;
+      background: var(--card);
+      border-radius: 10px;
+      overflow: hidden;
+      border: 1px solid var(--border);
+      margin-bottom: 16px;
+    }
+    .portafolio-table th {
+      background: #f1f5f9;
+      color: var(--primary); font-size: 0.72rem; font-weight: 700;
+      padding: 9px 10px; text-align: left;
+      border-bottom: 2px solid var(--border);
+      text-transform: uppercase; letter-spacing: 0.5px;
+    }
+    .portafolio-table td {
+      padding: 9px 10px;
+      border-bottom: 1px solid var(--border);
+      vertical-align: middle;
+    }
+    .portafolio-table tr:last-child td { border-bottom: none; }
+    .portafolio-table tr:nth-child(even) td { background: #f8fafc; }
+    .price-cell { font-weight: 700; color: var(--primary); text-align: right; white-space: nowrap; }
+    .badge {
+      display: inline-block; padding: 2px 7px;
+      border-radius: 4px; font-size: 0.67rem; font-weight: 600;
+    }
+    .badge-lila    { background: rgba(168,85,247,0.1);  color: #7c3aed; }
+    .badge-azul    { background: rgba(14,165,233,0.1);  color: #0369a1; }
+    .badge-roja    { background: rgba(239,68,68,0.1);   color: #dc2626; }
+    .badge-amarilla{ background: rgba(234,179,8,0.1);   color: #b45309; }
+    .badge-verde   { background: rgba(34,197,94,0.1);   color: #15803d; }
+    .badge-gris    { background: rgba(148,163,184,0.1); color: #64748b; }
+    .badge-default { background: rgba(100,116,139,0.08);color: #64748b; }
+
+    /* ── Footer nota ── */
+    .print-footer {
+      margin-top: 24px;
+      padding: 14px 18px;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      background: var(--card);
+      font-size: 0.72rem; color: var(--muted);
+    }
+    .print-footer strong { color: var(--text); }
+
+    /* ── Toolbar (screen only) ── */
+    .toolbar {
+      position: fixed; bottom: 22px; right: 22px;
+      display: flex; gap: 10px; z-index: 100;
+    }
+    .btn-tool {
+      padding: 11px 20px; border-radius: 8px; border: none; cursor: pointer;
+      font-family: inherit; font-weight: 600; font-size: 0.85rem;
+      display: flex; align-items: center; gap: 8px;
+      box-shadow: 0 4px 14px rgba(0,0,0,0.15);
+      transition: transform 0.15s, box-shadow 0.15s;
+    }
+    .btn-tool:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(0,0,0,0.18); }
+    .btn-primary-tool { background: linear-gradient(135deg, #0ea5e9, #0369a1); color: #fff; }
+    .btn-secondary-tool { background: #fff; color: var(--text); border: 1px solid var(--border); }
+
+    .loading-msg {
+      text-align: center; padding: 3rem;
+      color: var(--muted); font-size: 0.9rem;
+    }
+    .spinner {
+      width: 36px; height: 36px; border-radius: 50%;
+      border: 3px solid rgba(14,165,233,0.2); border-top-color: var(--primary);
+      animation: spin 0.8s linear infinite; margin: 0 auto 1rem;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ── PRINT STYLES ── */
+    @media print {
+      body { background: #fff; font-size: 11px; }
+      .toolbar { display: none !important; }
+      .page-wrapper { max-width: 100%; padding: 10px 16px; }
+      .print-header { border-radius: 0; border: none; border-bottom: 2px solid var(--border); margin-bottom: 10px; }
+      .portafolio-table { border-radius: 0; }
+      .portafolio-table tr { page-break-inside: avoid; }
+      .section-title { page-break-after: avoid; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="page-wrapper">
+  <!-- Header -->
+  <div class="print-header">
+    <div class="header-brand">
+      <div class="brand-logo-circle">🐾</div>
+      <div>
+        <div class="brand-name">Laboratorio SIRIO</div>
+        <div class="brand-sub">Laboratorio de Investigación y Análisis Veterinario</div>
+      </div>
+    </div>
+    <div class="header-meta">
+      <strong id="portafolio-doc-title">Portafolio de Servicios</strong>
+      <div>Vigencia: <span id="portafolio-year">2025</span></div>
+      <div id="portafolio-date"></div>
+    </div>
+  </div>
+
+  <!-- Quote banner (only in quote mode) -->
+  <div id="quote-banner" class="quote-banner" style="display:none;">
+    <div>
+      <h2>📋 Cotización de Exámenes</h2>
+      <div class="client-name" id="quote-client-label"></div>
+    </div>
+    <div class="total-box">
+      <div class="total-label">Total Cotizado</div>
+      <div class="total-amount" id="quote-total-amount"></div>
+    </div>
+  </div>
+
+  <!-- Content area -->
+  <div id="portafolio-content">
+    <div class="loading-msg">
+      <div class="spinner"></div>
+      Cargando portafolio de servicios...
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <div class="print-footer" id="portafolio-print-footer" style="display:none;">
+    <strong>Notas importantes:</strong>
+    <ul style="margin-top: 6px; padding-left: 18px; line-height: 1.8;">
+      <li>Los precios listados son tarifas oficiales vigentes al momento de la emisión de este documento.</li>
+      <li>Los precios no incluyen tarifas de recolección de muestras a domicilio ni descuentos por convenio.</li>
+      <li>Los tiempos de reporte son aproximados y pueden variar según la carga de trabajo del laboratorio.</li>
+      <li>Para consultas o convenios especiales, comuníquese directamente con el laboratorio.</li>
+    </ul>
+  </div>
+</div>
+
+<!-- Toolbar -->
+<div class="toolbar">
+  <button class="btn-tool btn-secondary-tool" onclick="window.close()">✕ Cerrar</button>
+  <button class="btn-tool btn-primary-tool" onclick="window.print()">🖨️ Descargar / Imprimir PDF</button>
+</div>
+
+<script>
+  // Determine if this is a quote or full portafolio
+  const params = new URLSearchParams(window.location.search);
+  const isQuote = params.get('cotizar') === 'true';
+  const quoteExamIds = isQuote ? new Set(JSON.parse(localStorage.getItem('sirio_quote_exams') || '[]')) : null;
+  const clientInfo   = isQuote ? JSON.parse(localStorage.getItem('sirio_client_info') || '{}')  : null;
+
+  // Set date
+  const now = new Date();
+  document.getElementById('portafolio-year').textContent = now.getFullYear();
+  document.getElementById('portafolio-date').textContent = now.toLocaleDateString('es-CO', { day: '2-digit', month: 'long', year: 'numeric' });
+
+  // Determine API base (same origin)
+  const API_BASE = window.location.origin;
+
+  async function loadAndRender() {
+    try {
+      const res  = await fetch(`${API_BASE}/api/client/portafolio`);
+      const data = await res.json();
+      if (!data.success) throw new Error('API error');
+      renderPortafolio(data.portafolio);
+    } catch (e) {
+      document.getElementById('portafolio-content').innerHTML =
+        '<div class="loading-msg" style="color:#dc2626;">No se pudo cargar el portafolio. Por favor, cierre esta ventana e intente de nuevo.</div>';
+    }
+  }
+
+  function getBadgeClass(recipiente) {
+    if (!recipiente) return 'badge-default';
+    const t = recipiente.toLowerCase();
+    if (t.includes('lila') || t.includes('edta'))            return 'badge-lila';
+    if (t.includes('celeste') || t.includes('citrato'))       return 'badge-azul';
+    if (t.includes('roja') || t.includes('rojo'))             return 'badge-roja';
+    if (t.includes('amarilla') || t.includes('amarillo'))     return 'badge-amarilla';
+    if (t.includes('verde') || t.includes('heparina'))        return 'badge-verde';
+    if (t.includes('gris') || t.includes('fluoruro'))         return 'badge-gris';
+    return 'badge-default';
+  }
+
+  function formatCOP(num) {
+    return new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 0 }).format(num);
+  }
+
+  function renderPortafolio(allExams) {
+    let exams = allExams;
+
+    if (isQuote) {
+      // Filter only selected exams
+      exams = allExams.filter(e => quoteExamIds.has(e.id_examen));
+      if (exams.length === 0) {
+        document.getElementById('portafolio-content').innerHTML =
+          '<div class="loading-msg">No se seleccionaron exámenes para la cotización.</div>';
+        return;
+      }
+
+      // Show quote banner
+      const total = exams.reduce((s, e) => s + e.precio, 0);
+      document.getElementById('portafolio-doc-title').textContent = 'Cotización de Exámenes';
+      document.getElementById('quote-banner').style.display = 'flex';
+      document.getElementById('quote-total-amount').textContent = formatCOP(total);
+      if (clientInfo && clientInfo.nombre) {
+        document.getElementById('quote-client-label').textContent = `Cliente: ${clientInfo.nombre}`;
+      }
+    }
+
+    // Group by section
+    const sections = [...new Set(exams.map(e => e.seccion))];
+    let html = '';
+
+    sections.forEach(sec => {
+      const items = exams.filter(e => e.seccion === sec);
+      html += `<div class="section-title">${sec}</div>`;
+      html += `<table class="portafolio-table">
+        <thead>
+          <tr>
+            <th style="width:35%">Examen</th>
+            <th style="text-align:right;width:110px">Precio</th>
+            <th style="width:90px">Reporte</th>
+            <th>Muestra</th>
+            <th>Recipiente</th>
+          </tr>
+        </thead>
+        <tbody>`;
+      items.forEach(item => {
+        const badge = item.recipiente
+          ? `<span class="badge ${getBadgeClass(item.recipiente)}">${item.recipiente}</span>`
+          : '<span style="color:#94a3b8;font-size:0.72rem;">—</span>';
+        html += `<tr>
+          <td style="font-weight:600;">${item.examen}</td>
+          <td class="price-cell">${formatCOP(item.precio)}</td>
+          <td style="color:#475569;">${item.tiempo_reporte}</td>
+          <td style="color:#475569;">${item.muestra}</td>
+          <td>${badge}</td>
+        </tr>`;
+      });
+      html += `</tbody></table>`;
+    });
+
+    document.getElementById('portafolio-content').innerHTML = html;
+    document.getElementById('portafolio-print-footer').style.display = 'block';
+  }
+
+  loadAndRender();
+</script>
+</body>
+</html>

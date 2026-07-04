@@ -355,4 +355,226 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Inicializar cargando los resultados
   loadResults();
+
+  // ==========================================================================
+  // PORTAFOLIO DE SERVICIOS INTERACTIVO
+  // ==========================================================================
+  let allExams = [];
+  let selectedExams = new Set();
+  let currentPortafolioCategory = 'TODOS';
+
+  const portafolioTableBody = document.getElementById('portafolio-table-body');
+  const searchPortafolioInput = document.getElementById('search-portafolio');
+  const portafolioCatsContainer = document.getElementById('portafolio-cats');
+  const portafolioCalculator = document.getElementById('portafolio-calculator');
+  const selectedTestsList = document.getElementById('selected-tests-list');
+  const cotizadorTotalVal = document.getElementById('cotizador-total-val');
+  const clearSelectedTestsBtn = document.getElementById('clear-selected-tests');
+  const printQuoteBtn = document.getElementById('print-quote-btn');
+  const downloadPortafolioBtn = document.getElementById('download-portafolio-btn');
+
+  async function loadPortafolio() {
+    try {
+      const response = await fetch(`${SirioAuth.API_BASE}/api/client/portafolio`);
+      const data = await response.json();
+      if (data.success) {
+        allExams = data.portafolio;
+        initCategories();
+        renderPortafolioTable();
+      }
+    } catch (error) {
+      console.error('Error al cargar portafolio:', error);
+    }
+  }
+
+  function initCategories() {
+    if (!portafolioCatsContainer) return;
+    const sections = ['TODOS', ...new Set(allExams.map(item => item.seccion))];
+    portafolioCatsContainer.innerHTML = sections.map(sec => {
+      const isActive = sec === currentPortafolioCategory;
+      return `<button class="category-pill" data-category="${sec}" style="
+        padding: 6px 14px; font-size: 0.78rem; border-radius: 20px; white-space: nowrap;
+        height: 32px; border: 1px solid ${isActive ? 'var(--color-primary)' : 'var(--border-light)'};
+        background: ${isActive ? 'var(--color-primary)' : 'rgba(255,255,255,0.03)'};
+        color: ${isActive ? '#fff' : 'var(--text-muted)'}; cursor: pointer;
+        transition: all 0.2s; font-family: inherit; font-weight: ${isActive ? '600' : '400'};
+      ">${sec}</button>`;
+    }).join('');
+
+    portafolioCatsContainer.querySelectorAll('.category-pill').forEach(btn => {
+      btn.addEventListener('click', () => {
+        currentPortafolioCategory = btn.dataset.category;
+        portafolioCatsContainer.querySelectorAll('.category-pill').forEach(b => {
+          b.style.background = 'rgba(255,255,255,0.03)';
+          b.style.color = 'var(--text-muted)';
+          b.style.border = '1px solid var(--border-light)';
+          b.style.fontWeight = '400';
+        });
+        btn.style.background = 'var(--color-primary)';
+        btn.style.color = '#fff';
+        btn.style.border = '1px solid var(--color-primary)';
+        btn.style.fontWeight = '600';
+        renderPortafolioTable();
+      });
+    });
+  }
+
+  function getRecipientBadge(recipiente) {
+    if (!recipiente) return '';
+    const text = recipiente.toLowerCase();
+    let bg = 'rgba(255,255,255,0.05)', color = 'var(--text-muted)';
+    if (text.includes('lila') || text.includes('edta'))           { bg = 'rgba(168,85,247,0.15)'; color = '#d8b4fe'; }
+    else if (text.includes('celeste') || text.includes('citrato')){ bg = 'rgba(14,165,233,0.15)'; color = '#7dd3fc'; }
+    else if (text.includes('roja') || text.includes('rojo'))      { bg = 'rgba(239,68,68,0.15)';  color = '#fca5a5'; }
+    else if (text.includes('amarilla') || text.includes('amarillo')){ bg = 'rgba(234,179,8,0.15)';color = '#fde047'; }
+    else if (text.includes('verde') || text.includes('heparina')) { bg = 'rgba(34,197,94,0.15)';  color = '#86efac'; }
+    else if (text.includes('gris') || text.includes('fluoruro'))  { bg = 'rgba(148,163,184,0.15)';color = '#cbd5e1'; }
+    return `<span style="background:${bg};color:${color};padding:3px 8px;border-radius:4px;font-size:0.72rem;font-weight:500;border:1px solid rgba(255,255,255,0.06);display:inline-block;">${recipiente}</span>`;
+  }
+
+  function renderPortafolioTable() {
+    if (!portafolioTableBody) return;
+    const query = searchPortafolioInput ? searchPortafolioInput.value.toLowerCase().trim() : '';
+    const filtered = allExams.filter(item => {
+      const matchCat = currentPortafolioCategory === 'TODOS' || item.seccion === currentPortafolioCategory;
+      const matchSearch = item.examen.toLowerCase().includes(query) || item.seccion.toLowerCase().includes(query);
+      return matchCat && matchSearch;
+    });
+
+    if (filtered.length === 0) {
+      portafolioTableBody.innerHTML = `<tr><td colspan="6" style="text-align:center;color:var(--text-dark);padding:3rem 0;">
+        <i class="fa-solid fa-folder-open" style="font-size:2rem;opacity:0.3;margin-bottom:0.5rem;display:block;"></i>
+        No se encontraron exámenes.
+      </td></tr>`;
+      return;
+    }
+
+    // Group by section if showing ALL
+    if (currentPortafolioCategory === 'TODOS') {
+      const sections = [...new Set(filtered.map(i => i.seccion))];
+      portafolioTableBody.innerHTML = sections.map(sec => {
+        const items = filtered.filter(i => i.seccion === sec);
+        const rows = items.map(item => buildRow(item)).join('');
+        return `<tr><td colspan="6" style="padding:12px 10px 4px;background:rgba(14,165,233,0.06);border-bottom:none;">
+          <span style="font-size:0.72rem;font-weight:700;text-transform:uppercase;letter-spacing:0.8px;color:var(--color-primary);">
+            <i class="fa-solid fa-circle-chevron-right" style="margin-right:5px;font-size:0.65rem;"></i>${sec}
+          </span>
+        </td></tr>${rows}`;
+      }).join('');
+    } else {
+      portafolioTableBody.innerHTML = filtered.map(item => buildRow(item)).join('');
+    }
+
+    // Events
+    portafolioTableBody.querySelectorAll('.portafolio-row').forEach(row => {
+      row.addEventListener('mouseenter', () => row.style.background = 'rgba(14,165,233,0.04)');
+      row.addEventListener('mouseleave', () => row.style.background = '');
+      row.addEventListener('click', () => {
+        const cb = row.querySelector('.exam-checkbox');
+        if (cb) { cb.checked = !cb.checked; toggleExamSelection(cb.dataset.id, cb.checked); }
+      });
+    });
+    portafolioTableBody.querySelectorAll('.exam-checkbox').forEach(cb => {
+      cb.addEventListener('change', () => toggleExamSelection(cb.dataset.id, cb.checked));
+    });
+  }
+
+  function buildRow(item) {
+    const isChecked = selectedExams.has(item.id_examen) ? 'checked' : '';
+    const formattedPrice = new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 0 }).format(item.precio);
+    return `<tr class="portafolio-row" data-id="${item.id_examen}" style="border-bottom:1px solid var(--border-light);cursor:pointer;transition:background 0.15s;">
+      <td style="padding:11px 10px;" onclick="event.stopPropagation();">
+        <input type="checkbox" class="exam-checkbox" data-id="${item.id_examen}" ${isChecked} style="cursor:pointer;width:16px;height:16px;accent-color:var(--color-primary);">
+      </td>
+      <td style="padding:11px 10px;font-weight:550;color:var(--text-main);font-size:0.85rem;">${item.examen}</td>
+      <td style="padding:11px 10px;text-align:right;font-weight:700;color:var(--color-accent);font-size:0.92rem;white-space:nowrap;">${formattedPrice}</td>
+      <td style="padding:11px 10px;color:var(--text-muted);font-size:0.78rem;white-space:nowrap;">${item.tiempo_reporte}</td>
+      <td style="padding:11px 10px;color:var(--text-muted);font-size:0.78rem;">${item.muestra}</td>
+      <td style="padding:11px 10px;">${getRecipientBadge(item.recipiente)}</td>
+    </tr>`;
+  }
+
+  function toggleExamSelection(idExamen, isChecked) {
+    if (isChecked) selectedExams.add(idExamen);
+    else selectedExams.delete(idExamen);
+    updateCalculator();
+  }
+
+  function updateCalculator() {
+    const grid = document.getElementById('portafolio-layout-grid');
+    if (selectedExams.size === 0) {
+      if (portafolioCalculator) portafolioCalculator.style.display = 'none';
+      if (grid) grid.style.gridTemplateColumns = '1fr';
+      return;
+    }
+    if (portafolioCalculator) portafolioCalculator.style.display = 'block';
+    if (grid && window.innerWidth > 992) grid.style.gridTemplateColumns = '1fr 340px';
+
+    const selectedList = allExams.filter(item => selectedExams.has(item.id_examen));
+    const total = selectedList.reduce((sum, item) => sum + item.precio, 0);
+    if (cotizadorTotalVal) cotizadorTotalVal.innerText = new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 0 }).format(total);
+
+    if (selectedTestsList) {
+      selectedTestsList.innerHTML = selectedList.map(item => {
+        const priceStr = new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 0 }).format(item.precio);
+        return `<div style="display:flex;justify-content:space-between;align-items:center;background:rgba(255,255,255,0.02);padding:8px 12px;border-radius:6px;border:1px solid var(--border-light);font-size:0.79rem;gap:8px;">
+          <div style="flex:1;word-break:break-word;">
+            <div style="font-weight:600;color:var(--text-main);">${item.examen}</div>
+            <div style="font-size:0.68rem;color:var(--text-muted);margin-top:2px;">${item.seccion}</div>
+          </div>
+          <div style="display:flex;align-items:center;gap:8px;flex-shrink:0;">
+            <span style="font-weight:700;color:var(--color-accent);font-size:0.82rem;">${priceStr}</span>
+            <button class="remove-test-btn" data-id="${item.id_examen}" style="background:transparent;border:none;color:var(--error);cursor:pointer;padding:4px;font-size:0.85rem;" title="Quitar">
+              <i class="fa-solid fa-xmark"></i>
+            </button>
+          </div>
+        </div>`;
+      }).join('');
+
+      selectedTestsList.querySelectorAll('.remove-test-btn').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          selectedExams.delete(btn.dataset.id);
+          const cb = portafolioTableBody ? portafolioTableBody.querySelector(`.exam-checkbox[data-id="${btn.dataset.id}"]`) : null;
+          if (cb) cb.checked = false;
+          updateCalculator();
+        });
+      });
+    }
+  }
+
+  if (clearSelectedTestsBtn) {
+    clearSelectedTestsBtn.addEventListener('click', () => {
+      selectedExams.clear();
+      if (portafolioTableBody) portafolioTableBody.querySelectorAll('.exam-checkbox').forEach(cb => cb.checked = false);
+      updateCalculator();
+    });
+  }
+
+  if (searchPortafolioInput) searchPortafolioInput.addEventListener('input', renderPortafolioTable);
+
+  if (printQuoteBtn) {
+    printQuoteBtn.addEventListener('click', () => {
+      // Guardar IDs seleccionados e info del cliente en localStorage para la página de impresión
+      localStorage.setItem('sirio_quote_exams', JSON.stringify([...selectedExams]));
+      const userData = SirioAuth.getUser ? SirioAuth.getUser() : {};
+      localStorage.setItem('sirio_client_info', JSON.stringify(userData || {}));
+      window.open('/portafolio-print.html?cotizar=true', '_blank');
+    });
+  }
+
+  if (downloadPortafolioBtn) {
+    downloadPortafolioBtn.addEventListener('click', () => {
+      window.open('/portafolio-print.html', '_blank');
+    });
+  }
+
+  // Cargar portafolio en cuanto se haga click en la pestaña
+  const portafolioTabBtn = document.querySelector('[data-tab="tab-client-portafolio"]');
+  if (portafolioTabBtn) {
+    portafolioTabBtn.addEventListener('click', () => {
+      if (allExams.length === 0) loadPortafolio();
+    });
+  }
+
 });
