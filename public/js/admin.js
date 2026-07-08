@@ -87,7 +87,7 @@ document.addEventListener('DOMContentLoaded', () => {
   async function loadGeneralOverview() {
     allResultsTableBody.innerHTML = `
       <tr>
-        <td colspan="4" style="text-align: center; color: var(--text-dark); padding: 2.5rem 0;">
+        <td colspan="6" style="text-align: center; color: var(--text-dark); padding: 2.5rem 0;">
           <i class="fa-solid fa-circle-notch fa-spin" style="margin-bottom: 0.5rem; font-size: 1.2rem; color: var(--color-primary);"></i>
           <p>Cargando historial general...</p>
         </td>
@@ -102,11 +102,11 @@ document.addEventListener('DOMContentLoaded', () => {
         allResults = data.results;
         renderGeneralOverview(allResults);
       } else {
-        allResultsTableBody.innerHTML = `<tr><td colspan="4" style="text-align: center; color: var(--error); padding: 1.5rem;">${data.message || 'Error al obtener historial general.'}</td></tr>`;
+        allResultsTableBody.innerHTML = `<tr><td colspan="6" style="text-align: center; color: var(--error); padding: 1.5rem;">${data.message || 'Error al obtener historial general.'}</td></tr>`;
       }
     } catch (error) {
       console.error('Error al cargar historial general:', error);
-      allResultsTableBody.innerHTML = `<tr><td colspan="4" style="text-align: center; color: var(--error); padding: 1.5rem;">Error de conexion al cargar historial general.</td></tr>`;
+      allResultsTableBody.innerHTML = `<tr><td colspan="6" style="text-align: center; color: var(--error); padding: 1.5rem;">Error de conexion al cargar historial general.</td></tr>`;
     }
   }
 
@@ -114,10 +114,16 @@ document.addEventListener('DOMContentLoaded', () => {
   function renderGeneralOverview(results) {
     totalResultsCount.innerText = `${results.length} ${results.length === 1 ? 'examen' : 'examenes'}`;
     
+    // Resetear checkbox general y ocultar botón de lote
+    const selectAllChk = document.getElementById('select-all-results-chk');
+    if (selectAllChk) selectAllChk.checked = false;
+    const deleteSelectedBtn = document.getElementById('delete-selected-results-btn');
+    if (deleteSelectedBtn) deleteSelectedBtn.style.display = 'none';
+
     if (results.length === 0) {
       allResultsTableBody.innerHTML = `
         <tr>
-          <td colspan="4" style="text-align: center; color: var(--text-muted); padding: 3rem 0;">
+          <td colspan="6" style="text-align: center; color: var(--text-muted); padding: 3rem 0;">
             <i class="fa-solid fa-folder-open" style="font-size: 2rem; margin-bottom: 0.5rem; opacity: 0.3;"></i>
             <p>No se han publicado examenes todavia.</p>
           </td>
@@ -136,6 +142,9 @@ document.addEventListener('DOMContentLoaded', () => {
       tr.addEventListener('mouseleave', () => tr.style.background = 'transparent');
       
       tr.innerHTML = `
+          <td style="padding: 12px 16px; text-align: center;">
+            <input type="checkbox" class="select-result-chk" data-id="${res.id_resultado}" style="cursor: pointer; width: 16px; height: 16px;">
+          </td>
           <td style="padding: 12px 16px; font-weight: 500; color: var(--text-main); max-width: 150px; text-overflow: ellipsis; overflow: hidden; white-space: nowrap;" title="${res.nombre_cliente}">
             ${res.nombre_cliente}
           </td>
@@ -1974,6 +1983,139 @@ document.addEventListener('DOMContentLoaded', () => {
         }
       } catch (err) {
         console.error('Error al añadir categoría:', err);
+      }
+    });
+  }
+
+  // Lógica de Selección Masiva en el Historial General
+  const selectAllChk = document.getElementById('select-all-results-chk');
+  const deleteSelectedBtn = document.getElementById('delete-selected-results-btn');
+
+  if (selectAllChk && deleteSelectedBtn) {
+    selectAllChk.addEventListener('change', () => {
+      const chks = allResultsTableBody.querySelectorAll('.select-result-chk');
+      chks.forEach(chk => chk.checked = selectAllChk.checked);
+      updateDeleteSelectedButtonState();
+    });
+
+    allResultsTableBody.addEventListener('change', (e) => {
+      if (e.target.classList.contains('select-result-chk')) {
+        updateDeleteSelectedButtonState();
+      }
+    });
+
+    function updateDeleteSelectedButtonState() {
+      const chks = allResultsTableBody.querySelectorAll('.select-result-chk');
+      const selected = Array.from(chks).filter(chk => chk.checked);
+      const count = selected.length;
+      
+      if (count > 0) {
+        deleteSelectedBtn.style.display = 'flex';
+        deleteSelectedBtn.querySelector('span').innerText = `Eliminar Seleccionados (${count})`;
+      } else {
+        deleteSelectedBtn.style.display = 'none';
+      }
+
+      // Actualizar estado del master checkbox
+      selectAllChk.checked = (chks.length > 0 && count === chks.length);
+    }
+
+    // Acción de eliminar seleccionados (Masivo)
+    deleteSelectedBtn.addEventListener('click', async () => {
+      const chks = allResultsTableBody.querySelectorAll('.select-result-chk');
+      const selectedIds = Array.from(chks)
+        .filter(chk => chk.checked)
+        .map(chk => chk.dataset.id);
+
+      if (selectedIds.length === 0) return;
+
+      const confirmDelete = confirm(`¿Está seguro de que desea eliminar los ${selectedIds.length} exámenes seleccionados? Se borrarán permanentemente de la base de datos y sus archivos PDF asociados.`);
+      if (!confirmDelete) return;
+
+      SirioAuth.showLoading('Eliminando exámenes...');
+
+      try {
+        const response = await fetch(`${SirioAuth.API_BASE}/api/admin/delete-results-bulk`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ ids: selectedIds })
+        });
+        const data = await response.json();
+
+        if (data.success) {
+          showGlobalAlert(data.message || 'Exámenes eliminados correctamente.', 'success');
+          // Recargar historial general
+          await loadGeneralOverview();
+        } else {
+          showGlobalAlert(data.message || 'Error al eliminar exámenes.', 'error');
+        }
+      } catch (error) {
+        console.error('Error en eliminación masiva:', error);
+        showGlobalAlert('Error de conexión al eliminar exámenes.', 'error');
+      } finally {
+        SirioAuth.hideLoading();
+      }
+    });
+  }
+
+  // Lógica de Eliminación por Rango de Fechas (Zona de Peligro)
+  const deleteRangeBtn = document.getElementById('delete-range-btn');
+  const deleteRangeStart = document.getElementById('delete-range-start');
+  const deleteRangeEnd = document.getElementById('delete-range-end');
+
+  if (deleteRangeBtn && deleteRangeStart && deleteRangeEnd) {
+    deleteRangeBtn.addEventListener('click', async () => {
+      const startVal = deleteRangeStart.value;
+      const endVal = deleteRangeEnd.value;
+
+      if (!startVal || !endVal) {
+        alert('Por favor, selecciona tanto la fecha de inicio como la de fin.');
+        return;
+      }
+
+      if (new Date(startVal) > new Date(endVal)) {
+        alert('La fecha de inicio no puede ser posterior a la fecha fin.');
+        return;
+      }
+
+      const confirmDelete = confirm(`⚠️ ADVERTENCIA CRÍTICA: Está a punto de eliminar de forma irreversible TODOS los exámenes publicados desde el ${startVal} hasta el ${endVal}. ¿Desea continuar?`);
+      if (!confirmDelete) return;
+
+      // Doble confirmación por seguridad
+      const confirmText = prompt('Para confirmar esta acción de eliminación por rango de fechas, escriba "ELIMINAR RANGO" a continuación:');
+      if (confirmText !== 'ELIMINAR RANGO') {
+        alert('Confirmación incorrecta. Acción cancelada.');
+        return;
+      }
+
+      SirioAuth.showLoading('Eliminando exámenes en el rango...');
+
+      try {
+        const response = await fetch(`${SirioAuth.API_BASE}/api/admin/delete-results-range`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ fecha_inicio: startVal, fecha_fin: endVal })
+        });
+        const data = await response.json();
+
+        if (data.success) {
+          showGlobalAlert(data.message || 'Exámenes del rango eliminados correctamente.', 'success');
+          deleteRangeStart.value = '';
+          deleteRangeEnd.value = '';
+          // Recargar historial general
+          await loadGeneralOverview();
+        } else {
+          showGlobalAlert(data.message || 'Error al eliminar exámenes del rango.', 'error');
+        }
+      } catch (error) {
+        console.error('Error al eliminar por rango:', error);
+        showGlobalAlert('Error de conexión al eliminar por rango.', 'error');
+      } finally {
+        SirioAuth.hideLoading();
       }
     });
   }

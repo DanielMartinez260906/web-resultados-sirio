@@ -387,6 +387,76 @@ app.post('/api/admin/delete-result', async (req, res) => {
   }
 });
 
+// API: Eliminar Exámenes Seleccionados (Masivo - Solo Admins)
+app.post('/api/admin/delete-results-bulk', async (req, res) => {
+  const { ids } = req.body;
+
+  if (!ids || !Array.isArray(ids) || ids.length === 0) {
+    return res.status(400).json({ success: false, message: 'Se requiere una lista de IDs de resultados para eliminar.' });
+  }
+
+  try {
+    const result = await db.deleteResultsBulk(ids);
+
+    if (result.success) {
+      const archivos = result.archivos_eliminados || [];
+      for (const archivo of archivos) {
+        if (archivo && archivo.includes('cloudinary.com')) {
+          const publicId = extractPublicId(archivo);
+          if (publicId) await deletePDF(publicId);
+        } else if (archivo && archivo !== 'ejemplo_examen.pdf') {
+          const filePath = path.join(UPLOADS_DIR, archivo);
+          if (fs.existsSync(filePath)) {
+            fs.unlinkSync(filePath);
+            console.log(`🗑️ Archivo local eliminado en lote: ${archivo}`);
+          }
+        }
+      }
+      res.json(result);
+    } else {
+      res.status(400).json(result);
+    }
+  } catch (error) {
+    console.error('Error al eliminar resultados en lote:', error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
+// API: Eliminar Exámenes por Rango de Fechas (Solo Admins)
+app.post('/api/admin/delete-results-range', async (req, res) => {
+  const { fecha_inicio, fecha_fin } = req.body;
+
+  if (!fecha_inicio || !fecha_fin) {
+    return res.status(400).json({ success: false, message: 'Las fechas de inicio y fin son requeridas.' });
+  }
+
+  try {
+    const result = await db.deleteResultsRange(fecha_inicio, fecha_fin);
+
+    if (result.success) {
+      const archivos = result.archivos_eliminados || [];
+      for (const archivo of archivos) {
+        if (archivo && archivo.includes('cloudinary.com')) {
+          const publicId = extractPublicId(archivo);
+          if (publicId) await deletePDF(publicId);
+        } else if (archivo && archivo !== 'ejemplo_examen.pdf') {
+          const filePath = path.join(UPLOADS_DIR, archivo);
+          if (fs.existsSync(filePath)) {
+            fs.unlinkSync(filePath);
+            console.log(`🗑️ Archivo local eliminado por rango de fechas: ${archivo}`);
+          }
+        }
+      }
+      res.json(result);
+    } else {
+      res.status(400).json(result);
+    }
+  } catch (error) {
+    console.error('Error al eliminar resultados por rango de fechas:', error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
 // API: Eliminar Cliente e Historial Asociado (Solo Admins)
 app.post('/api/admin/delete-client', async (req, res) => {
   const { id_usuario } = req.body;

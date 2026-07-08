@@ -75,6 +75,8 @@ function doPost(e) {
     else if (action === "addResult")        { response = addResult(doc, data); }
     else if (action === "getClientResults") { response = getClientResults(doc, data); }
     else if (action === "deleteResult")     { response = deleteResult(doc, data); }
+    else if (action === "deleteResultsBulk") { response = deleteResultsBulk(doc, data); }
+    else if (action === "deleteResultsRange") { response = deleteResultsRange(doc, data); }
     else if (action === "deleteAllResults")  { response = deleteAllResults(doc); }
     else if (action === "getAllResults")     { response = getAllResults(doc); }
     else if (action === "logAccess")        { response = logAccess(doc, data); }
@@ -831,6 +833,94 @@ function deleteAllResults(doc) {
     success: true,
     message: "Todos los examenes fueron eliminados del Google Sheet.",
     archivos_eliminados: deletedFiles
+  };
+}
+
+// ============================================================
+// ELIMINAR EXÁMENES SELECCIONADOS (MASIVO)
+// ============================================================
+function deleteResultsBulk(doc, data) {
+  var sheet   = doc.getSheetByName("Resultados");
+  var rows    = sheet.getDataRange().getValues();
+  var headers = rows[0];
+  var colMap  = buildColMap(headers);
+
+  var idsToDelete = data.ids; // Array de id_resultado
+  if (!idsToDelete || !Array.isArray(idsToDelete) || idsToDelete.length === 0) {
+    return { success: false, message: "No se proporcionaron IDs de resultados para eliminar." };
+  }
+
+  var idxIdRes    = colMap["id_resultado"];
+  var idxArchivo  = colMap["nombre_archivo"];
+
+  var deletedFiles = [];
+  var rowsDeleted = 0;
+
+  // Recorrer las filas de abajo hacia arriba para evitar descalce de índices al eliminar
+  for (var i = rows.length - 1; i >= 1; i--) {
+    var row = rows[i];
+    var idRes = idxIdRes !== undefined ? row[idxIdRes].toString().trim() : "";
+    if (idsToDelete.indexOf(idRes) !== -1) {
+      var fileName = idxArchivo !== undefined ? row[idxArchivo].toString().trim() : "";
+      if (fileName && fileName !== "ejemplo_examen.pdf") {
+        deletedFiles.push(fileName);
+      }
+      sheet.deleteRow(i + 1);
+      rowsDeleted++;
+    }
+  }
+
+  return { 
+    success: true, 
+    message: rowsDeleted + " exámenes eliminados.", 
+    archivos_eliminados: deletedFiles 
+  };
+}
+
+// ============================================================
+// ELIMINAR EXÁMENES POR RANGO DE FECHAS
+// ============================================================
+function deleteResultsRange(doc, data) {
+  var sheet   = doc.getSheetByName("Resultados");
+  var rows    = sheet.getDataRange().getValues();
+  var headers = rows[0];
+  var colMap  = buildColMap(headers);
+
+  var fechaInicio = data.fecha_inicio; // YYYY-MM-DD
+  var fechaFin    = data.fecha_fin;    // YYYY-MM-DD
+
+  if (!fechaInicio || !fechaFin) {
+    return { success: false, message: "Las fechas de inicio y fin son requeridas." };
+  }
+
+  var idxIdRes      = colMap["id_resultado"];
+  var idxArchivo    = colMap["nombre_archivo"];
+  var idxFechaSub   = colMap["fecha_subida"];
+
+  var deletedFiles = [];
+  var rowsDeleted = 0;
+
+  // Recorrer las filas de abajo hacia arriba
+  for (var i = rows.length - 1; i >= 1; i--) {
+    var row = rows[i];
+    var fechaStr = idxFechaSub !== undefined ? row[idxFechaSub].toString().trim() : "";
+    if (fechaStr.length >= 10) {
+      var datePart = fechaStr.substring(0, 10); // Extraer YYYY-MM-DD
+      if (datePart >= fechaInicio && datePart <= fechaFin) {
+        var fileName = idxArchivo !== undefined ? row[idxArchivo].toString().trim() : "";
+        if (fileName && fileName !== "ejemplo_examen.pdf") {
+          deletedFiles.push(fileName);
+        }
+        sheet.deleteRow(i + 1);
+        rowsDeleted++;
+      }
+    }
+  }
+
+  return { 
+    success: true, 
+    message: rowsDeleted + " exámenes eliminados en el rango especificado.", 
+    archivos_eliminados: deletedFiles 
   };
 }
 

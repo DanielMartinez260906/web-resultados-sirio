@@ -335,6 +335,64 @@ function handleMockAction(action, data) {
       return { success: false, message: "El examen especificado no existe en la base de datos local." };
     }
 
+    case 'deleteResultsBulk': {
+      const idsToDelete = data.ids;
+      if (!idsToDelete || !Array.isArray(idsToDelete) || idsToDelete.length === 0) {
+        return { success: false, message: "No se proporcionaron IDs para eliminar." };
+      }
+      const deletedFiles = [];
+      const initialLength = db.Resultados.length;
+      
+      db.Resultados = db.Resultados.filter(r => {
+        if (idsToDelete.includes(r.id_resultado)) {
+          if (r.nombre_archivo && r.nombre_archivo !== 'ejemplo_examen.pdf') {
+            deletedFiles.push(r.nombre_archivo);
+          }
+          return false;
+        }
+        return true;
+      });
+      
+      const rowsDeleted = initialLength - db.Resultados.length;
+      writeMockDB(db);
+      return {
+        success: true,
+        message: `${rowsDeleted} exámenes eliminados de la base de datos local.`,
+        archivos_eliminados: deletedFiles
+      };
+    }
+
+    case 'deleteResultsRange': {
+      const { fecha_inicio, fecha_fin } = data;
+      if (!fecha_inicio || !fecha_fin) {
+        return { success: false, message: "Fechas de inicio y fin son requeridas." };
+      }
+      const deletedFiles = [];
+      const initialLength = db.Resultados.length;
+      
+      db.Resultados = db.Resultados.filter(r => {
+        const fechaStr = r.fecha_subida || '';
+        if (fechaStr.length >= 10) {
+          const datePart = fechaStr.substring(0, 10);
+          if (datePart >= fecha_inicio && datePart <= fecha_fin) {
+            if (r.nombre_archivo && r.nombre_archivo !== 'ejemplo_examen.pdf') {
+              deletedFiles.push(r.nombre_archivo);
+            }
+            return false;
+          }
+        }
+        return true;
+      });
+      
+      const rowsDeleted = initialLength - db.Resultados.length;
+      writeMockDB(db);
+      return {
+        success: true,
+        message: `${rowsDeleted} exámenes eliminados de la base de datos local en el rango especificado.`,
+        archivos_eliminados: deletedFiles
+      };
+    }
+
     case 'deleteAllResults': {
       const deletedFiles = [];
       db.Resultados.forEach(r => {
@@ -549,6 +607,8 @@ module.exports = {
   getClientResults: (id_usuario) => callSheetsAPI('getClientResults', { id_usuario }),
   releaseRetainedResults: (id_usuario) => callSheetsAPI('releaseRetainedResults', { id_usuario }),
   deleteResult: (id_resultado) => callSheetsAPI('deleteResult', { id_resultado }),
+  deleteResultsBulk: (ids) => callSheetsAPI('deleteResultsBulk', { ids }),
+  deleteResultsRange: (fecha_inicio, fecha_fin) => callSheetsAPI('deleteResultsRange', { fecha_inicio, fecha_fin }),
   deleteClient: (id_usuario) => callSheetsAPI('deleteClient', { id_usuario }),
   deleteAllResults: () => callSheetsAPI('deleteAllResults'),
   getAllResults: () => callSheetsAPI('getAllResults'),

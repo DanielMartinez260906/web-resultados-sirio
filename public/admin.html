@@ -95,11 +95,17 @@
           </div>
 
           <div style="display: flex; flex-direction: column; gap: 1rem;">
-            <!-- Buscador General -->
-            <div class="search-container" style="margin-bottom: 0;">
-              <i class="fa-solid fa-magnifying-glass"></i>
-              <input type="text" id="search-all-results"
-                     placeholder="Buscar por cliente o nombre de examen...">
+            <!-- Buscador General y Botón de Eliminación Masiva -->
+            <div style="display: flex; gap: 0.75rem; align-items: center; width: 100%; flex-wrap: wrap;">
+              <div class="search-container" style="margin-bottom: 0; flex: 1; min-width: 200px;">
+                <i class="fa-solid fa-magnifying-glass"></i>
+                <input type="text" id="search-all-results"
+                       placeholder="Buscar por cliente o nombre de examen...">
+              </div>
+              <button id="delete-selected-results-btn" class="btn btn-danger" style="display: none; height: 42px; border-radius: 8px; font-size: 0.85rem; padding: 0 1rem; gap: 6px; align-items: center;">
+                <i class="fa-solid fa-trash-can"></i>
+                <span>Eliminar Seleccionados</span>
+              </button>
             </div>
 
             <!-- Tabla responsive -->
@@ -107,6 +113,9 @@
               <table class="results-table">
                 <thead>
                   <tr>
+                    <th style="width: 40px; text-align: center; padding: 12px 16px;">
+                      <input type="checkbox" id="select-all-results-chk" style="cursor: pointer; width: 16px; height: 16px;">
+                    </th>
                     <th>Cliente</th>
                     <th>Examen / PDF</th>
                     <th>Fecha y Hora</th>
@@ -500,7 +509,7 @@
 
     <!-- Pestaña: Zona de Peligro -->
     <div id="tab-danger" class="tab-content" style="display: none;">
-      <div class="panel-card centered-panel" style="border-color: rgba(239, 68, 68, 0.25);">
+      <div class="panel-card centered-panel" style="border-color: rgba(239, 68, 68, 0.25); margin-bottom: 1.5rem;">
         <h3 class="panel-card-title" style="color: var(--error);">
           <i class="fa-solid fa-triangle-exclamation"></i> Zona de Peligro
         </h3>
@@ -509,6 +518,30 @@
         </p>
         <button class="btn btn-danger" id="delete-all-btn" style="width: 100%;">
           <i class="fa-solid fa-dumpster-fire"></i> Eliminar Todos los Exámenes
+        </button>
+      </div>
+
+      <div class="panel-card centered-panel" style="border-color: rgba(239, 68, 68, 0.25);">
+        <h3 class="panel-card-title" style="color: var(--error); margin-bottom: 0.5rem;">
+          <i class="fa-solid fa-calendar-minus"></i> Eliminar por Rango de Fechas
+        </h3>
+        <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 1.25rem;">
+          Elimina de forma irreversible todos los exámenes publicados dentro del período seleccionado para liberar espacio de almacenamiento.
+        </p>
+        
+        <div style="display: flex; gap: 1rem; flex-wrap: wrap; margin-bottom: 1.25rem;">
+          <div style="flex: 1; min-width: 130px;">
+            <label for="delete-range-start" style="font-size: 0.75rem; font-weight: 500; color: var(--text-muted); display: block; margin-bottom: 6px;">Fecha de Inicio</label>
+            <input type="date" id="delete-range-start" class="form-control" style="height: 42px; border-radius: 8px; font-size: 0.85rem; padding: 8px 10px;">
+          </div>
+          <div style="flex: 1; min-width: 130px;">
+            <label for="delete-range-end" style="font-size: 0.75rem; font-weight: 500; color: var(--text-muted); display: block; margin-bottom: 6px;">Fecha Fin</label>
+            <input type="date" id="delete-range-end" class="form-control" style="height: 42px; border-radius: 8px; font-size: 0.85rem; padding: 8px 10px;">
+          </div>
+        </div>
+
+        <button class="btn btn-danger" id="delete-range-btn" style="width: 100%; gap: 6px; display: flex; align-items: center; justify-content: center;">
+          <i class="fa-solid fa-calendar-xmark"></i> Eliminar Exámenes en el Rango
         </button>
       </div>
     </div>
