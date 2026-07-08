@@ -92,21 +92,21 @@
           </div>
 
           <!-- Filtro por Fecha -->
-          <div class="filter-group" style="flex: 0 1 auto;">
-            <label for="filter-date">
-              <i class="fa-solid fa-calendar-days"></i> Fecha:
-            </label>
-            <input type="date" id="filter-date" class="form-control"
-                   style="padding: 8px 10px; height: 42px; border-radius: 8px; font-size: 0.85rem; width: auto; min-width: 140px;">
+          <div class="filter-group-pill" style="flex: 0 1 auto;">
+            <span class="filter-pill-label">
+              <i class="fa-solid fa-calendar-days"></i> Fecha
+            </span>
+            <span class="filter-pill-divider"></span>
+            <input type="date" id="filter-date" class="filter-pill-input" style="width: 120px;">
           </div>
 
           <!-- Ordenamiento -->
-          <div class="filter-group" style="flex: 0 1 auto;">
-            <label for="sort-order">
-              <i class="fa-solid fa-sort"></i> Orden:
-            </label>
-            <select id="sort-order" class="form-control"
-                    style="padding: 8px 10px; height: 42px; border-radius: 8px; font-size: 0.85rem; width: auto; min-width: 150px;">
+          <div class="filter-group-pill" style="flex: 0 1 auto;">
+            <span class="filter-pill-label">
+              <i class="fa-solid fa-sort"></i> Orden
+            </span>
+            <span class="filter-pill-divider"></span>
+            <select id="sort-order" class="filter-pill-input" style="width: 120px; cursor: pointer;">
               <option value="date-desc">Más recientes</option>
               <option value="date-asc">Más antiguos</option>
               <option value="name-asc">Nombre A–Z</option>

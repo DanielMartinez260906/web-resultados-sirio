@@ -889,6 +889,99 @@ body.light-theme .filter-group .form-control:focus {
   box-shadow: 0 0 0 3px rgba(14, 165, 233, 0.15), 0 4px 12px rgba(15, 23, 42, 0.06);
 }
 
+/* Premium Pill-Style Filters for Client Portal */
+.filter-group-pill {
+  display: flex;
+  align-items: center;
+  background: rgba(7, 13, 25, 0.4);
+  border: 1px solid var(--border-light);
+  border-radius: 10px;
+  padding: 0 14px;
+  height: 42px;
+  transition: var(--transition-smooth);
+}
+
+.filter-group-pill:hover,
+.filter-group-pill:focus-within {
+  border-color: var(--color-primary);
+  background: rgba(7, 13, 25, 0.65);
+  box-shadow: 0 0 0 3px rgba(14, 165, 233, 0.15);
+}
+
+body.light-theme .filter-group-pill {
+  background: rgba(255, 255, 255, 0.95);
+  border-color: rgba(15, 23, 42, 0.15);
+}
+
+body.light-theme .filter-group-pill:hover,
+body.light-theme .filter-group-pill:focus-within {
+  background: #ffffff;
+  border-color: var(--color-primary);
+}
+
+.filter-pill-label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  white-space: nowrap;
+  user-select: none;
+}
+
+.filter-pill-divider {
+  width: 1px;
+  height: 18px;
+  background: var(--border-light);
+  margin: 0 12px;
+}
+
+.filter-pill-input {
+  background: transparent !important;
+  border: none !important;
+  color: var(--text-main) !important;
+  font-size: 0.84rem;
+  font-weight: 500;
+  outline: none !important;
+  padding: 0 !important;
+  height: 100%;
+  box-sizing: border-box;
+}
+
+/* Specific styling for select inside pill */
+select.filter-pill-input {
+  appearance: none;
+  -webkit-appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2394a3b8' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E") !important;
+  background-repeat: no-repeat !important;
+  background-position: right center !important;
+  background-size: 14px !important;
+  padding-right: 20px !important;
+  cursor: pointer;
+}
+
+body.light-theme select.filter-pill-input {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23475569' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E") !important;
+}
+
+/* Custom WebKit styling for calendar icon in date inputs */
+input[type="date"].filter-pill-input::-webkit-calendar-picker-indicator {
+  cursor: pointer;
+  filter: invert(0.6);
+  opacity: 0.7;
+  transition: var(--transition-smooth);
+}
+
+input[type="date"].filter-pill-input::-webkit-calendar-picker-indicator:hover {
+  opacity: 1;
+  transform: scale(1.1);
+}
+
+body.light-theme input[type="date"].filter-pill-input::-webkit-calendar-picker-indicator {
+  filter: invert(0.2);
+}
+
 /* ==========================================================================
    ADMIN OVERVIEW TABLE (general results)
    ========================================================================== */
