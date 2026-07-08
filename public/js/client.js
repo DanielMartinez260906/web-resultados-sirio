@@ -37,8 +37,20 @@ document.addEventListener('DOMContentLoaded', () => {
       
       btn.classList.add('active');
       document.getElementById(targetTab).style.display = 'block';
+
+      // Guardar pestaña activa
+      sessionStorage.setItem('sirio_active_tab_client', targetTab);
     });
   });
+
+  // Restaurar pestaña activa guardada al iniciar
+  const savedClientTab = sessionStorage.getItem('sirio_active_tab_client');
+  if (savedClientTab) {
+    const activeBtn = document.querySelector(`#client-nav .nav-tab[data-tab="${savedClientTab}"]`);
+    if (activeBtn) {
+      activeBtn.click();
+    }
+  }
 
   // Alternador de vista (Mosaico / Lista)
   const viewGridBtn = document.getElementById('view-grid-btn');
@@ -853,6 +865,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (selectedIngresarExams.size === 0) {
       container.innerHTML = `<span style="font-size: 0.8rem; color: var(--text-dark);">Ningún examen seleccionado. Agregue exámenes arriba.</span>`;
+      if (typeof saveFormDraft === 'function') saveFormDraft();
       return;
     }
 
@@ -862,6 +875,8 @@ document.addEventListener('DOMContentLoaded', () => {
         <i class="fa-solid fa-circle-xmark" style="cursor: pointer; opacity: 0.7;" onclick="removeIngresarExam('${examName.replace(/'/g, "\\'")}')"></i>
       </span>
     `).join('');
+
+    if (typeof saveFormDraft === 'function') saveFormDraft();
   }
 
   window.removeIngresarExam = (examName) => {
@@ -1103,6 +1118,9 @@ document.addEventListener('DOMContentLoaded', () => {
     if (ingresarVetInput && currentUser) {
       ingresarVetInput.value = currentUser.nombre;
     }
+
+    // Limpiar borrador guardado en localStorage
+    localStorage.removeItem(STORAGE_FORM_KEY);
   }
 
   const ingresarTabBtn = document.querySelector('[data-tab="tab-client-ingresar"]');
@@ -1122,5 +1140,142 @@ document.addEventListener('DOMContentLoaded', () => {
       if (allExams.length === 0) loadPortafolio();
     });
   }
+
+  // ── LOGICA DE BORRADOR DE FORMULARIO (Ingresar Paciente) ──────────
+  const STORAGE_FORM_KEY = 'sirio_draft_ingreso_paciente';
+
+  function saveFormDraft() {
+    const muestrasChecked = [];
+    document.querySelectorAll('input[name="ingresar-muestra"]:checked').forEach(cb => {
+      muestrasChecked.push(cb.value);
+    });
+
+    const pcrSintomasChecked = [];
+    document.querySelectorAll('input[name="pcr-sintomas"]:checked').forEach(cb => {
+      pcrSintomasChecked.push(cb.value);
+    });
+
+    const draftData = {
+      medico: document.getElementById('ingresar-medico')?.value || '',
+      propietario: document.getElementById('ingresar-propietario')?.value || '',
+      paciente_nombre: document.getElementById('ingresar-paciente-hc')?.value || '',
+      especie: document.getElementById('ingresar-especie')?.value || '',
+      raza: document.getElementById('ingresar-raza')?.value || '',
+      edad: document.getElementById('ingresar-edad')?.value || '',
+      sexo: document.getElementById('ingresar-sexo')?.value || '',
+      muestras: muestrasChecked,
+      examenes_solicitados: Array.from(selectedIngresarExams),
+      otros_examenes: document.getElementById('ingresar-otros')?.value || '',
+      observaciones: document.getElementById('ingresar-observaciones')?.value || '',
+      dir_habitual: document.getElementById('ingresar-dir-habitual')?.checked || false,
+      direccion: document.getElementById('ingresar-direccion')?.value || '',
+      telefono: document.getElementById('ingresar-telefono')?.value || '',
+      quien_diligencia: document.getElementById('ingresar-quien')?.value || '',
+      datos_especiales_tipo: document.getElementById('ingresar-datos-especiales-tipo')?.value || '',
+      biopsia_tipo_muestra: document.getElementById('biopsia-tipo-muestra')?.value || '',
+      biopsia_aspecto: document.getElementById('biopsia-aspecto')?.value || '',
+      biopsia_consistencia: document.getElementById('biopsia-consistencia')?.value || '',
+      biopsia_ubicacion: document.getElementById('biopsia-ubicacion')?.value || '',
+      biopsia_tiempo: document.getElementById('biopsia-tiempo')?.value || '',
+      biopsia_detalles_adicionales: document.getElementById('biopsia-detalles-adicionales')?.value || '',
+      pcr_tipo: document.getElementById('pcr-tipo')?.value || '',
+      pcr_sintomatico: document.getElementById('pcr-sintomatico')?.value || '',
+      pcr_sintomas: pcrSintomasChecked,
+      pcr_observaciones: document.getElementById('pcr-observaciones')?.value || ''
+    };
+
+    localStorage.setItem(STORAGE_FORM_KEY, JSON.stringify(draftData));
+  }
+
+  function restoreFormDraft() {
+    const saved = localStorage.getItem(STORAGE_FORM_KEY);
+    if (!saved) return;
+
+    try {
+      const data = JSON.parse(saved);
+
+      if (document.getElementById('ingresar-medico')) document.getElementById('ingresar-medico').value = data.medico || '';
+      if (document.getElementById('ingresar-propietario')) document.getElementById('ingresar-propietario').value = data.propietario || '';
+      if (document.getElementById('ingresar-paciente-hc')) document.getElementById('ingresar-paciente-hc').value = data.paciente_nombre || '';
+      if (document.getElementById('ingresar-especie')) document.getElementById('ingresar-especie').value = data.especie || '';
+      if (document.getElementById('ingresar-raza')) document.getElementById('ingresar-raza').value = data.raza || '';
+      if (document.getElementById('ingresar-edad')) document.getElementById('ingresar-edad').value = data.edad || '';
+      if (document.getElementById('ingresar-sexo')) document.getElementById('ingresar-sexo').value = data.sexo || '';
+      if (document.getElementById('ingresar-otros')) document.getElementById('ingresar-otros').value = data.otros_examenes || '';
+      if (document.getElementById('ingresar-observaciones')) document.getElementById('ingresar-observaciones').value = data.observaciones || '';
+      if (document.getElementById('ingresar-direccion')) document.getElementById('ingresar-direccion').value = data.direccion || '';
+      if (document.getElementById('ingresar-telefono')) document.getElementById('ingresar-telefono').value = data.telefono || '';
+      if (document.getElementById('ingresar-quien')) document.getElementById('ingresar-quien').value = data.quien_diligencia || '';
+      
+      const dirHabitual = document.getElementById('ingresar-dir-habitual');
+      if (dirHabitual) {
+        dirHabitual.checked = data.dir_habitual || false;
+        const customDeliveryGrid = document.getElementById('ingresar-custom-delivery-grid');
+        if (customDeliveryGrid) {
+          customDeliveryGrid.style.display = dirHabitual.checked ? 'none' : 'grid';
+        }
+      }
+
+      if (data.muestras && Array.isArray(data.muestras)) {
+        document.querySelectorAll('input[name="ingresar-muestra"]').forEach(cb => {
+          cb.checked = data.muestras.includes(cb.value);
+        });
+      }
+
+      if (data.examenes_solicitados && Array.isArray(data.examenes_solicitados)) {
+        selectedIngresarExams = new Set(data.examenes_solicitados);
+      }
+
+      const datosEspecialesSelect = document.getElementById('ingresar-datos-especiales-tipo');
+      if (datosEspecialesSelect) {
+        datosEspecialesSelect.value = data.datos_especiales_tipo || '';
+        const condicionalBiopsia = document.getElementById('condicional-biopsia');
+        const condicionalPcr = document.getElementById('condicional-pcr');
+        
+        if (datosEspecialesSelect.value === 'Biopsia') {
+          if (condicionalBiopsia) condicionalBiopsia.style.display = 'block';
+          if (condicionalPcr) condicionalPcr.style.display = 'none';
+        } else if (datosEspecialesSelect.value === 'PCR') {
+          if (condicionalBiopsia) condicionalBiopsia.style.display = 'none';
+          if (condicionalPcr) condicionalPcr.style.display = 'block';
+        } else {
+          if (condicionalBiopsia) condicionalBiopsia.style.display = 'none';
+          if (condicionalPcr) condicionalPcr.style.display = 'none';
+        }
+      }
+
+      if (document.getElementById('biopsia-tipo-muestra')) document.getElementById('biopsia-tipo-muestra').value = data.biopsia_tipo_muestra || '';
+      if (document.getElementById('biopsia-aspecto')) document.getElementById('biopsia-aspecto').value = data.biopsia_aspecto || '';
+      if (document.getElementById('biopsia-consistencia')) document.getElementById('biopsia-consistencia').value = data.biopsia_consistencia || '';
+      if (document.getElementById('biopsia-ubicacion')) document.getElementById('biopsia-ubicacion').value = data.biopsia_ubicacion || '';
+      if (document.getElementById('biopsia-tiempo')) document.getElementById('biopsia-tiempo').value = data.biopsia_tiempo || '';
+      if (document.getElementById('biopsia-detalles-adicionales')) document.getElementById('biopsia-detalles-adicionales').value = data.biopsia_detalles_adicionales || '';
+
+      if (document.getElementById('pcr-tipo')) document.getElementById('pcr-tipo').value = data.pcr_tipo || '';
+      if (document.getElementById('pcr-sintomatico')) document.getElementById('pcr-sintomatico').value = data.pcr_sintomatico || '';
+      if (data.pcr_sintomas && Array.isArray(data.pcr_sintomas)) {
+        document.querySelectorAll('input[name="pcr-sintomas"]').forEach(cb => {
+          cb.checked = data.pcr_sintomas.includes(cb.value);
+        });
+      }
+      if (document.getElementById('pcr-observaciones')) document.getElementById('pcr-observaciones').value = data.pcr_observaciones || '';
+
+      updateIngresarSelectedPills();
+      renderIngresarExams();
+
+    } catch (e) {
+      console.error('Error al restaurar borrador de paciente:', e);
+    }
+  }
+
+  // Escuchar cambios en el formulario para auto-guardar borrador
+  const formIngreso = document.getElementById('form-ingreso-paciente');
+  if (formIngreso) {
+    formIngreso.addEventListener('input', saveFormDraft);
+    formIngreso.addEventListener('change', saveFormDraft);
+  }
+
+  // Restaurar borrador al cargar
+  restoreFormDraft();
 
 });

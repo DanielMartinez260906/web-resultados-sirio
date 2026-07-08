@@ -16,6 +16,7 @@ document.addEventListener('DOMContentLoaded', () => {
   let selectedClient = null;
   let selectedFiles = []; // Almacena el listado de archivos seleccionados/arrastrados
   let allResults = []; // Almacena todos los resultados para el historial general
+  let isJefasUnlocked = false; // Estado de autorización para pestañas restringidas
 
   // Elementos del DOM
   const clientsContainer = document.getElementById('clients-container');
@@ -1017,8 +1018,16 @@ document.addEventListener('DOMContentLoaded', () => {
   const tabContents = document.querySelectorAll('.tab-content');
 
   navTabs.forEach(tab => {
-    tab.addEventListener('click', () => {
+    tab.addEventListener('click', (e) => {
       const targetTab = tab.dataset.tab;
+
+      // Interceptar si es de configuración o portafolio y está bloqueado
+      if ((targetTab === 'tab-config' || targetTab === 'tab-portafolio-admin') && !isJefasUnlocked) {
+        e.preventDefault();
+        e.stopPropagation();
+        openJefasPasswordModal(targetTab);
+        return;
+      }
 
       // Quitar clase activa de todas las pestañas y agregar al actual
       navTabs.forEach(t => t.classList.remove('active'));
@@ -1032,6 +1041,9 @@ document.addEventListener('DOMContentLoaded', () => {
           content.style.display = 'none';
         }
       });
+
+      // Guardar pestaña activa
+      sessionStorage.setItem('sirio_active_tab_admin', targetTab);
 
       // Al cambiar de pestaña, asegurar el estado correcto de "Enviar Resultados"
       if (targetTab === 'tab-send') {
@@ -1056,6 +1068,85 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     });
   });
+
+  // ── CONTROL DE ACCESO RESTRINGIDO JEFAS ────────────────────
+  const jefasPasswordModal = document.getElementById('jefas-password-modal');
+  const jefasPasswordInput = document.getElementById('jefas-password-input');
+  const toggleJefasPwdVisibility = document.getElementById('toggle-jefas-pwd-visibility');
+  const jefasPasswordError = document.getElementById('jefas-password-error');
+  const cancelJefasPasswordBtn = document.getElementById('cancel-jefas-password-btn');
+  const confirmJefasPasswordBtn = document.getElementById('confirm-jefas-password-btn');
+  let pendingTabId = null;
+
+  function openJefasPasswordModal(targetTab) {
+    pendingTabId = targetTab;
+    if (jefasPasswordInput) {
+      jefasPasswordInput.value = '';
+      jefasPasswordInput.setAttribute('type', 'password');
+    }
+    const icon = toggleJefasPwdVisibility ? toggleJefasPwdVisibility.querySelector('i') : null;
+    if (icon) icon.className = 'fa-solid fa-eye';
+    if (jefasPasswordError) jefasPasswordError.style.display = 'none';
+    if (jefasPasswordModal) jefasPasswordModal.style.display = 'flex';
+    setTimeout(() => { if (jefasPasswordInput) jefasPasswordInput.focus(); }, 100);
+  }
+
+  function closeJefasPasswordModal() {
+    if (jefasPasswordModal) jefasPasswordModal.style.display = 'none';
+    pendingTabId = null;
+  }
+
+  if (toggleJefasPwdVisibility) {
+    toggleJefasPwdVisibility.addEventListener('click', () => {
+      const type = jefasPasswordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+      jefasPasswordInput.setAttribute('type', type);
+      const icon = toggleJefasPwdVisibility.querySelector('i');
+      if (type === 'password') {
+        icon.className = 'fa-solid fa-eye';
+      } else {
+        icon.className = 'fa-solid fa-eye-slash';
+      }
+    });
+  }
+
+  if (cancelJefasPasswordBtn) {
+    cancelJefasPasswordBtn.addEventListener('click', () => {
+      closeJefasPasswordModal();
+    });
+  }
+
+  async function verifyJefasPassword() {
+    const password = jefasPasswordInput.value.trim();
+    if (!password) return;
+
+    // Contraseña Jefas solicitada por el usuario
+    if (password === 'SirioJefas2026*') {
+      isJefasUnlocked = true;
+      closeJefasPasswordModal();
+      if (pendingTabId) {
+        switchTab(pendingTabId);
+      }
+    } else {
+      if (jefasPasswordError) jefasPasswordError.style.display = 'block';
+      if (jefasPasswordInput) {
+        jefasPasswordInput.value = '';
+        jefasPasswordInput.focus();
+      }
+    }
+  }
+
+  if (confirmJefasPasswordBtn) {
+    confirmJefasPasswordBtn.addEventListener('click', verifyJefasPassword);
+  }
+
+  if (jefasPasswordInput) {
+    jefasPasswordInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        verifyJefasPassword();
+      }
+    });
+  }
 
   // ==========================================================================
   // LÓGICA DEL DIRECTORIO DE CLIENTES (Pestaña Clientes y Perfiles)
@@ -1885,6 +1976,12 @@ document.addEventListener('DOMContentLoaded', () => {
         console.error('Error al añadir categoría:', err);
       }
     });
+  }
+
+  // Restaurar pestaña activa guardada al iniciar
+  const savedAdminTab = sessionStorage.getItem('sirio_active_tab_admin');
+  if (savedAdminTab) {
+    switchTab(savedAdminTab);
   }
 
 });

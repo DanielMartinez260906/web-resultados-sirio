@@ -41,24 +41,28 @@
     </div>
 
     <!-- ── Barra de Navegación del Cliente ────────────────────────────── -->
-    <nav class="admin-nav" id="client-nav">
-      <button class="nav-tab active" data-tab="tab-client-results">
-        <i class="fa-solid fa-square-poll-horizontal"></i>
-        <span>Mis Resultados</span>
-      </button>
-      <button class="nav-tab" data-tab="tab-client-portafolio">
-        <i class="fa-solid fa-book-medical"></i>
-        <span>Portafolio de Servicios</span>
-      </button>
-      <button class="nav-tab" data-tab="tab-client-ingresar">
-        <i class="fa-solid fa-file-signature"></i>
-        <span>Ingresar Paciente</span>
-      </button>
-      <button class="nav-tab" data-tab="tab-client-profile">
-        <i class="fa-solid fa-user-gear"></i>
-        <span>Mi Perfil</span>
-      </button>
-    </nav>
+    <div class="nav-scroll-wrapper">
+      <button class="scroll-arrow left" aria-label="Desplazar a la izquierda"><i class="fa-solid fa-chevron-left"></i></button>
+      <nav class="admin-nav" id="client-nav">
+        <button class="nav-tab active" data-tab="tab-client-results">
+          <i class="fa-solid fa-square-poll-horizontal"></i>
+          <span>Mis Resultados</span>
+        </button>
+        <button class="nav-tab" data-tab="tab-client-portafolio">
+          <i class="fa-solid fa-book-medical"></i>
+          <span>Portafolio de Servicios</span>
+        </button>
+        <button class="nav-tab" data-tab="tab-client-ingresar">
+          <i class="fa-solid fa-file-signature"></i>
+          <span>Ingresar Paciente</span>
+        </button>
+        <button class="nav-tab" data-tab="tab-client-profile">
+          <i class="fa-solid fa-user-gear"></i>
+          <span>Mi Perfil</span>
+        </button>
+      </nav>
+      <button class="scroll-arrow right" aria-label="Desplazar a la derecha"><i class="fa-solid fa-chevron-right"></i></button>
+    </div>
 
     <!-- Pestaña 1: Mis Resultados -->
     <div id="tab-client-results" class="tab-content">

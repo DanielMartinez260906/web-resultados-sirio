@@ -81,33 +81,150 @@
     },
     {
       "id_examen": "E005",
+      "seccion": "MICROBIOLOGÍA",
+      "examen": "Cultivo de piel (Bacteriológico + antibiograma)",
+      "precio": 58000,
+      "tiempo_reporte": "2-5 días",
+      "muestra": "Pelos y/o escamas de piel",
+      "recipiente": "Frasco estéril o placa de Petri"
+    },
+    {
+      "id_examen": "E006",
+      "seccion": "MICROBIOLOGÍA",
+      "examen": "Cultivo de secreciones (Bacteriológico + antibiograma)",
+      "precio": 58000,
+      "tiempo_reporte": "2-5 días",
+      "muestra": "Hisopado de secreción",
+      "recipiente": "Hisopado en medio de transporte"
+    },
+    {
+      "id_examen": "E007",
+      "seccion": "MICROBIOLOGÍA",
+      "examen": "Cultivo de otras muestras (Bacteriológico + Antibiograma) (Aerotolerantes)",
+      "precio": 58000,
+      "tiempo_reporte": "2-5 días",
+      "muestra": "Según tipo de muestra",
+      "recipiente": "Frasco estéril"
+    },
+    {
+      "id_examen": "E008",
+      "seccion": "MICROBIOLOGÍA",
+      "examen": "Hemocultivo + antibiograma",
+      "precio": 110000,
+      "tiempo_reporte": "3-10 días",
+      "muestra": "Sangre total",
+      "recipiente": "Frasco para hemocultivos"
+    },
+    {
+      "id_examen": "E009",
+      "seccion": "MICROBIOLOGÍA",
+      "examen": "Antibiograma adicional",
+      "precio": 40000,
+      "tiempo_reporte": "1-2 días",
+      "muestra": "No aplica",
+      "recipiente": "No aplica"
+    },
+    {
+      "id_examen": "E010",
+      "seccion": "MICROBIOLOGÍA",
+      "examen": "Cultivo micobacterias",
+      "precio": 70000,
+      "tiempo_reporte": "Indicaciones previas",
+      "muestra": "Según tipo de muestra",
+      "recipiente": "Según tipo de muestra"
+    },
+    {
+      "id_examen": "E011",
+      "seccion": "MICROBIOLOGÍA",
+      "examen": "Cultivo bacteriológico + antibiograma MIC (Concentración Inhibitoria Mínima) Cualquier muestra",
+      "precio": 95000,
+      "tiempo_reporte": "2-5 días",
+      "muestra": "Según tipo de muestra",
+      "recipiente": "Medio de transporte o Petri"
+    },
+    {
+      "id_examen": "E012",
+      "seccion": "MICROBIOLOGÍA",
+      "examen": "Cultivo anaerobios estrictos",
+      "precio": 165000,
+      "tiempo_reporte": "3-10 días",
+      "muestra": "Según tipo de muestra",
+      "recipiente": "Según instrucción del laboratorio"
+    },
+    {
+      "id_examen": "E013",
+      "seccion": "MICROBIOLOGÍA",
+      "examen": "Cultivo bacteriológico + micológico* + antibiograma (cualquier muestra)",
+      "precio": 68000,
+      "tiempo_reporte": "2-6 días (micológico: 5-20 días)",
+      "muestra": "Según tipo de muestra",
+      "recipiente": "Medio de transporte o Petri"
+    },
+    {
+      "id_examen": "E014",
+      "seccion": "MICROBIOLOGÍA",
+      "examen": "Cultivo micológico (Hongos) de cualquier muestra",
+      "precio": 38000,
+      "tiempo_reporte": "5-20 días",
+      "muestra": "Escamas, pelo o uñas",
+      "recipiente": "Caja de Petri o frasco estéril"
+    },
+    {
+      "id_examen": "E015",
       "seccion": "HEMATOLOGÍA",
-      "examen": "Hemograma automatizado (Extendido de sangre periférica, Proteínas, Reticulocitos)",
+      "examen": "Hemograma automatizado (Extendido de sangre periférica, Proteínas plasmáticas, Reticulocitos)",
       "precio": 14000,
       "tiempo_reporte": "1 día",
       "muestra": "300 ul Sangre total",
       "recipiente": "Tubo tapa lila (EDTA)"
     },
     {
-      "id_examen": "E006",
+      "id_examen": "E016",
       "seccion": "COAGULACIÓN",
-      "examen": "Tiempo de Protrombina TP",
+      "examen": "Tiempo de Protrombina TP (Coordinar hora de recolección)",
       "precio": 14500,
       "tiempo_reporte": "1 día",
       "muestra": "a. 1 ml Sangre / b. 500 ul Plasma",
       "recipiente": "a. Tubo celeste (Citrato)"
     },
     {
-      "id_examen": "E007",
+      "id_examen": "E017",
       "seccion": "COAGULACIÓN",
-      "examen": "Tiempo Parcial de Tromboplastina TPT",
+      "examen": "Tiempo Parcial de Tromboplastina TPT (Coordinar hora de recolección)",
       "precio": 14500,
       "tiempo_reporte": "1 día",
       "muestra": "a. 1 ml Sangre / b. 500 ul Plasma",
       "recipiente": "a. Tubo celeste (Citrato)"
     },
     {
-      "id_examen": "E008",
+      "id_examen": "E018",
+      "seccion": "COAGULACIÓN",
+      "examen": "Dímero D no específico",
+      "precio": 90000,
+      "tiempo_reporte": "1 día",
+      "muestra": "a. 1 ml Sangre / b. 500 ul Plasma",
+      "recipiente": "a. Tubo celeste (Citrato)"
+    },
+    {
+      "id_examen": "E019",
+      "seccion": "COAGULACIÓN",
+      "examen": "Dímero D específico canino",
+      "precio": 70000,
+      "tiempo_reporte": "1 día",
+      "muestra": "a. 1 ml Sangre / b. 500 ul Plasma",
+      "recipiente": "a. Tubo celeste (Citrato)"
+    },
+    {
+      "id_examen": "E020",
+      "seccion": "COAGULACIÓN",
+      "examen": "Fibrinógeno",
+      "precio": 20000,
+      "tiempo_reporte": "1 día",
+      "muestra": "a. 1 ml Sangre / b. 500 ul Plasma",
+      "recipiente": "a. Tubo celeste (Citrato)"
+    },
+    {
+      "id_examen": "E021",
       "seccion": "QUÍMICA SANGUÍNEA",
       "examen": "Ácidos Biliares (Una muestra)",
       "precio": 85000,
@@ -116,7 +233,34 @@
       "recipiente": "Tubo tapa roja o amarilla"
     },
     {
-      "id_examen": "E009",
+      "id_examen": "E022",
+      "seccion": "QUÍMICA SANGUÍNEA",
+      "examen": "Ácidos Biliares Pre-Post",
+      "precio": 160000,
+      "tiempo_reporte": "1 día",
+      "muestra": "a. 1 ml Sangre / b. 1 ml Suero",
+      "recipiente": "Tubo tapa roja o amarilla"
+    },
+    {
+      "id_examen": "E023",
+      "seccion": "QUÍMICA SANGUÍNEA",
+      "examen": "Ácido úrico",
+      "precio": 15000,
+      "tiempo_reporte": "1 día",
+      "muestra": "a. 500 ul Sangre / b. 500 ul Suero",
+      "recipiente": "Tubo tapa roja o amarilla"
+    },
+    {
+      "id_examen": "E024",
+      "seccion": "QUÍMICA SANGUÍNEA",
+      "examen": "Albúmina",
+      "precio": 10500,
+      "tiempo_reporte": "1 día",
+      "muestra": "a. 500 ul Sangre / b. 500 ul Suero",
+      "recipiente": "Tubo tapa roja o amarilla"
+    },
+    {
+      "id_examen": "E025",
       "seccion": "QUÍMICA SANGUÍNEA",
       "examen": "Alanina aminotransferasa (ALT/GPT)",
       "precio": 10500,
@@ -125,7 +269,97 @@
       "recipiente": "Tubo tapa roja o amarilla"
     },
     {
-      "id_examen": "E010",
+      "id_examen": "E026",
+      "seccion": "QUÍMICA SANGUÍNEA",
+      "examen": "Aspartato aminotransferasa (AST)",
+      "precio": 10500,
+      "tiempo_reporte": "1 día",
+      "muestra": "a. 500 ul Sangre / b. 500 ul Suero",
+      "recipiente": "Tubo tapa roja o amarilla"
+    },
+    {
+      "id_examen": "E027",
+      "seccion": "QUÍMICA SANGUÍNEA",
+      "examen": "Amilasa Pancreática",
+      "precio": 30000,
+      "tiempo_reporte": "1 día",
+      "muestra": "a. 500 ul Sangre / b. 500 ul Suero",
+      "recipiente": "Tubo tapa roja o amarilla"
+    },
+    {
+      "id_examen": "E028",
+      "seccion": "QUÍMICA SANGUÍNEA",
+      "examen": "Bilirrubina directa",
+      "precio": 10500,
+      "tiempo_reporte": "1 día",
+      "muestra": "a. 500 ul Sangre / b. 500 ul Suero",
+      "recipiente": "Tubo tapa roja o amarilla"
+    },
+    {
+      "id_examen": "E029",
+      "seccion": "QUÍMICA SANGUÍNEA",
+      "examen": "Bilirrubina total",
+      "precio": 10500,
+      "tiempo_reporte": "1 día",
+      "muestra": "a. 500 ul Sangre / b. 500 ul Suero",
+      "recipiente": "Tubo tapa roja o amarilla"
+    },
+    {
+      "id_examen": "E030",
+      "seccion": "QUÍMICA SANGUÍNEA",
+      "examen": "BUN + Urea",
+      "precio": 10500,
+      "tiempo_reporte": "1 día",
+      "muestra": "a. 500 ul Sangre / b. 500 ul Suero",
+      "recipiente": "Tubo tapa roja o amarilla"
+    },
+    {
+      "id_examen": "E031",
+      "seccion": "QUÍMICA SANGUÍNEA",
+      "examen": "Calcio ionizado",
+      "precio": 65000,
+      "tiempo_reporte": "1 día",
+      "muestra": "1 ml Sangre total",
+      "recipiente": "Tubo tapa verde (Heparina de litio)"
+    },
+    {
+      "id_examen": "E032",
+      "seccion": "QUÍMICA SANGUÍNEA",
+      "examen": "Calcio sérico",
+      "precio": 16000,
+      "tiempo_reporte": "1 día",
+      "muestra": "a. 500 ul Sangre / b. 500 ul Suero",
+      "recipiente": "Tubo tapa roja o amarilla"
+    },
+    {
+      "id_examen": "E033",
+      "seccion": "QUÍMICA SANGUÍNEA",
+      "examen": "Cloro",
+      "precio": 15000,
+      "tiempo_reporte": "1 día",
+      "muestra": "a. 500 ul Sangre / b. 500 ul Suero",
+      "recipiente": "Tubo tapa roja o amarilla"
+    },
+    {
+      "id_examen": "E034",
+      "seccion": "QUÍMICA SANGUÍNEA",
+      "examen": "Colesterol HDL",
+      "precio": 17500,
+      "tiempo_reporte": "1 día",
+      "muestra": "a. 500 ul Sangre / b. 500 ul Suero",
+      "recipiente": "Tubo tapa roja o amarilla"
+    },
+    {
+      "id_examen": "E035",
+      "seccion": "QUÍMICA SANGUÍNEA",
+      "examen": "Colesterol total",
+      "precio": 10500,
+      "tiempo_reporte": "1 día",
+      "muestra": "a. 500 ul Sangre / b. 500 ul Suero",
+      "recipiente": "Tubo tapa roja o amarilla"
+    },
+    {
+      "id_examen": "E036",
       "seccion": "QUÍMICA SANGUÍNEA",
       "examen": "Creatinina",
       "precio": 10500,
@@ -134,7 +368,25 @@
       "recipiente": "Tubo tapa roja o amarilla"
     },
     {
-      "id_examen": "E011",
+      "id_examen": "E037",
+      "seccion": "QUÍMICA SANGUÍNEA",
+      "examen": "Creatina Quinasa MB (CK-MB)",
+      "precio": 25000,
+      "tiempo_reporte": "1 día",
+      "muestra": "a. 500 ul Sangre / b. 500 ul Suero",
+      "recipiente": "Tubo tapa roja o amarilla"
+    },
+    {
+      "id_examen": "E038",
+      "seccion": "QUÍMICA SANGUÍNEA",
+      "examen": "Creatina Quinasa Total (CK o CPK total)",
+      "precio": 21000,
+      "tiempo_reporte": "1 día",
+      "muestra": "a. 500 ul Sangre / b. 500 ul Suero",
+      "recipiente": "Tubo tapa roja o amarilla"
+    },
+    {
+      "id_examen": "E039",
       "seccion": "QUÍMICA SANGUÍNEA",
       "examen": "Dimetilarginina Simétrica (SDMA) + Creatinina",
       "precio": 155000,
@@ -143,25 +395,304 @@
       "recipiente": "Tubo tapa roja o amarilla"
     },
     {
-      "id_examen": "E012",
-      "seccion": "VITAMINAS",
-      "examen": "Ácido Fólico/Vitamina B9",
-      "precio": 50000,
-      "tiempo_reporte": "2-3 días",
-      "muestra": "a. 1 ml Sangre / b. 500 ul Suero",
+      "id_examen": "E040",
+      "seccion": "QUÍMICA SANGUÍNEA",
+      "examen": "Fenobarbital",
+      "precio": 54000,
+      "tiempo_reporte": "1 día",
+      "muestra": "a. 500 ul Sangre / b. 500 ul Suero",
       "recipiente": "Tubo tapa roja o amarilla"
     },
     {
-      "id_examen": "E013",
+      "id_examen": "E041",
+      "seccion": "QUÍMICA SANGUÍNEA",
+      "examen": "Ferritina",
+      "precio": 40000,
+      "tiempo_reporte": "1 día",
+      "muestra": "a. 500 ul Sangre / b. 500 ul Suero",
+      "recipiente": "Tubo tapa roja o amarilla"
+    },
+    {
+      "id_examen": "E042",
+      "seccion": "QUÍMICA SANGUÍNEA",
+      "examen": "Fósforo",
+      "precio": 14000,
+      "tiempo_reporte": "1 día",
+      "muestra": "a. 500 ul Sangre / b. 500 ul Suero",
+      "recipiente": "Tubo tapa roja o amarilla"
+    },
+    {
+      "id_examen": "E043",
+      "seccion": "QUÍMICA SANGUÍNEA",
+      "examen": "Fosfatasa alcalina (FA)",
+      "precio": 10500,
+      "tiempo_reporte": "1 día",
+      "muestra": "a. 500 ul Sangre / b. 500 ul Suero",
+      "recipiente": "Tubo tapa roja o amarilla"
+    },
+    {
+      "id_examen": "E044",
+      "seccion": "QUÍMICA SANGUÍNEA",
+      "examen": "Fructosamina",
+      "precio": 50000,
+      "tiempo_reporte": "1 día",
+      "muestra": "a. 500 ul Sangre / b. 500 ul Suero",
+      "recipiente": "Tubo tapa roja o amarilla"
+    },
+    {
+      "id_examen": "E045",
+      "seccion": "QUÍMICA SANGUÍNEA",
+      "examen": "Gamma Glutamil Transferasa (GGT)",
+      "precio": 10500,
+      "tiempo_reporte": "1 día",
+      "muestra": "a. 500 ul Sangre / b. 500 ul Suero",
+      "recipiente": "Tubo tapa roja o amarilla"
+    },
+    {
+      "id_examen": "E046",
+      "seccion": "QUÍMICA SANGUÍNEA",
+      "examen": "Glucosa",
+      "precio": 10500,
+      "tiempo_reporte": "1 día",
+      "muestra": "a. 500 ul Sangre / b. 500 ul Suero",
+      "recipiente": "Tubo tapa gris (Fluoruro/Oxalato)"
+    },
+    {
+      "id_examen": "E047",
+      "seccion": "QUÍMICA SANGUÍNEA",
+      "examen": "Hemoglobina glicada (HBA1C)",
+      "precio": 39000,
+      "tiempo_reporte": "1 día",
+      "muestra": "1 ml Sangre total",
+      "recipiente": "Tubo tapa lila (EDTA)"
+    },
+    {
+      "id_examen": "E048",
+      "seccion": "QUÍMICA SANGUÍNEA",
+      "examen": "Hierro",
+      "precio": 25000,
+      "tiempo_reporte": "1 día",
+      "muestra": "a. 1 ml Sangre / b. 1 ml Suero",
+      "recipiente": "Tubo tapa roja o amarilla"
+    },
+    {
+      "id_examen": "E049",
+      "seccion": "QUÍMICA SANGUÍNEA",
+      "examen": "Lactato (Ácido láctico)",
+      "precio": 64000,
+      "tiempo_reporte": "1 día",
+      "muestra": "1 ml Sangre total",
+      "recipiente": "Tubo tapa verde (Heparina de litio)"
+    },
+    {
+      "id_examen": "E050",
+      "seccion": "QUÍMICA SANGUÍNEA",
+      "examen": "Lactato Deshidrogenasa (LDH)",
+      "precio": 28000,
+      "tiempo_reporte": "1 día",
+      "muestra": "a. 500 ul Sangre / b. 500 ul Suero",
+      "recipiente": "Tubo tapa roja o amarilla"
+    },
+    {
+      "id_examen": "E051",
+      "seccion": "QUÍMICA SANGUÍNEA",
+      "examen": "Lipasa pancreática específica canina",
+      "precio": 65000,
+      "tiempo_reporte": "1 día",
+      "muestra": "a. 500 ul Sangre / b. 500 ul Suero",
+      "recipiente": "Tubo tapa roja o amarilla"
+    },
+    {
+      "id_examen": "E052",
+      "seccion": "QUÍMICA SANGUÍNEA",
+      "examen": "Lipasa pancreática específica felina",
+      "precio": 65000,
+      "tiempo_reporte": "1 día",
+      "muestra": "a. 500 ul Sangre / b. 500 ul Suero",
+      "recipiente": "Tubo tapa roja o amarilla"
+    },
+    {
+      "id_examen": "E053",
+      "seccion": "QUÍMICA SANGUÍNEA",
+      "examen": "Magnesio",
+      "precio": 20000,
+      "tiempo_reporte": "1 día",
+      "muestra": "a. 500 ul Sangre / b. 500 ul Suero",
+      "recipiente": "Tubo tapa roja o amarilla"
+    },
+    {
+      "id_examen": "E054",
+      "seccion": "QUÍMICA SANGUÍNEA",
+      "examen": "Potasio",
+      "precio": 18000,
+      "tiempo_reporte": "1 día",
+      "muestra": "a. 500 ul Sangre / b. 500 ul Suero",
+      "recipiente": "Tubo tapa roja o amarilla"
+    },
+    {
+      "id_examen": "E055",
+      "seccion": "QUÍMICA SANGUÍNEA",
+      "examen": "Proteínas totales séricas",
+      "precio": 10500,
+      "tiempo_reporte": "1 día",
+      "muestra": "a. 500 ul Sangre / b. 500 ul Suero",
+      "recipiente": "Tubo tapa roja o amarilla"
+    },
+    {
+      "id_examen": "E056",
+      "seccion": "QUÍMICA SANGUÍNEA",
+      "examen": "Proteínas diferenciadas (Albúmina-Globulinas-P. Totales-Relación A/G)",
+      "precio": 20000,
+      "tiempo_reporte": "1 día",
+      "muestra": "a. 500 ul Sangre / b. 500 ul Suero",
+      "recipiente": "Tubo tapa roja o amarilla"
+    },
+    {
+      "id_examen": "E057",
+      "seccion": "QUÍMICA SANGUÍNEA",
+      "examen": "Proteína C reactiva no específica (PCR cuantitativa)",
+      "precio": 44000,
+      "tiempo_reporte": "1 día",
+      "muestra": "a. 500 ul Sangre / b. 500 ul Suero",
+      "recipiente": "Tubo tapa roja o amarilla"
+    },
+    {
+      "id_examen": "E058",
+      "seccion": "QUÍMICA SANGUÍNEA",
+      "examen": "Proteína C reactiva específica canina (PCR cuantitativa)",
+      "precio": 56000,
+      "tiempo_reporte": "1 día",
+      "muestra": "a. 500 ul Sangre / b. 500 ul Suero",
+      "recipiente": "Tubo tapa roja o amarilla"
+    },
+    {
+      "id_examen": "E059",
+      "seccion": "QUÍMICA SANGUÍNEA",
+      "examen": "Sodio",
+      "precio": 19000,
+      "tiempo_reporte": "1 día",
+      "muestra": "a. 500 ul Sangre / b. 500 ul Suero",
+      "recipiente": "Tubo tapa roja o amarilla"
+    },
+    {
+      "id_examen": "E060",
+      "seccion": "QUÍMICA SANGUÍNEA",
+      "examen": "Somatomedina C",
+      "precio": 99000,
+      "tiempo_reporte": "1 día",
+      "muestra": "a. 500 ul Sangre / b. 500 ul Suero",
+      "recipiente": "Tubo tapa roja o amarilla"
+    },
+    {
+      "id_examen": "E061",
+      "seccion": "QUÍMICA SANGUÍNEA",
+      "examen": "Tripsina inmunorreactiva Canina",
+      "precio": 125000,
+      "tiempo_reporte": "1 día",
+      "muestra": "a. 1.5 ml Sangre / b. 1 ml Suero",
+      "recipiente": "Tubo tapa roja o amarilla"
+    },
+    {
+      "id_examen": "E062",
+      "seccion": "QUÍMICA SANGUÍNEA",
+      "examen": "Triglicéridos",
+      "precio": 10500,
+      "tiempo_reporte": "1 día",
+      "muestra": "a. 500 ul Sangre / b. 500 ul Suero",
+      "recipiente": "Tubo tapa roja o amarilla"
+    },
+    {
+      "id_examen": "E063",
+      "seccion": "QUÍMICA SANGUÍNEA",
+      "examen": "Troponina I",
+      "precio": 80000,
+      "tiempo_reporte": "1 día",
+      "muestra": "a. 500 ul Sangre / b. 500 ul Suero",
+      "recipiente": "Tubo tapa roja o amarilla"
+    },
+    {
+      "id_examen": "E064",
+      "seccion": "VITAMINAS",
+      "examen": "Ácido Fólico / Vitamina B9",
+      "precio": 50000,
+      "tiempo_reporte": "2-3 días",
+      "muestra": "a. 500 ul Sangre / b. 500 ul Suero",
+      "recipiente": "Tubo tapa roja o amarilla"
+    },
+    {
+      "id_examen": "E065",
+      "seccion": "VITAMINAS",
+      "examen": "Vitamina B12 cianocobalamina",
+      "precio": 58000,
+      "tiempo_reporte": "2-3 días",
+      "muestra": "a. 500 ul Sangre / b. 500 ul Suero",
+      "recipiente": "Tubo tapa roja o amarilla"
+    },
+    {
+      "id_examen": "E066",
+      "seccion": "VITAMINAS",
+      "examen": "Vitamina D 1,25 Dihidroxi (Calcitriol)",
+      "precio": 285000,
+      "tiempo_reporte": "2-3 días",
+      "muestra": "a. 500 ul Sangre / b. 500 ul Suero",
+      "recipiente": "Tubo tapa roja o amarilla"
+    },
+    {
+      "id_examen": "E067",
+      "seccion": "VITAMINAS",
+      "examen": "Vitamina D25",
+      "precio": 90000,
+      "tiempo_reporte": "2-3 días",
+      "muestra": "a. 500 ul Sangre / b. 500 ul Suero",
+      "recipiente": "Tubo tapa roja o amarilla"
+    },
+    {
+      "id_examen": "E068",
       "seccion": "UROANÁLISIS",
-      "examen": "Citoquímico de orina (Fisicoquímico, microscópico + GRAM)",
+      "examen": "Análisis de cálculo urinario (Vesícula/Vejiga)",
+      "precio": 95000,
+      "tiempo_reporte": "1 día",
+      "muestra": "Cálculo renal",
+      "recipiente": "Frasco tapa rosca estéril"
+    },
+    {
+      "id_examen": "E069",
+      "seccion": "UROANÁLISIS",
+      "examen": "Análisis de cálculo vesiculares",
+      "precio": 115000,
+      "tiempo_reporte": "1 día",
+      "muestra": "Cálculo vesicular",
+      "recipiente": "Frasco tapa rosca estéril"
+    },
+    {
+      "id_examen": "E070",
+      "seccion": "UROANÁLISIS",
+      "examen": "Citoquímico de orina (Estudio fisicoquímico, microscópico + GRAM)",
       "precio": 11000,
       "tiempo_reporte": "1 día",
       "muestra": "Orina",
       "recipiente": "Jeringa o frasco estéril"
     },
     {
-      "id_examen": "E014",
+      "id_examen": "E071",
+      "seccion": "UROANÁLISIS",
+      "examen": "Cortisol en orina",
+      "precio": 47000,
+      "tiempo_reporte": "1 día",
+      "muestra": "Orina",
+      "recipiente": "Jeringa o frasco estéril"
+    },
+    {
+      "id_examen": "E072",
+      "seccion": "UROANÁLISIS",
+      "examen": "Glucosa en orina (Cuantitativa)",
+      "precio": 10500,
+      "tiempo_reporte": "1 día",
+      "muestra": "Orina",
+      "recipiente": "Jeringa o frasco estéril"
+    },
+    {
+      "id_examen": "E073",
       "seccion": "UROANÁLISIS",
       "examen": "Relación Proteína/Creatinina en orina (UPC)",
       "precio": 20000,
@@ -170,7 +701,16 @@
       "recipiente": "Jeringa o frasco estéril"
     },
     {
-      "id_examen": "E015",
+      "id_examen": "E074",
+      "seccion": "UROANÁLISIS",
+      "examen": "Relación Cortisol/Creatinina en orina (UCCR)",
+      "precio": 53000,
+      "tiempo_reporte": "1 día",
+      "muestra": "Orina",
+      "recipiente": "Jeringa o frasco estéril"
+    },
+    {
+      "id_examen": "E075",
       "seccion": "COPROLOGÍA",
       "examen": "Coprológico (Directo + Lugol + Flotación)",
       "precio": 12000,
@@ -179,34 +719,196 @@
       "recipiente": "Frasco tapa rosca estéril"
     },
     {
-      "id_examen": "E016",
+      "id_examen": "E076",
       "seccion": "COPROLOGÍA",
-      "examen": "Coprograma (Coprológico, azúcares, sangre oculta, pH, Gram, Wright)",
+      "examen": "Coprológico seriado (3 muestras)",
+      "precio": 30500,
+      "tiempo_reporte": "1 día",
+      "muestra": "Materia fecal (3 muestras)",
+      "recipiente": "Frasco tapa rosca estéril (Rotular #1, #2, #3)"
+    },
+    {
+      "id_examen": "E077",
+      "seccion": "COPROLOGÍA",
+      "examen": "Coprograma (Coprológico, azúcares, sangre oculta, pH, coloración Gram/Wright)",
       "precio": 25000,
       "tiempo_reporte": "1 día",
       "muestra": "Materia fecal",
       "recipiente": "Frasco tapa rosca estéril"
     },
     {
-      "id_examen": "E017",
+      "id_examen": "E078",
+      "seccion": "COPROLOGÍA",
+      "examen": "Coloración Ziehl-Neelsen / Kinyoun (Coccidias, Cryptosporidium, Micobacterias)",
+      "precio": 20000,
+      "tiempo_reporte": "1 día",
+      "muestra": "Materia fecal",
+      "recipiente": "Frasco tapa rosca estéril"
+    },
+    {
+      "id_examen": "E079",
+      "seccion": "COPROLOGÍA",
+      "examen": "Análisis para diarrea persistente (Coprograma, Ziehl-Neelsen, Coprocultivo)",
+      "precio": 70000,
+      "tiempo_reporte": "2-5 días",
+      "muestra": "Materia fecal",
+      "recipiente": "Frasco tapa rosca estéril"
+    },
+    {
+      "id_examen": "E080",
+      "seccion": "COPROLOGÍA",
+      "examen": "Detección semicuantitativa de grasa neutra y ácidos grasos en heces",
+      "precio": 20000,
+      "tiempo_reporte": "1 día",
+      "muestra": "Materia fecal",
+      "recipiente": "Frasco tapa rosca estéril"
+    },
+    {
+      "id_examen": "E081",
+      "seccion": "ANÁLISIS OTRAS MUESTRAS",
+      "examen": "Análisis de líquidos corporales (Físico-químico, bioquímico, citológico, Gram/Wright)",
+      "precio": 45000,
+      "tiempo_reporte": "1-2 días",
+      "muestra": "1 ml Líquido (EDTA) + 3 ml Líquido",
+      "recipiente": "Tubo lila (EDTA) + Tubo tapa roja / Jeringa"
+    },
+    {
+      "id_examen": "E082",
       "seccion": "ANÁLISIS OTRAS MUESTRAS",
       "examen": "Citología vaginal canina (Ciclo estral)",
       "precio": 25000,
       "tiempo_reporte": "1 día",
-      "muestra": "Extendido de muestra",
-      "recipiente": "Placas portaobjetos (protegidas)"
+      "muestra": "Extendido de secreción vaginal",
+      "recipiente": "Placa portaobjetos (protegida)"
     },
     {
-      "id_examen": "E018",
+      "id_examen": "E083",
+      "seccion": "ANÁLISIS OTRAS MUESTRAS",
+      "examen": "Coloración Wright (Diferenciación celular)",
+      "precio": 15000,
+      "tiempo_reporte": "1 día",
+      "muestra": "Frotis / Extendido",
+      "recipiente": "Placa portaobjetos"
+    },
+    {
+      "id_examen": "E084",
+      "seccion": "ANÁLISIS OTRAS MUESTRAS",
+      "examen": "Coloración Ziehl-Neelsen",
+      "precio": 15000,
+      "tiempo_reporte": "1 día",
+      "muestra": "Frotis / Extendido",
+      "recipiente": "Placa portaobjetos"
+    },
+    {
+      "id_examen": "E085",
+      "seccion": "ANÁLISIS OTRAS MUESTRAS",
+      "examen": "Coloración Kinyoun",
+      "precio": 15000,
+      "tiempo_reporte": "1 día",
+      "muestra": "Frotis / Extendido",
+      "recipiente": "Placa portaobjetos"
+    },
+    {
+      "id_examen": "E086",
+      "seccion": "ANÁLISIS OTRAS MUESTRAS",
+      "examen": "Coloración GRAM (Infecciosa)",
+      "precio": 15000,
+      "tiempo_reporte": "1 día",
+      "muestra": "Frotis / Extendido",
+      "recipiente": "Placa portaobjetos"
+    },
+    {
+      "id_examen": "E087",
+      "seccion": "ANÁLISIS OTRAS MUESTRAS",
+      "examen": "Examen directo (cualquier muestra)",
+      "precio": 12000,
+      "tiempo_reporte": "1 día",
+      "muestra": "Secreción / Raspado / Líquido",
+      "recipiente": "Portaobjetos o frasco estéril"
+    },
+    {
+      "id_examen": "E088",
+      "seccion": "ANÁLISIS OTRAS MUESTRAS",
+      "examen": "Espermograma (Físico-químico, morfológico, citológico y microbiológico)",
+      "precio": 40000,
+      "tiempo_reporte": "1 día",
+      "muestra": "Líquido seminal (Coordinar hora)",
+      "recipiente": "Frasco tapa rosca estéril"
+    },
+    {
+      "id_examen": "E089",
+      "seccion": "ANÁLISIS OTRAS MUESTRAS",
+      "examen": "Raspado de piel + Examen con luz de wood",
+      "precio": 12000,
+      "tiempo_reporte": "1 día",
+      "muestra": "Escamas de piel y pelos",
+      "recipiente": "Caja de Petri o frasco estéril"
+    },
+    {
+      "id_examen": "E090",
+      "seccion": "ANÁLISIS OTRAS MUESTRAS",
+      "examen": "Tricograma + Examen con luz de wood",
+      "precio": 18000,
+      "tiempo_reporte": "1 día",
+      "muestra": "Pelos completos con folículo",
+      "recipiente": "Caja de Petri o frasco estéril"
+    },
+    {
+      "id_examen": "E091",
+      "seccion": "ANÁLISIS OTRAS MUESTRAS",
+      "examen": "Raspado de piel + Tricograma + Examen con luz de wood",
+      "precio": 23000,
+      "tiempo_reporte": "1 día",
+      "muestra": "Escamas de piel y pelos completos",
+      "recipiente": "Caja de Petri o frasco estéril"
+    },
+    {
+      "id_examen": "E092",
       "seccion": "PATOLOGÍA",
       "examen": "Biopsia (Histopatológico de 3 fragmentos de tejido por animal)",
       "precio": 135000,
       "tiempo_reporte": "3-5 días",
-      "muestra": "Fragmento de tejido",
+      "muestra": "Fragmentos de tejido",
       "recipiente": "Frasco con formol al 10%"
     },
     {
-      "id_examen": "E019",
+      "id_examen": "E093",
+      "seccion": "PATOLOGÍA",
+      "examen": "Biopsia (Análisis histopatológico de 1 fragmento adicional)",
+      "precio": 40000,
+      "tiempo_reporte": "3-5 días",
+      "muestra": "Fragmento adicional de tejido",
+      "recipiente": "Frasco con formol al 10%"
+    },
+    {
+      "id_examen": "E094",
+      "seccion": "PATOLOGÍA",
+      "examen": "Citología tumoral/TVT/PAAF (Punción Aspirada por Aguja Fina)",
+      "precio": 50000,
+      "tiempo_reporte": "1-2 días",
+      "muestra": "Impronta de masa o secreción",
+      "recipiente": "Placa portaobjetos (protegida)"
+    },
+    {
+      "id_examen": "E095",
+      "seccion": "HORMONAS",
+      "examen": "Hormona Adrenocorticótropica (ACTH)",
+      "precio": 50000,
+      "tiempo_reporte": "1-2 días",
+      "muestra": "a. 1 ml Sangre / b. 1 ml Suero",
+      "recipiente": "Tubo tapa roja o amarilla"
+    },
+    {
+      "id_examen": "E096",
+      "seccion": "HORMONAS",
+      "examen": "Aldosterona (Paciente con ayuno 12h)",
+      "precio": 55000,
+      "tiempo_reporte": "1-2 días",
+      "muestra": "a. 1 ml Sangre / b. 1 ml Suero",
+      "recipiente": "Tubo tapa roja o amarilla"
+    },
+    {
+      "id_examen": "E097",
       "seccion": "HORMONAS",
       "examen": "Cortisol en suero (Específico canino)",
       "precio": 59000,
@@ -215,58 +917,976 @@
       "recipiente": "Tubo tapa roja o amarilla"
     },
     {
-      "id_examen": "E020",
+      "id_examen": "E098",
       "seccion": "HORMONAS",
-      "examen": "Hormona estimulante de tiroides TSH específica canina",
+      "examen": "Cortisol en suero (No específico)",
+      "precio": 46000,
+      "tiempo_reporte": "1-2 días",
+      "muestra": "a. 500 ul Sangre / b. 500 ul Suero",
+      "recipiente": "Tubo tapa roja o amarilla"
+    },
+    {
+      "id_examen": "E099",
+      "seccion": "HORMONAS",
+      "examen": "Cortisol en orina",
+      "precio": 48000,
+      "tiempo_reporte": "1-2 días",
+      "muestra": "1 ml Orina",
+      "recipiente": "Frasco estéril o jeringa"
+    },
+    {
+      "id_examen": "E100",
+      "seccion": "HORMONAS",
+      "examen": "Cortisol en suero 3 muestras (No específico)",
+      "precio": 115000,
+      "tiempo_reporte": "1-2 días",
+      "muestra": "a. 1.5 ml Sangre / b. 1.5 ml Suero (Rotular #1, #2, #3)",
+      "recipiente": "Tubo tapa roja o amarilla"
+    },
+    {
+      "id_examen": "E101",
+      "seccion": "HORMONAS",
+      "examen": "Cortisol en suero 3 muestras (Específico canino)",
+      "precio": 147000,
+      "tiempo_reporte": "1-2 días",
+      "muestra": "a. 1.5 ml Sangre / b. 1.5 ml Suero (Rotular #1, #2, #3)",
+      "recipiente": "Tubo tapa roja o amarilla"
+    },
+    {
+      "id_examen": "E102",
+      "seccion": "HORMONAS",
+      "examen": "Estradiol",
+      "precio": 47000,
+      "tiempo_reporte": "1-2 días",
+      "muestra": "a. 500 ul Sangre / b. 500 ul Suero",
+      "recipiente": "Tubo tapa roja o amarilla"
+    },
+    {
+      "id_examen": "E103",
+      "seccion": "HORMONAS",
+      "examen": "Hormona folículo estimulante (FSH)",
+      "precio": 45000,
+      "tiempo_reporte": "1-2 días",
+      "muestra": "a. 500 ul Sangre / b. 500 ul Suero",
+      "recipiente": "Tubo tapa roja o amarilla"
+    },
+    {
+      "id_examen": "E104",
+      "seccion": "HORMONAS",
+      "examen": "Hormona de crecimiento (GH)",
+      "precio": 51000,
+      "tiempo_reporte": "1-2 días",
+      "muestra": "a. 500 ul Sangre / b. 500 ul Suero",
+      "recipiente": "Tubo tapa roja o amarilla"
+    },
+    {
+      "id_examen": "E105",
+      "seccion": "HORMONAS",
+      "examen": "Hormona estimulante de tiroides TSH (Inespecífica para la especie)",
+      "precio": 28000,
+      "tiempo_reporte": "1-2 días",
+      "muestra": "a. 500 ul Sangre / b. 500 ul Suero",
+      "recipiente": "Tubo tapa roja o amarilla"
+    },
+    {
+      "id_examen": "E106",
+      "seccion": "HORMONAS",
+      "examen": "Hormona estimulante de tiroides TSH (Específica canina)",
       "precio": 58000,
       "tiempo_reporte": "1-2 días",
       "muestra": "a. 500 ul Sangre / b. 500 ul Suero",
       "recipiente": "Tubo tapa roja"
     },
     {
-      "id_examen": "E021",
-      "seccion": "PERFILES",
-      "examen": "Perfil Prequirúrgico 1 (Hemograma, ALT, Creatinina)",
+      "id_examen": "E107",
+      "seccion": "HORMONAS",
+      "examen": "Hormona luteinizante (LH)",
+      "precio": 45000,
+      "tiempo_reporte": "1-2 días",
+      "muestra": "a. 500 ul Sangre / b. 500 ul Suero",
+      "recipiente": "Tubo tapa roja o amarilla"
+    },
+    {
+      "id_examen": "E108",
+      "seccion": "HORMONAS",
+      "examen": "Insulina",
+      "precio": 45000,
+      "tiempo_reporte": "1-2 días",
+      "muestra": "a. 500 ul Sangre / b. 500 ul Suero",
+      "recipiente": "Tubo tapa roja o amarilla"
+    },
+    {
+      "id_examen": "E109",
+      "seccion": "HORMONAS",
+      "examen": "Parathormona",
+      "precio": 98000,
+      "tiempo_reporte": "1-2 días",
+      "muestra": "a. 500 ul Sangre / b. 400 ul Plasma",
+      "recipiente": "a. Tubo lila / b. Vial o jeringa"
+    },
+    {
+      "id_examen": "E110",
+      "seccion": "HORMONAS",
+      "examen": "Prolactina",
+      "precio": 54000,
+      "tiempo_reporte": "1-2 días",
+      "muestra": "a. 500 ul Sangre / b. 500 ul Suero",
+      "recipiente": "Tubo tapa roja o amarilla"
+    },
+    {
+      "id_examen": "E111",
+      "seccion": "HORMONAS",
+      "examen": "Progesterona específica canina",
+      "precio": 50000,
+      "tiempo_reporte": "1-2 días",
+      "muestra": "a. 500 ul Sangre / b. 500 ul Suero",
+      "recipiente": "Tubo tapa roja o amarilla"
+    },
+    {
+      "id_examen": "E112",
+      "seccion": "HORMONAS",
+      "examen": "Testosterona libre",
+      "precio": 55000,
+      "tiempo_reporte": "1-2 días",
+      "muestra": "a. 500 ul Sangre / b. 500 ul Suero",
+      "recipiente": "Tubo tapa roja o amarilla"
+    },
+    {
+      "id_examen": "E113",
+      "seccion": "HORMONAS",
+      "examen": "Testosterona total",
+      "precio": 50000,
+      "tiempo_reporte": "1-2 días",
+      "muestra": "a. 500 ul Sangre / b. 500 ul Suero",
+      "recipiente": "Tubo tapa roja o amarilla"
+    },
+    {
+      "id_examen": "E114",
+      "seccion": "HORMONAS",
+      "examen": "Tiroxina total T4T (Específico canino o felino)",
+      "precio": 56000,
+      "tiempo_reporte": "1-2 días",
+      "muestra": "a. 500 ul Sangre / b. 500 ul Suero",
+      "recipiente": "Tubo tapa roja"
+    },
+    {
+      "id_examen": "E115",
+      "seccion": "HORMONAS",
+      "examen": "Tiroxina total T4T (Inespecífica para la especie)",
+      "precio": 24000,
+      "tiempo_reporte": "1-2 días",
+      "muestra": "a. 500 ul Sangre / b. 500 ul Suero",
+      "recipiente": "Tubo tapa roja o amarilla"
+    },
+    {
+      "id_examen": "E116",
+      "seccion": "HORMONAS",
+      "examen": "Tiroxina libre T4L",
+      "precio": 23000,
+      "tiempo_reporte": "1-2 días",
+      "muestra": "a. 500 ul Sangre / b. 500 ul Suero",
+      "recipiente": "Tubo tapa roja o amarilla"
+    },
+    {
+      "id_examen": "E117",
+      "seccion": "HORMONAS",
+      "examen": "Triyodotironina total T3T",
+      "precio": 27000,
+      "tiempo_reporte": "1-2 días",
+      "muestra": "a. 500 ul Sangre / b. 500 ul Suero",
+      "recipiente": "Tubo tapa roja o amarilla"
+    },
+    {
+      "id_examen": "E118",
+      "seccion": "OTROS SERVICIOS",
+      "examen": "Suero autólogo",
+      "precio": 11000,
+      "tiempo_reporte": "1 día",
+      "muestra": "1-5 ml Sangre total",
+      "recipiente": "Tubo tapa roja o amarilla"
+    },
+    {
+      "id_examen": "E119",
+      "seccion": "OTROS SERVICIOS",
+      "examen": "Plasma rico en plaquetas (PRP)",
       "precio": 25000,
       "tiempo_reporte": "1 día",
-      "muestra": "500 ul Sangre EDTA + 500 ul Sangre total",
-      "recipiente": "Tubo lila (EDTA) + Tubo tapa roja"
+      "muestra": "1-5 ml Sangre total",
+      "recipiente": "Tubo tapa azul"
     },
     {
-      "id_examen": "E022",
-      "seccion": "PERFILES",
-      "examen": "Perfil Renal 1 (Hemograma + BUN + Urea + Creatinina)",
-      "precio": 28000,
-      "tiempo_reporte": "1 día",
-      "muestra": "500 ul Sangre EDTA + 1 ml Sangre total",
-      "recipiente": "Tubo lila (EDTA) + Tubo tapa roja"
-    },
-    {
-      "id_examen": "E023",
+      "id_examen": "E120",
       "seccion": "BIOLOGÍA MOLECULAR",
-      "examen": "PCR Hemoparásitos Felino - Tiempo Real (7 patógenos)",
+      "examen": "PCR Hemoparásitos Felino - Tiempo Real (Anaplasma spp, Rickettsia spp, Ehrlichia spp, Mycoplasma spp, Hepatozoon spp, Toxoplasma gondii y Bartonella spp)",
       "precio": 170000,
+      "tiempo_reporte": "2-4 días",
+      "muestra": "1 ml Sangre Total (o Médula ósea, ganglios)",
+      "recipiente": "Tubo tapa lila (EDTA)"
+    },
+    {
+      "id_examen": "E121",
+      "seccion": "BIOLOGÍA MOLECULAR",
+      "examen": "PCR Hemoparásitos Canino - Tiempo Real (Anaplasma spp, Ehrlichia spp, Mycoplasma spp, Hepatozoon spp, Babesia spp, Toxoplasma gondii y Dirofilaria spp)",
+      "precio": 170000,
+      "tiempo_reporte": "2-4 días",
+      "muestra": "1 ml Sangre Total (o Médula ósea, ganglios)",
+      "recipiente": "Tubo tapa lila (EDTA)"
+    },
+    {
+      "id_examen": "E122",
+      "seccion": "BIOLOGÍA MOLECULAR",
+      "examen": "PCR Hemoparásitos Felino - Punto Final Positivo/Negativo (Anaplasma spp, Cytauxzoon felis, Mycoplasma sp, Babesia sp)",
+      "precio": 140000,
       "tiempo_reporte": "2-4 días",
       "muestra": "1 ml Sangre Total",
       "recipiente": "Tubo tapa lila (EDTA)"
     },
     {
-      "id_examen": "E024",
+      "id_examen": "E123",
+      "seccion": "BIOLOGÍA MOLECULAR",
+      "examen": "PCR Hemoparásitos Canino - Punto Final Positivo/Negativo (Anaplasma spp, Ehrlichia spp, Hepatozoon spp, Babesia sp)",
+      "precio": 140000,
+      "tiempo_reporte": "2-4 días",
+      "muestra": "1 ml Sangre Total",
+      "recipiente": "Tubo tapa lila (EDTA)"
+    },
+    {
+      "id_examen": "E124",
       "seccion": "INMUNOLOGÍA",
       "examen": "Distemper Canino",
       "precio": 35000,
       "tiempo_reporte": "1 día",
-      "muestra": "Sangre total o Hisopado Ocular/Nasal",
+      "muestra": "Sangre total / Hisopado / Orina",
       "recipiente": "Tubo lila, roja o Frasco estéril"
     },
     {
-      "id_examen": "E025",
+      "id_examen": "E125",
+      "seccion": "INMUNOLOGÍA",
+      "examen": "Parvovirus Canino",
+      "precio": 35000,
+      "tiempo_reporte": "1 día",
+      "muestra": "Materia fecal / Hisopado rectal",
+      "recipiente": "Frasco tapa rosca estéril"
+    },
+    {
+      "id_examen": "E126",
+      "seccion": "INMUNOLOGÍA",
+      "examen": "Parvovirus + Coronavirus Canino",
+      "precio": 45000,
+      "tiempo_reporte": "1 día",
+      "muestra": "Materia fecal / Hisopado rectal",
+      "recipiente": "Frasco tapa rosca estéril"
+    },
+    {
+      "id_examen": "E127",
+      "seccion": "INMUNOLOGÍA",
+      "examen": "Parvovirus + Coronavirus + Giardia Canino",
+      "precio": 50000,
+      "tiempo_reporte": "1 día",
+      "muestra": "Materia fecal / Hisopado rectal",
+      "recipiente": "Frasco tapa rosca estéril"
+    },
+    {
+      "id_examen": "E128",
+      "seccion": "INMUNOLOGÍA",
+      "examen": "Brucella canis",
+      "precio": 45000,
+      "tiempo_reporte": "1 día",
+      "muestra": "Sangre total / Suero",
+      "recipiente": "Tubo roja, amarilla o lila"
+    },
+    {
+      "id_examen": "E129",
+      "seccion": "INMUNOLOGÍA",
+      "examen": "Virus de Inmunodeficiencia Felina / Leucemia / Dirofilaria IDEXX Felino",
+      "precio": 115000,
+      "tiempo_reporte": "1 día",
+      "muestra": "a. 500 ul Sangre / b. 500 ul Suero",
+      "recipiente": "a. Tubo roja o lila / b. Vial o jeringa"
+    },
+    {
+      "id_examen": "E130",
+      "seccion": "INMUNOLOGÍA",
+      "examen": "Virus de Inmunodeficiencia Felina + Virus de la Leucemia (VIF + VLEU) Felino",
+      "precio": 44000,
+      "tiempo_reporte": "1 día",
+      "muestra": "a. 500 ul Sangre / b. 500 ul Suero",
+      "recipiente": "a. Tubo roja o lila / b. Vial o jeringa"
+    },
+    {
+      "id_examen": "E131",
+      "seccion": "INMUNOLOGÍA",
+      "examen": "Triple viral felina IgG (Panleucopenia, Calicivirus, Herpesvirus) (Vaccicheck)",
+      "precio": 120000,
+      "tiempo_reporte": "1 día",
+      "muestra": "a. 500 ul Sangre / b. 500 ul Suero",
+      "recipiente": "a. Tubo roja o lila / b. Vial o jeringa"
+    },
+    {
+      "id_examen": "E132",
+      "seccion": "INMUNOLOGÍA",
+      "examen": "SNAP 4DX IDEXX (Dirofilaria, Enfermedad de Lyme, Ehrlichia, Anaplasma)",
+      "precio": 110000,
+      "tiempo_reporte": "1 día",
+      "muestra": "a. 500 ul Sangre / b. 500 ul Suero",
+      "recipiente": "a. Tubo roja o lila / b. Vial o jeringa"
+    },
+    {
+      "id_examen": "E133",
+      "seccion": "INMUNOLOGÍA",
+      "examen": "Coronavirus felino + Índice A/G + Prueba de Rivalta (Peritonitis Infecciosa Felina)",
+      "precio": 125000,
+      "tiempo_reporte": "1 día",
+      "muestra": "Sangre total + Líquido abdominal",
+      "recipiente": "Tubo roja o amarilla + Tubo tapa roja o jeringa"
+    },
+    {
+      "id_examen": "E134",
+      "seccion": "INMUNOLOGÍA",
+      "examen": "Prueba de Coombs específica canina (Prueba de antiglobulina directa)",
+      "precio": 155000,
+      "tiempo_reporte": "1 día",
+      "muestra": "Sangre total",
+      "recipiente": "Tubo tapa lila (EDTA)"
+    },
+    {
+      "id_examen": "E135",
+      "seccion": "INMUNOLOGÍA",
+      "examen": "Pruebas cruzadas de compatibilidad (mayor y menor)",
+      "precio": 50000,
+      "tiempo_reporte": "1 día",
+      "muestra": "1 ml Sangre donante + 1 ml Sangre receptor",
+      "recipiente": "Tubo lila (EDTA) Donante + Receptor"
+    },
+    {
+      "id_examen": "E136",
+      "seccion": "INMUNOLOGÍA",
+      "examen": "Toxoplasma IgG",
+      "precio": 40000,
+      "tiempo_reporte": "1 día",
+      "muestra": "a. 500 ul Sangre / b. 500 ul Suero",
+      "recipiente": "Tubo tapa roja o amarilla"
+    },
+    {
+      "id_examen": "E137",
+      "seccion": "INMUNOLOGÍA",
+      "examen": "Toxoplasma IgM",
+      "precio": 40000,
+      "tiempo_reporte": "1 día",
+      "muestra": "a. 500 ul Sangre / b. 500 ul Suero",
+      "recipiente": "Tubo tapa roja o amarilla"
+    },
+    {
+      "id_examen": "E138",
+      "seccion": "INMUNOLOGÍA",
+      "examen": "Leptospira canino Ac IgG (4 serovares: Canicola, Icterohaemorrhagiae, Pomona, Grippotyphosa)",
+      "precio": 130000,
+      "tiempo_reporte": "1 día",
+      "muestra": "500 ul Sangre total",
+      "recipiente": "Tubo tapa lila (EDTA), tapa roja o azul"
+    },
+    {
+      "id_examen": "E139",
+      "seccion": "INMUNOLOGÍA",
+      "examen": "Anticuerpos Tiroglobulina (TgAb)",
+      "precio": 43000,
+      "tiempo_reporte": "1 día",
+      "muestra": "a. 1 ml Sangre / b. 1 ml Suero",
+      "recipiente": "a. Tubo tapa roja / b. Vial o jeringa"
+    },
+    {
+      "id_examen": "E140",
+      "seccion": "INMUNOLOGÍA",
+      "examen": "Títulos de rabia (Fluorescent Antibody Virus Neutralization - FAVN Test)",
+      "precio": 740000,
+      "tiempo_reporte": "Según indicaciones",
+      "muestra": "a. 2 ml Sangre / b. 1.5 ml Suero libre hemólisis",
+      "recipiente": "a. Tubo tapa amarilla/roja / b. Vial o jeringa"
+    },
+    {
+      "id_examen": "E141",
       "seccion": "TOXICOLOGÍA",
-      "examen": "Antidepresivos tricíclicos - TCA",
+      "examen": "Antidepresivos tricíclicos - TCA (Tamizaje cualitativo)",
       "precio": 25000,
       "tiempo_reporte": "1 día",
       "muestra": "Orina",
       "recipiente": "Frasco tapa rosca estéril"
+    },
+    {
+      "id_examen": "E142",
+      "seccion": "TOXICOLOGÍA",
+      "examen": "Anfetamina - AMP (Tamizaje cualitativo)",
+      "precio": 25000,
+      "tiempo_reporte": "1 día",
+      "muestra": "Orina",
+      "recipiente": "Frasco tapa rosca estéril"
+    },
+    {
+      "id_examen": "E143",
+      "seccion": "TOXICOLOGÍA",
+      "examen": "Barbitúricos - BAR (Tamizaje cualitativo)",
+      "precio": 25000,
+      "tiempo_reporte": "1 día",
+      "muestra": "Orina",
+      "recipiente": "Frasco tapa rosca estéril"
+    },
+    {
+      "id_examen": "E144",
+      "seccion": "TOXICOLOGÍA",
+      "examen": "Benzodiazepinas - BZO (Tamizaje cualitativo)",
+      "precio": 25000,
+      "tiempo_reporte": "1 día",
+      "muestra": "Orina",
+      "recipiente": "Frasco tapa rosca estéril"
+    },
+    {
+      "id_examen": "E145",
+      "seccion": "TOXICOLOGÍA",
+      "examen": "Cocaína - COC (Tamizaje cualitativo)",
+      "precio": 25000,
+      "tiempo_reporte": "1 día",
+      "muestra": "Orina",
+      "recipiente": "Frasco tapa rosca estéril"
+    },
+    {
+      "id_examen": "E146",
+      "seccion": "TOXICOLOGÍA",
+      "examen": "Feniciclidina - PCP (Tamizaje cualitativo)",
+      "precio": 25000,
+      "tiempo_reporte": "1 día",
+      "muestra": "Orina",
+      "recipiente": "Frasco tapa rosca estéril"
+    },
+    {
+      "id_examen": "E147",
+      "seccion": "TOXICOLOGÍA",
+      "examen": "Marihuana - THC (Tamizaje cualitativo)",
+      "precio": 25000,
+      "tiempo_reporte": "1 día",
+      "muestra": "Orina",
+      "recipiente": "Frasco tapa rosca estéril"
+    },
+    {
+      "id_examen": "E148",
+      "seccion": "TOXICOLOGÍA",
+      "examen": "Metadona - MTD (Tamizaje cualitativo)",
+      "precio": 25000,
+      "tiempo_reporte": "1 día",
+      "muestra": "Orina",
+      "recipiente": "Frasco tapa rosca estéril"
+    },
+    {
+      "id_examen": "E149",
+      "seccion": "TOXICOLOGÍA",
+      "examen": "Metanfetamina - MET (Tamizaje cualitativo)",
+      "precio": 25000,
+      "tiempo_reporte": "1 día",
+      "muestra": "Orina",
+      "recipiente": "Frasco tapa rosca estéril"
+    },
+    {
+      "id_examen": "E150",
+      "seccion": "TOXICOLOGÍA",
+      "examen": "Metilendioximetanfetamina - MDMA (Tamizaje cualitativo)",
+      "precio": 25000,
+      "tiempo_reporte": "1 día",
+      "muestra": "Orina",
+      "recipiente": "Frasco tapa rosca estéril"
+    },
+    {
+      "id_examen": "E151",
+      "seccion": "TOXICOLOGÍA",
+      "examen": "Morfina - MOP (Tamizaje cualitativo)",
+      "precio": 25000,
+      "tiempo_reporte": "1 día",
+      "muestra": "Orina",
+      "recipiente": "Frasco tapa rosca estéril"
+    },
+    {
+      "id_examen": "E152",
+      "seccion": "TOXICOLOGÍA",
+      "examen": "Opiato - OPI (Tamizaje cualitativo)",
+      "precio": 25000,
+      "tiempo_reporte": "1 día",
+      "muestra": "Orina",
+      "recipiente": "Frasco tapa rosca estéril"
+    },
+    {
+      "id_examen": "E153",
+      "seccion": "TOXICOLOGÍA",
+      "examen": "Combinación de 2 pruebas (Toxicología)",
+      "precio": 35000,
+      "tiempo_reporte": "1 día",
+      "muestra": "Orina",
+      "recipiente": "Frasco tapa rosca estéril"
+    },
+    {
+      "id_examen": "E154",
+      "seccion": "TOXICOLOGÍA",
+      "examen": "Combinación de 3 pruebas (Toxicología)",
+      "precio": 40000,
+      "tiempo_reporte": "1 día",
+      "muestra": "Orina",
+      "recipiente": "Frasco tapa rosca estéril"
+    },
+    {
+      "id_examen": "E155",
+      "seccion": "TOXICOLOGÍA",
+      "examen": "Combinación de 5 pruebas (Toxicología)",
+      "precio": 45000,
+      "tiempo_reporte": "1 día",
+      "muestra": "Orina",
+      "recipiente": "Frasco tapa rosca estéril"
+    },
+    {
+      "id_examen": "E156",
+      "seccion": "TOXICOLOGÍA",
+      "examen": "Tamizaje Completo 12 Drogas (COC-AMP-THC-MTD-MET-MOP-OPI-MDMA-PCP-BAR-BZO-TCA)",
+      "precio": 80000,
+      "tiempo_reporte": "1 día",
+      "muestra": "Orina",
+      "recipiente": "Frasco tapa rosca estéril"
+    },
+    {
+      "id_examen": "E157",
+      "seccion": "TOXICOLOGÍA",
+      "examen": "Tamizaje de intoxicación por warfarínicos (Raticidas)",
+      "precio": 20000,
+      "tiempo_reporte": "1 día",
+      "muestra": "Sangre (Coordinar)",
+      "recipiente": "Tubo tapa celeste, por 3 días consecutivos"
+    },
+    {
+      "id_examen": "E158",
+      "seccion": "PERFILES",
+      "examen": "Perfil Prequirúrgico 1 (Hemograma, ALT, Creatinina)",
+      "precio": 25000,
+      "tiempo_reporte": "1 día",
+      "muestra": "500 ul Sangre EDTA + 500 ul Sangre total",
+      "recipiente": "Tubo lila (EDTA) + Tubo tapa roja o amarilla"
+    },
+    {
+      "id_examen": "E159",
+      "seccion": "PERFILES",
+      "examen": "Perfil Prequirúrgico 2 (Hemograma, ALT, Creatinina, TP, TPT)",
+      "precio": 40000,
+      "tiempo_reporte": "1 día",
+      "muestra": "500 ul Sangre EDTA + 500 ul Sangre total + 500 ul Sangre total",
+      "recipiente": "Tubo lila (EDTA) + Tubo tapa roja + Tubo tapa azul"
+    },
+    {
+      "id_examen": "E160",
+      "seccion": "PERFILES",
+      "examen": "TP-TPT (Coordinar hora de recolección)",
+      "precio": 20000,
+      "tiempo_reporte": "1 día",
+      "muestra": "a. 500 ul Sangre / b. 500 ul Plasma",
+      "recipiente": "a. Tubo celeste (Citrato)"
+    },
+    {
+      "id_examen": "E161",
+      "seccion": "PERFILES",
+      "examen": "Diagnóstico Primario 1 (Hemograma, ALT, Creatinina y Citoquímico o Coprológico o Raspado de piel)",
+      "precio": 35000,
+      "tiempo_reporte": "1 día",
+      "muestra": "Sangre total + Orina / Materia fecal / Escamas de piel",
+      "recipiente": "Tubo lila + Tubo roja + Frasco estéril"
+    },
+    {
+      "id_examen": "E162",
+      "seccion": "PERFILES",
+      "examen": "Diagnóstico Primario 2 (Hemograma, ALT, Creatinina y 2 exámenes (Coprológico + Raspado o Coprológico + Citoquímico o Raspado + Citoquímico))",
+      "precio": 43000,
+      "tiempo_reporte": "1 día",
+      "muestra": "Sangre total + 2 muestras biológicas",
+      "recipiente": "Tubo lila + Tubo roja + Recipientes correspondientes"
+    },
+    {
+      "id_examen": "E163",
+      "seccion": "PERFILES",
+      "examen": "Diagnóstico Primario 3 (Hemograma + ALT + FA + Creatinina + Urea + BUN)",
+      "precio": 39000,
+      "tiempo_reporte": "1 día",
+      "muestra": "500 ul Sangre EDTA + 1 ml Sangre total",
+      "recipiente": "Tubo lila (EDTA) + Tubo tapa roja o amarilla"
+    },
+    {
+      "id_examen": "E164",
+      "seccion": "PERFILES",
+      "examen": "Perfil Convulsivo (Hemograma, ALT, Albúmina, AST, Bil. T+D, BUN/Urea, Creatinina, FA, GGT, P. Diferenciadas, Glucosa)",
+      "precio": 98000,
+      "tiempo_reporte": "1 día",
+      "muestra": "a. 500 ul Sangre EDTA + 1 ml Sangre + 500 ul Sangre / b. 500 ul EDTA + 800 ul Suero",
+      "recipiente": "a. Tubo lila + Tubo roja + Tubo gris / b. Tubo lila + Vial"
+    },
+    {
+      "id_examen": "E165",
+      "seccion": "PERFILES",
+      "examen": "Perfil Dermatológico 1 (Raspado de piel + Luz de wood + Cultivo bacteriológico + Cultivo micológico)",
+      "precio": 78000,
+      "tiempo_reporte": "2-6 días",
+      "muestra": "Pelos, escamas de piel e hisopado de piel",
+      "recipiente": "Frasco estéril + Hisopado en medio de transporte"
+    },
+    {
+      "id_examen": "E166",
+      "seccion": "PERFILES",
+      "examen": "Perfil Dermatológico 2 (Hemograma, Raspado, Cultivo bact/micol, T4 Libre, Colesterol total)",
+      "precio": 95000,
+      "tiempo_reporte": "2-6 días",
+      "muestra": "500 ul Sangre EDTA + 500 ul Sangre + Pelos/Escamas/Hisopado",
+      "recipiente": "Tubo lila + Tubo roja + Frasco estéril + Medio de transporte"
+    },
+    {
+      "id_examen": "E167",
+      "seccion": "PERFILES",
+      "examen": "Perfil Diabético 1 (Glucosa en sangre + Glucosa en orina cuantitativa)",
+      "precio": 17000,
+      "tiempo_reporte": "1 día",
+      "muestra": "500 ul Sangre + 3 ml Orina",
+      "recipiente": "Tubo gris + Frasco estéril"
+    },
+    {
+      "id_examen": "E168",
+      "seccion": "PERFILES",
+      "examen": "Perfil Diabético 2 (Glucosa en sangre + Glucosa en orina cuantitativa + Citoquímico de orina)",
+      "precio": 27000,
+      "tiempo_reporte": "1 día",
+      "muestra": "500 ul Sangre + 3 ml Orina",
+      "recipiente": "Tubo gris + Frasco estéril"
+    },
+    {
+      "id_examen": "E169",
+      "seccion": "PERFILES",
+      "examen": "Perfil Diabético 3 (Citoquímico de orina, Glucosa en sangre, Hemoglobina glicada HBA1C)",
+      "precio": 55000,
+      "tiempo_reporte": "1 día",
+      "muestra": "500 ul Sangre EDTA + 500 ul Sangre + 3 ml Orina",
+      "recipiente": "Tubo lila + Tubo gris + Frasco estéril"
+    },
+    {
+      "id_examen": "E170",
+      "seccion": "PERFILES",
+      "examen": "Perfil Diabético 4 (Citoquímico de orina, Glucosa en sangre, Fructosamina, Hemoglobina glicada HBA1C)",
+      "precio": 90000,
+      "tiempo_reporte": "1 día",
+      "muestra": "500 ul Sangre EDTA + 1 ml Sangre + 3 ml Orina",
+      "recipiente": "Tubo lila + Tubo roja/amarilla + Frasco estéril"
+    },
+    {
+      "id_examen": "E171",
+      "seccion": "PERFILES",
+      "examen": "Perfil Diabético 5 (Citoquímico de orina, Fructosamina, Insulina)",
+      "precio": 90000,
+      "tiempo_reporte": "1 día",
+      "muestra": "1 ml Sangre + 3 ml Orina",
+      "recipiente": "Tubo roja/amarilla + Frasco estéril"
+    },
+    {
+      "id_examen": "E172",
+      "seccion": "PERFILES",
+      "examen": "Perfil Diabético 6 (Citoquímico, Glucosa en orina cuantitativa, Glucosa en sangre, Fructosamina, HBA1C)",
+      "precio": 99000,
+      "tiempo_reporte": "1 día",
+      "muestra": "500 ul Sangre EDTA + 1 ml Sangre + 3 ml Orina",
+      "recipiente": "Tubo lila + Tubo gris + Frasco estéril"
+    },
+    {
+      "id_examen": "E173",
+      "seccion": "PERFILES",
+      "examen": "Perfil Gastrointestinal 1 (Coprológico + Parvovirus)",
+      "precio": 48000,
+      "tiempo_reporte": "1 día",
+      "muestra": "Materia fecal",
+      "recipiente": "Frasco tapa rosca estéril"
+    },
+    {
+      "id_examen": "E174",
+      "seccion": "PERFILES",
+      "examen": "Perfil Gastrointestinal 2 (Coprológico + Parvovirus + Coronavirus canino)",
+      "precio": 55000,
+      "tiempo_reporte": "1 día",
+      "muestra": "Materia fecal",
+      "recipiente": "Frasco tapa rosca estéril"
+    },
+    {
+      "id_examen": "E175",
+      "seccion": "PERFILES",
+      "examen": "Perfil Gastrointestinal 3 (Coprograma + Parvovirus + Coronavirus canino)",
+      "precio": 65000,
+      "tiempo_reporte": "1 día",
+      "muestra": "Materia fecal",
+      "recipiente": "Frasco tapa rosca estéril"
+    },
+    {
+      "id_examen": "E176",
+      "seccion": "PERFILES",
+      "examen": "Perfil Gastrointestinal 4 (Hemograma + Coprograma + Parvovirus + Coronavirus canino)",
+      "precio": 70000,
+      "tiempo_reporte": "1 día",
+      "muestra": "300 ul Sangre total + Materia fecal",
+      "recipiente": "Tubo lila + Frasco estéril"
+    },
+    {
+      "id_examen": "E177",
+      "seccion": "PERFILES",
+      "examen": "Perfil Gastrointestinal 5 (Análisis diarrea persistente: Hemograma, Coprograma, Ziehl-Neelsen, Coprocultivo, Parvo, Corona)",
+      "precio": 100000,
+      "tiempo_reporte": "2-5 días",
+      "muestra": "300 ul Sangre total + Materia fecal",
+      "recipiente": "Tubo lila + Frasco estéril"
+    },
+    {
+      "id_examen": "E178",
+      "seccion": "PERFILES",
+      "examen": "Ionograma 1 (Sodio, Cloro, Potasio)",
+      "precio": 50000,
+      "tiempo_reporte": "1 día",
+      "muestra": "500 ul Sangre total",
+      "recipiente": "Tubo tapa amarilla (activador de coágulo)"
+    },
+    {
+      "id_examen": "E179",
+      "seccion": "PERFILES",
+      "examen": "Ionograma 2 (Sodio, Cloro, Potasio, Calcio ionizado, pH)",
+      "precio": 63000,
+      "tiempo_reporte": "1 día",
+      "muestra": "500 ul Sangre total",
+      "recipiente": "Tubo tapa verde (Heparina de litio)"
+    },
+    {
+      "id_examen": "E180",
+      "seccion": "PERFILES",
+      "examen": "Ionograma 3 (Sodio, Cloro, Potasio, pH, Calcio ionizado, Calcio sérico, Lactato, Creatinina)",
+      "precio": 68000,
+      "tiempo_reporte": "1 día",
+      "muestra": "500 ul Sangre total",
+      "recipiente": "Tubo tapa verde (Heparina de litio)"
+    },
+    {
+      "id_examen": "E181",
+      "seccion": "PERFILES",
+      "examen": "Ionograma 4 (Sodio, Cloro, Potasio, Fósforo, pH, Calcio sérico, Calcio ionizado, Lactato, Hematocrito, Hemoglobina, Creatinina)",
+      "precio": 75000,
+      "tiempo_reporte": "1 día",
+      "muestra": "500 ul Sangre + 500 ul Sangre",
+      "recipiente": "Tubo tapa verde + Tubo tapa amarilla"
+    },
+    {
+      "id_examen": "E182",
+      "seccion": "PERFILES",
+      "examen": "Perfil Geriátrico 1 (Hemograma, ALT, AST, FA, Colesterol, Creatinina, Glucosa, Urea, BUN, T4L, Citoquímico)",
+      "precio": 90000,
+      "tiempo_reporte": "1 día",
+      "muestra": "500 ul Sangre EDTA + 1 ml Sangre + 500 ul Sangre + 3 ml Orina",
+      "recipiente": "Tubo lila + Tubo roja + Tubo gris + Frasco estéril"
+    },
+    {
+      "id_examen": "E183",
+      "seccion": "PERFILES",
+      "examen": "Perfil Geriátrico 2 (Hemograma, ALT, AST, FA, Colesterol, Creatinina, Glucosa, Urea, BUN, T4L, T4T específica, Citoquímico)",
+      "precio": 110000,
+      "tiempo_reporte": "1 día",
+      "muestra": "500 ul Sangre EDTA + 1 ml Sangre + 500 ul Sangre + 3 ml Orina",
+      "recipiente": "Tubo lila + Tubo roja + Tubo gris + Frasco estéril"
+    },
+    {
+      "id_examen": "E184",
+      "seccion": "PERFILES",
+      "examen": "Perfil Hepático 1 (ALT + AST + FA + BIL T + BIL D + GGT)",
+      "precio": 38000,
+      "tiempo_reporte": "1 día",
+      "muestra": "a. 1 ml Sangre / b. 700 ul Suero",
+      "recipiente": "a. Tubo tapa roja / b. Vial (Proteger de luz)"
+    },
+    {
+      "id_examen": "E185",
+      "seccion": "PERFILES",
+      "examen": "Perfil Hepático 3 (ALT + AST + FA + BIL T + BIL D + Proteínas diferenciadas + GGT)",
+      "precio": 50000,
+      "tiempo_reporte": "1 día",
+      "muestra": "a. 1 ml Sangre / b. 700 ul Suero",
+      "recipiente": "a. Tubo tapa roja / b. Vial (Proteger de luz)"
+    },
+    {
+      "id_examen": "E186",
+      "seccion": "PERFILES",
+      "examen": "Perfil Hepático 4 (ALT + AST + FA + BIL T + BIL D + P. diferenciadas + GGT + Bun + Urea)",
+      "precio": 60000,
+      "tiempo_reporte": "1 día",
+      "muestra": "a. 1 ml Sangre / b. 700 ul Suero",
+      "recipiente": "a. Tubo tapa roja / b. Vial (Proteger de luz)"
+    },
+    {
+      "id_examen": "E187",
+      "seccion": "PERFILES",
+      "examen": "Perfil Lipídico (Colesterol total, Triglicéridos, HDL, LDL, VLDL)",
+      "precio": 36000,
+      "tiempo_reporte": "1 día",
+      "muestra": "1 ml Sangre total",
+      "recipiente": "Tubo tapa roja o amarilla"
+    },
+    {
+      "id_examen": "E188",
+      "seccion": "PERFILES",
+      "examen": "Perfil Pancreático 1 (Lipasa pancreática específica + Grasa neutra / ácidos grasos en heces)",
+      "precio": 75000,
+      "tiempo_reporte": "1 día",
+      "muestra": "1 ml Sangre + Materia fecal",
+      "recipiente": "Tubo roja o amarilla + Frasco estéril"
+    },
+    {
+      "id_examen": "E189",
+      "seccion": "PERFILES",
+      "examen": "Perfil Pancreático 2 (Amilasa + Glucosa + Lipasa pancreática específica)",
+      "precio": 85000,
+      "tiempo_reporte": "1 día",
+      "muestra": "1 ml Sangre + 500 ul Sangre",
+      "recipiente": "Tubo roja o amarilla + Tubo gris"
+    },
+    {
+      "id_examen": "E190",
+      "seccion": "PERFILES",
+      "examen": "Perfil Pancreático 3 (Amilasa + Glucosa + Lipasa espec. + Grasa neutra / ácidos grasos en heces)",
+      "precio": 100000,
+      "tiempo_reporte": "1 día",
+      "muestra": "1 ml Sangre + 500 ul Sangre + Materia fecal",
+      "recipiente": "Tubo roja + Tubo gris + Frasco estéril"
+    },
+    {
+      "id_examen": "E191",
+      "seccion": "PERFILES",
+      "examen": "Perfil Renal 1 (Hemograma + BUN + Urea + Creatinina)",
+      "precio": 28000,
+      "tiempo_reporte": "1 día",
+      "muestra": "500 ul Sangre EDTA + 1 ml Sangre total",
+      "recipiente": "Tubo lila (EDTA) + Tubo tapa roja o amarilla"
+    },
+    {
+      "id_examen": "E192",
+      "seccion": "PERFILES",
+      "examen": "Perfil Renal 2 (Hemograma + BUN + Urea + Creatinina + Fósforo)",
+      "precio": 45000,
+      "tiempo_reporte": "1 día",
+      "muestra": "500 ul Sangre EDTA + 1 ml Sangre + 500 ul Sangre",
+      "recipiente": "Tubo lila + Tubo roja + Recipientes"
+    },
+    {
+      "id_examen": "E193",
+      "seccion": "PERFILES",
+      "examen": "Perfil Renal 3 (Hemograma + BUN + Urea + Creatinina + Fósforo + Citoquímico UPC Semicuantitativa)",
+      "precio": 50000,
+      "tiempo_reporte": "1 día",
+      "muestra": "500 ul Sangre EDTA + 1 ml Sangre + 3 ml Orina",
+      "recipiente": "Tubo lila + Tubo roja + Frasco estéril"
+    },
+    {
+      "id_examen": "E194",
+      "seccion": "PERFILES",
+      "examen": "Perfil Renal 4 (Hemograma + Creatinina + SDMA)",
+      "precio": 160000,
+      "tiempo_reporte": "1 día",
+      "muestra": "500 ul Sangre EDTA + 1 ml Sangre total",
+      "recipiente": "Tubo lila (EDTA) + Tubo tapa roja o amarilla"
+    },
+    {
+      "id_examen": "E195",
+      "seccion": "PERFILES",
+      "examen": "Perfil Renal 5 (Hemograma + Creatinina + SDMA + Urea + BUN + Citoquímico UPC Semicuantitativa)",
+      "precio": 165000,
+      "tiempo_reporte": "1 día",
+      "muestra": "500 ul Sangre EDTA + 1 ml Sangre + 3 ml Orina",
+      "recipiente": "Tubo lila + Tubo roja + Frasco estéril"
+    },
+    {
+      "id_examen": "E196",
+      "seccion": "PERFILES",
+      "examen": "Perfil Renal 6 (Citoquímico + BUN + Urea + Creatinina)",
+      "precio": 25000,
+      "tiempo_reporte": "1 día",
+      "muestra": "500 ul Sangre total + 3 ml Orina",
+      "recipiente": "Tubo roja o amarilla + Frasco estéril"
+    },
+    {
+      "id_examen": "E197",
+      "seccion": "PERFILES",
+      "examen": "Perfil Renal 7 (Citoquímico de orina + Índice UPC Cuantitativa)",
+      "precio": 27000,
+      "tiempo_reporte": "1 día",
+      "muestra": "3 ml Orina",
+      "recipiente": "Frasco estéril o jeringa"
+    },
+    {
+      "id_examen": "E198",
+      "seccion": "PERFILES",
+      "examen": "Perfil Renal 8 (Citoquímico de orina + BUN + Urea + Creatinina + Fósforo + Índice UPC Cuantitativa)",
+      "precio": 60000,
+      "tiempo_reporte": "1 día",
+      "muestra": "1 ml Sangre + 3 ml Orina",
+      "recipiente": "Tubo roja o amarilla + Frasco estéril"
+    },
+    {
+      "id_examen": "E199",
+      "seccion": "PERFILES",
+      "examen": "Perfil Tiroideo 1 (T4L + Colesterol)",
+      "precio": 28000,
+      "tiempo_reporte": "1-2 días",
+      "muestra": "500 ul Sangre total",
+      "recipiente": "Tubo tapa roja o amarilla"
+    },
+    {
+      "id_examen": "E200",
+      "seccion": "PERFILES",
+      "examen": "Perfil Tiroideo 2 (T4L + Colesterol + Triglicéridos)",
+      "precio": 35000,
+      "tiempo_reporte": "1-2 días",
+      "muestra": "500 ul Sangre total",
+      "recipiente": "Tubo tapa roja o amarilla"
+    },
+    {
+      "id_examen": "E201",
+      "seccion": "PERFILES",
+      "examen": "Perfil Tiroideo 3 (T4L + T4T no específica + Colesterol + Triglicéridos)",
+      "precio": 56000,
+      "tiempo_reporte": "1-2 días",
+      "muestra": "500 ul Sangre total",
+      "recipiente": "Tubo tapa roja o amarilla"
+    },
+    {
+      "id_examen": "E202",
+      "seccion": "PERFILES",
+      "examen": "Perfil Tiroideo 4 (T4L + T4T no específica + TSH no específica)",
+      "precio": 67000,
+      "tiempo_reporte": "1-2 días",
+      "muestra": "500 ul Sangre total",
+      "recipiente": "Tubo tapa roja o amarilla"
+    },
+    {
+      "id_examen": "E203",
+      "seccion": "PERFILES",
+      "examen": "Perfil Tiroideo 5 (T4L + T4T no específica + TSH no específica + Colesterol + Triglicéridos)",
+      "precio": 84000,
+      "tiempo_reporte": "1-2 días",
+      "muestra": "500 ul Sangre total",
+      "recipiente": "Tubo tapa roja o amarilla"
+    },
+    {
+      "id_examen": "E204",
+      "seccion": "PERFILES",
+      "examen": "Perfil Tiroideo 6 (T4L + T4T específica + TSH específica canina)",
+      "precio": 124000,
+      "tiempo_reporte": "1-2 días",
+      "muestra": "1.5 ml Sangre total",
+      "recipiente": "Tubo tapa roja o amarilla"
+    },
+    {
+      "id_examen": "E205",
+      "seccion": "PERFILES",
+      "examen": "Perfil Tiroideo 7 (T4L + T4T específica + TSH específica + Colesterol + Triglicéridos)",
+      "precio": 130000,
+      "tiempo_reporte": "1-2 días",
+      "muestra": "1.5 ml Sangre total",
+      "recipiente": "Tubo tapa roja o amarilla"
     }
   ],
   "Pacientes": [

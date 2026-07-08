@@ -51,6 +51,17 @@ const upload = multer({
   limits: { fileSize: 20 * 1024 * 1024 } // Límite de 20MB
 });
 
+// Middleware para prevenir el almacenamiento en caché de los archivos HTML (para manejo de navegación atrás/adelante)
+app.use((req, res, next) => {
+  const ext = path.extname(req.path);
+  if (ext === '.html' || req.path === '/' || req.path.endsWith('/')) {
+    res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate, max-age=0');
+    res.setHeader('Pragma', 'no-cache');
+    res.setHeader('Expires', '0');
+  }
+  next();
+});
+
 // Servir archivos estáticos del frontend
 app.use(express.static(path.join(__dirname, '../public')));
 

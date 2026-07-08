@@ -16,12 +16,39 @@ const SirioAuth = {
     }
     return '';
   })(),
-  // Clave para localStorage
+  // Clave para localStorage/Cookies de sesión
   STORAGE_KEY: 'sirio_session_user',
+
+  // Helpers de cookies
+  setCookie(name, value, days) {
+    let expires = "";
+    if (days) {
+      const date = new Date();
+      date.setTime(date.getTime() + (days * 24 * 60 * 60 * 1000));
+      expires = "; expires=" + date.toUTCString();
+    }
+    document.cookie = name + "=" + encodeURIComponent(value) + expires + "; path=/; SameSite=Lax";
+  },
+
+  getCookie(name) {
+    const nameEQ = name + "=";
+    const ca = document.cookie.split(';');
+    for(let i = 0; i < ca.length; i++) {
+      let c = ca[i].trim();
+      if (c.indexOf(nameEQ) === 0) {
+        return decodeURIComponent(c.substring(nameEQ.length));
+      }
+    }
+    return null;
+  },
+
+  eraseCookie(name) {
+    document.cookie = name + "=; Max-Age=-99999999; path=/; SameSite=Lax";
+  },
   
   // Obtener usuario actualmente logueado
   getCurrentUser() {
-    const userJson = localStorage.getItem(this.STORAGE_KEY) || sessionStorage.getItem(this.STORAGE_KEY);
+    const userJson = this.getCookie(this.STORAGE_KEY);
     if (!userJson) return null;
     try {
       return JSON.parse(userJson);
@@ -46,8 +73,8 @@ const SirioAuth = {
 
       if (result.success) {
         const userData = result.user;
-        const storage = rememberMe ? localStorage : sessionStorage;
-        storage.setItem(this.STORAGE_KEY, JSON.stringify(userData));
+        const days = rememberMe ? 7 : null;
+        this.setCookie(this.STORAGE_KEY, JSON.stringify(userData), days);
         return { success: true, user: userData };
       } else {
         return { success: false, message: result.message || 'Error de inicio de sesion.' };
@@ -60,6 +87,7 @@ const SirioAuth = {
 
   // Cerrar sesión
   logout() {
+    this.eraseCookie(this.STORAGE_KEY);
     localStorage.removeItem(this.STORAGE_KEY);
     sessionStorage.removeItem(this.STORAGE_KEY);
     window.location.href = '/index.html';
@@ -67,18 +95,35 @@ const SirioAuth = {
 
   // Verificar la sesión en una página específica y redirigir si es incorrecta
   checkSession(requiredRole) {
+    const isLoginPage = window.location.pathname.endsWith('index.html') || window.location.pathname === '/';
+    
+    // Si estamos en la página de login
+    if (isLoginPage) {
+      // Si el usuario navegó hacia atrás/adelante para llegar aquí,
+      // borramos la sesión y no permitimos la redirección automática
+      const navigationEntry = performance.getEntriesByType("navigation")[0];
+      const isBackForward = navigationEntry && navigationEntry.type === "back_forward";
+      
+      if (isBackForward) {
+        this.eraseCookie(this.STORAGE_KEY);
+        localStorage.removeItem(this.STORAGE_KEY);
+        sessionStorage.removeItem(this.STORAGE_KEY);
+        return null;
+      }
+    }
+
     const user = this.getCurrentUser();
     
     // Si no hay sesión, al index (login)
     if (!user) {
-      if (!window.location.pathname.endsWith('index.html') && window.location.pathname !== '/') {
+      if (!isLoginPage) {
         window.location.href = '/index.html';
       }
       return null;
     }
 
     // Si hay sesión y está en el login, redirigir a su dashboard correspondiente
-    if (window.location.pathname.endsWith('index.html') || window.location.pathname === '/') {
+    if (isLoginPage) {
       if (user.rol === 'admin') {
         window.location.href = '/admin.html';
       } else if (user.rol === 'cliente') {
@@ -214,6 +259,72 @@ document.addEventListener('DOMContentLoaded', () => {
   if (_sessionUser && _sessionUser.rol === 'admin') {
     SirioAuth.initStatusBadge();
   }
+
+  // Inicializar barras de navegación deslizantes con flechas de ayuda
+  const initNavScrolls = () => {
+    const wrappers = document.querySelectorAll('.nav-scroll-wrapper');
+    wrappers.forEach(wrapper => {
+      const nav = wrapper.querySelector('.admin-nav');
+      const arrowLeft = wrapper.querySelector('.scroll-arrow.left');
+      const arrowRight = wrapper.querySelector('.scroll-arrow.right');
+      if (!nav || !arrowLeft || !arrowRight) return;
+
+      const updateArrows = () => {
+        const scrollLeft = nav.scrollLeft;
+        const scrollWidth = nav.scrollWidth;
+        const clientWidth = nav.clientWidth;
+        
+        const hasOverflow = scrollWidth > clientWidth;
+        const isAtLeft = scrollLeft <= 5;
+        const isAtRight = scrollLeft + clientWidth >= scrollWidth - 5;
+
+        if (hasOverflow) {
+          if (isAtLeft) {
+            arrowLeft.classList.remove('visible');
+            wrapper.classList.remove('overflow-left');
+          } else {
+            arrowLeft.classList.add('visible');
+            wrapper.classList.add('overflow-left');
+          }
+
+          if (isAtRight) {
+            arrowRight.classList.remove('visible');
+            wrapper.classList.remove('overflow-right');
+          } else {
+            arrowRight.classList.add('visible');
+            wrapper.classList.add('overflow-right');
+          }
+        } else {
+          arrowLeft.classList.remove('visible');
+          arrowRight.classList.remove('visible');
+          wrapper.classList.remove('overflow-left');
+          wrapper.classList.remove('overflow-right');
+        }
+      };
+
+      // Controladores de scroll para los botones
+      arrowLeft.addEventListener('click', () => {
+        nav.scrollBy({ left: -200, behavior: 'smooth' });
+      });
+
+      arrowRight.addEventListener('click', () => {
+        nav.scrollBy({ left: 200, behavior: 'smooth' });
+      });
+
+      // Monitorear eventos de scroll y redimensionamiento
+      nav.addEventListener('scroll', updateArrows);
+      window.addEventListener('resize', updateArrows);
+      
+      // Una pequeña pausa para asegurar que el DOM y estilos estén renderizados
+      setTimeout(updateArrows, 100);
+      
+      // Observar cambios en el contenido (por ejemplo, si cambian pestañas activas)
+      const observer = new MutationObserver(updateArrows);
+      observer.observe(nav, { childList: true, subtree: true });
+    });
+  };
+
+  initNavScrolls();
 });
 
 function updateThemeIcon(btn) {
@@ -227,3 +338,10 @@ function updateThemeIcon(btn) {
     btn.title = "Cambiar a Modo Claro";
   }
 }
+
+// Manejar la carga de páginas desde la caché del historial (bfcache) para forzar verificación de sesión
+window.addEventListener('pageshow', (event) => {
+  if (event.persisted) {
+    window.location.reload();
+  }
+});
