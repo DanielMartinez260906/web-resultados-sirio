@@ -7,9 +7,12 @@ document.addEventListener('DOMContentLoaded', () => {
   let currentUser = SirioAuth.checkSession('cliente');
   if (!currentUser) return;
 
-  // Mostrar nombre del cliente y DNI en la cabecera
+  // Mostrar nombre del cliente en la cabecera
   document.getElementById('client-name').innerText = currentUser.nombre;
-  document.getElementById('client-id-text').innerText = currentUser.identificacion;
+  const clientIdText = document.getElementById('client-id-text');
+  if (clientIdText) {
+    clientIdText.innerText = currentUser.identificacion;
+  }
   
   // Botón de cerrar sesión
   document.getElementById('logout-btn').addEventListener('click', () => SirioAuth.logout());
