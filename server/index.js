@@ -712,6 +712,17 @@ app.get('/api/client/download', async (req, res) => {
 // ENDPOINTS DE CONFIGURACIÓN Y GEMINI IA
 // ============================================================
 
+// API: Obtener el tema estacional activo (Público para Clientes y Admins)
+app.get('/api/client/theme', async (req, res) => {
+  try {
+    const configRes = await db.getConfig();
+    const config = configRes.config || {};
+    res.json({ success: true, theme: config.seasonal_theme || 'default' });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
 // API: Obtener configuraciones del sistema (Solo Admins)
 app.get('/api/admin/config', async (req, res) => {
   try {

@@ -251,6 +251,9 @@ document.addEventListener('DOMContentLoaded', () => {
       const isLight = document.body.classList.contains('light-theme');
       localStorage.setItem('sirio_theme', isLight ? 'light' : 'dark');
       updateThemeIcon(themeToggle);
+      if (window.SirioNetworkBg) {
+        window.SirioNetworkBg.restart();
+      }
     });
   }
 

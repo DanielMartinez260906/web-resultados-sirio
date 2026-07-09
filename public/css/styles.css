@@ -311,23 +311,84 @@ select::-ms-expand {
   padding: var(--space-md);
 }
 
+/* Base de la tarjeta en móvil: transparente, sin bordes ni sombras */
 .login-card {
   width: 100%;
   max-width: 440px;
-  background: var(--bg-card);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  border: 1px solid var(--border-light);
-  border-radius: var(--border-radius);
-  padding: var(--space-xl) var(--space-lg);
-  box-shadow: var(--shadow-premium);
+  background: transparent;
+  border: none;
+  border-radius: 0;
+  padding: 0;
+  box-shadow: none;
   display: flex;
   flex-direction: column;
   animation: floatIn 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  position: relative;
+  overflow: hidden;
 }
 
+/* Decoraciones de Laboratorio en Login Card */
+.lab-decor {
+  position: absolute;
+  opacity: 0.15;
+  font-size: 3.8rem;
+  color: var(--color-primary);
+  pointer-events: none;
+  transition: var(--transition-smooth);
+  z-index: 1;
+}
+
+.decoration-top-right {
+  top: -5px;
+  right: -5px;
+  transform: rotate(15deg);
+}
+
+.decoration-bottom-left {
+  bottom: -10px;
+  left: -10px;
+  transform: rotate(-15deg);
+}
+
+.login-card:hover .lab-decor {
+  opacity: 0.35;
+  color: #38bdf8;
+}
+
+.login-card:hover .decoration-top-right {
+  transform: rotate(25deg) scale(1.22);
+}
+
+.login-card:hover .decoration-bottom-left {
+  transform: rotate(-25deg) scale(1.22);
+}
+
+/* Tabletas y Computadoras: convertimos a formato TARJETA PREMIUM */
 @media (min-width: 480px) {
-  .login-card { padding: var(--space-2xl) 2.5rem; }
+  .login-card {
+    background: var(--bg-card);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 2px solid var(--color-primary);
+    border-radius: var(--border-radius);
+    padding: var(--space-2xl) 2.5rem;
+    box-shadow: var(--shadow-premium);
+    transition: var(--transition-smooth);
+  }
+
+  .login-card:hover {
+    transform: translateY(-5px);
+    border-color: #ffffff;
+    box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.6), 
+                0 0 25px rgba(14, 165, 233, 0.35), 
+                0 0 10px rgba(14, 165, 233, 0.15);
+  }
+
+  body.light-theme .login-card:hover {
+    box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.08), 
+                0 0 25px rgba(14, 165, 233, 0.25), 
+                0 0 10px rgba(14, 165, 233, 0.1);
+  }
 }
 
 .brand-header {
@@ -419,13 +480,13 @@ select::-ms-expand {
 
 /* Logo scales with viewport */
 .header-user-info img {
-  height: 48px;
+  height: 58px;
   width: auto;
   flex-shrink: 0;
 }
 
-@media (min-width: 480px) { .header-user-info img { height: 65px; } }
-@media (min-width: 768px) { .header-user-info img { height: 85px; } .main-header { margin-bottom: var(--space-xl); } }
+@media (min-width: 480px) { .header-user-info img { height: 76px; } }
+@media (min-width: 768px) { .header-user-info img { height: 98px; } .main-header { margin-bottom: var(--space-xl); } }
 
 .header-divider {
   border-left: 1px solid var(--border-light);

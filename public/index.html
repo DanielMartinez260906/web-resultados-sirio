@@ -19,10 +19,14 @@
   </div>
 
   <div class="login-wrapper">
-    <div class="login-card">
+    <div class="login-card" style="position: relative; overflow: hidden;">
+      <!-- Íconos Decorativos de Laboratorio -->
+      <div class="lab-decor decoration-top-right"><i class="fa-solid fa-flask-vial"></i></div>
+      <div class="lab-decor decoration-bottom-left"><i class="fa-solid fa-microscope"></i></div>
+
       <div class="brand-header">
         <img src="logo.png" alt="Laboratorio Sirio Logo"
-             style="max-width: 280px; width: 100%; height: auto; margin: 0 auto 0.75rem auto;">
+             style="max-width: 330px; width: 100%; height: auto; margin: 0 auto 0.75rem auto;">
         <p>Portal Web de Resultados y Análisis Clínicos</p>
       </div>
 
@@ -95,6 +99,7 @@
   </footer>
 
   <script src="js/auth.js"></script>
+  <script src="js/network-bg.js"></script>
   <script>
     document.addEventListener('DOMContentLoaded', () => {
       SirioAuth.checkSession();

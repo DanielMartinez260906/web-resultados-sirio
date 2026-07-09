@@ -7,6 +7,7 @@
   <title>Panel de Administración - Laboratorio SIRIO</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <link rel="stylesheet" href="css/styles.css">
+  <link rel="stylesheet" href="css/themes.css">
 </head>
 <body>
 
@@ -505,6 +506,35 @@
           </button>
         </form>
       </div>
+
+      <!-- Tarjeta de Decoración Estacional -->
+      <div class="panel-card centered-panel" style="margin-top: 1.5rem;">
+        <h3 class="panel-card-title" style="display: flex; align-items: center; gap: 10px;">
+          <i class="fa-solid fa-wand-magic-sparkles" style="color: var(--color-accent);"></i> Decoración de la Página
+        </h3>
+        <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 1.5rem; line-height: 1.45;">
+          Personalice el estilo visual del portal según la temporada del año. La decoración se aplicará de forma instantánea tanto a clientes como al personal administrativo.
+        </p>
+
+        <div class="theme-selector-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(110px, 1fr)); gap: 12px;">
+          <button type="button" class="theme-btn active" data-theme="default" style="display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; padding: 18px 10px; border-radius: 12px; cursor: pointer; transition: all 0.25s; min-height: 90px; text-align: center;">
+            <i class="fa-solid fa-circle-nodes" style="font-size: 1.6rem; color: var(--color-accent);"></i>
+            <span style="font-size: 0.8rem; font-weight: 600; margin-top: 4px;">Normal</span>
+          </button>
+          <button type="button" class="theme-btn" data-theme="christmas" style="display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; padding: 18px 10px; border-radius: 12px; cursor: pointer; transition: all 0.25s; min-height: 90px; text-align: center;">
+            <span style="font-size: 1.8rem; line-height: 1;">🎄</span>
+            <span style="font-size: 0.8rem; font-weight: 600; margin-top: 4px;">Navidad</span>
+          </button>
+          <button type="button" class="theme-btn" data-theme="halloween" style="display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; padding: 18px 10px; border-radius: 12px; cursor: pointer; transition: all 0.25s; min-height: 90px; text-align: center;">
+            <span style="font-size: 1.8rem; line-height: 1;">🎃</span>
+            <span style="font-size: 0.8rem; font-weight: 600; margin-top: 4px;">Halloween</span>
+          </button>
+          <button type="button" class="theme-btn" data-theme="valentine" style="display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; padding: 18px 10px; border-radius: 12px; cursor: pointer; transition: all 0.25s; min-height: 90px; text-align: center;">
+            <span style="font-size: 1.8rem; line-height: 1;">💖</span>
+            <span style="font-size: 0.8rem; font-weight: 600; margin-top: 4px;">San Valentín</span>
+          </button>
+        </div>
+      </div>
     </div>
 
     <!-- Pestaña: Zona de Peligro -->
@@ -866,5 +896,7 @@
 
   <script src="js/auth.js"></script>
   <script src="js/admin.js"></script>
+  <script src="js/themes.js"></script>
+  <script src="js/network-bg.js"></script>
 </body>
 </html>

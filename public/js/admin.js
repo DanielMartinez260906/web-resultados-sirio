@@ -1523,6 +1523,16 @@ document.addEventListener('DOMContentLoaded', () => {
         if (configGeminiKeyInput) {
           configGeminiKeyInput.value = data.config.gemini_api_key || '';
         }
+        
+        // Cargar el tema estacional activo
+        const activeTheme = data.config.seasonal_theme || 'default';
+        document.querySelectorAll('.theme-btn').forEach(btn => {
+          if (btn.getAttribute('data-theme') === activeTheme) {
+            btn.classList.add('active');
+          } else {
+            btn.classList.remove('active');
+          }
+        });
       } else {
         showGlobalAlert(data.message || 'Error al cargar la configuración de IA.', 'error');
       }
@@ -1531,6 +1541,43 @@ document.addEventListener('DOMContentLoaded', () => {
       showGlobalAlert('No se pudo conectar con el servidor para obtener la configuración.', 'error');
     }
   }
+
+  // Lógica de cambio de tema estacional con autosave inmediato
+  const themeButtons = document.querySelectorAll('.theme-btn');
+  themeButtons.forEach(btn => {
+    btn.addEventListener('click', async () => {
+      const selectedTheme = btn.getAttribute('data-theme');
+      
+      // Feedback visual de los botones de la interfaz
+      themeButtons.forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+
+      // Aplicar tema en el DOM local
+      if (typeof SirioThemes !== 'undefined') {
+        SirioThemes.applyTheme(selectedTheme);
+      }
+
+      // Guardar de forma persistente en la hoja de cálculo / base de datos
+      try {
+        const response = await fetch(`${SirioAuth.API_BASE}/api/admin/config`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ seasonal_theme: selectedTheme })
+        });
+        
+        const result = await response.json();
+        if (!result.success) {
+          console.error('[Temas] Error al guardar tema en servidor:', result.message);
+          showGlobalAlert('Error al guardar el tema en el servidor.', 'error');
+        }
+      } catch (err) {
+        console.error('[Temas] Fallo de red al guardar tema:', err);
+        showGlobalAlert('Fallo de red al intentar guardar el tema.', 'error');
+      }
+    });
+  });
 
   if (systemConfigForm) {
     systemConfigForm.addEventListener('submit', async (e) => {
