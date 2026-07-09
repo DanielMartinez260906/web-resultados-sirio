@@ -37,6 +37,13 @@
       "rol": "cliente",
       "fecha_hora": "3/7/2026, 5:25:23 a. m.",
       "estado": "Exitoso"
+    },
+    {
+      "id_log": "L00002",
+      "usuario": "admin",
+      "rol": "admin",
+      "fecha_hora": "8/7/2026, 5:09:18 p. m.",
+      "estado": "Exitoso"
     }
   ],
   "Configuracion": {

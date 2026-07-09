@@ -611,6 +611,26 @@
                 </button>
               </div>
             </div>
+
+            <!-- Notificaciones Push -->
+            <div class="profile-detail-item" style="background: rgba(255, 255, 255, 0.02); padding: 16px; border-radius: 8px; border: 1px solid var(--border-light); margin-top: 1rem;">
+              <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
+                <div style="flex: 1; min-width: 200px;">
+                  <span style="font-weight: 700; color: var(--text-main); font-size: 0.92rem; display: flex; align-items: center; gap: 8px; margin-bottom: 2px;">
+                    <i class="fa-solid fa-bell" style="color: var(--color-accent);"></i>
+                    Notificaciones en este Dispositivo
+                  </span>
+                  <span style="font-size: 0.76rem; color: var(--text-muted); display: block; line-height: 1.45;">
+                    Reciba una alerta en su celular o PC en el instante que publiquemos resultados de exámenes.
+                  </span>
+                </div>
+                <button type="button" id="push-toggle-btn" class="btn btn-secondary" style="font-size: 0.8rem; padding: 8px 16px; height: auto; border-radius: 20px; border: 1px solid rgba(255,255,255,0.15); display: flex; align-items: center; gap: 6px; cursor: pointer; transition: all 0.25s;">
+                  <i class="fa-solid fa-bell-slash"></i> Desactivadas
+                </button>
+              </div>
+              <div id="push-status-message" style="font-size: 0.72rem; margin-top: 8px; line-height: 1.4; display: none;"></div>
+            </div>
+
           </div>
         </div>
       </div>
@@ -786,5 +806,6 @@
 
   <script src="js/auth.js"></script>
   <script src="js/client.js"></script>
+  <script src="js/notifications.js"></script>
 </body>
 </html>

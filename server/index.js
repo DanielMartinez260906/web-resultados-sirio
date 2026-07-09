@@ -5,8 +5,32 @@ const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
 const axios = require('axios');
+const webpush = require('web-push');
 const db = require('./db');
 const { uploadPDF, deletePDF, extractPublicId } = require('./cloudinary');
+
+// Configurar Web Push (VAPID)
+let vapidKeys;
+if (process.env.VAPID_PUBLIC_KEY && process.env.VAPID_PRIVATE_KEY) {
+  vapidKeys = {
+    publicKey: process.env.VAPID_PUBLIC_KEY,
+    privateKey: process.env.VAPID_PRIVATE_KEY
+  };
+} else {
+  // Generar llaves al vuelo si no están en el .env
+  vapidKeys = webpush.generateVAPIDKeys();
+  console.log('\x1b[33m%s\x1b[0m', '⚠️  ADVERTENCIA: VAPID_PUBLIC_KEY y VAPID_PRIVATE_KEY no configuradas en el .env.');
+  console.log('\x1b[33m%s\x1b[0m', 'Se han generado llaves temporales para esta sesión de desarrollo:');
+  console.log('VAPID_PUBLIC_KEY=' + vapidKeys.publicKey);
+  console.log('VAPID_PRIVATE_KEY=' + vapidKeys.privateKey);
+  console.log('\x1b[33m%s\x1b[0m', 'Guárdalas en tu archivo .env para mantener las suscripciones de los clientes.');
+}
+
+webpush.setVapidDetails(
+  process.env.VAPID_EMAIL || 'mailto:contacto@laboratoriosirio.com',
+  vapidKeys.publicKey,
+  vapidKeys.privateKey
+);
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -192,7 +216,15 @@ app.post('/api/client/update-profile', async (req, res) => {
       // Si se desmarca como moroso, liberar resultados retenidos automáticamente
       if (moroso === false || moroso === 'false') {
         try {
-          await db.releaseRetainedResults(id_usuario);
+          const releaseResult = await db.releaseRetainedResults(id_usuario);
+          if (releaseResult.success && releaseResult.released > 0) {
+            notifyUser(id_usuario, {
+              title: 'Resultados Liberados 🔓',
+              body: `Tus resultados pendientes han sido liberados y ya están disponibles para consulta.`,
+              icon: '/logo.png',
+              data: { url: '/client.html' }
+            });
+          }
         } catch (err) {
           console.error("Error al liberar resultados retenidos:", err);
         }
@@ -205,6 +237,39 @@ app.post('/api/client/update-profile', async (req, res) => {
     res.status(500).json({ success: false, message: error.message });
   }
 });
+
+// Función para enviar notificaciones Push a un usuario
+async function notifyUser(id_usuario, payloadData) {
+  try {
+    const subsRes = await db.getSubscriptions(id_usuario);
+    if (!subsRes.success || !subsRes.subscriptions || subsRes.subscriptions.length === 0) {
+      console.log(`[Push] No hay suscripciones activas para el usuario: ${id_usuario}`);
+      return;
+    }
+
+    const payload = JSON.stringify(payloadData);
+
+    console.log(`[Push] Enviando notificación a ${subsRes.subscriptions.length} dispositivo(s) del usuario ${id_usuario}...`);
+    
+    const sendPromises = subsRes.subscriptions.map(async (sub) => {
+      try {
+        await webpush.sendNotification(sub, payload);
+      } catch (err) {
+        // Si la suscripción ha expirado o ya no es válida (código 410 o 404), la eliminamos
+        if (err.statusCode === 410 || err.statusCode === 404) {
+          console.warn(`[Push] Suscripción expirada. Eliminando: ${sub.endpoint}`);
+          await db.deleteSubscription(id_usuario, sub.endpoint).catch(e => {});
+        } else {
+          console.error('[Push] Error al enviar notificación a dispositivo:', err.message);
+        }
+      }
+    });
+
+    await Promise.all(sendPromises);
+  } catch (error) {
+    console.error('[Push] Error en proceso de notificación:', error);
+  }
+}
 
 // API: Subir Examen PDF a Cloudinary (Solo Admins)
 app.post('/api/admin/upload', upload.array('pdf', 20), async (req, res) => {
@@ -278,6 +343,20 @@ app.post('/api/admin/upload', upload.array('pdf', 20), async (req, res) => {
 
     if (result.success) {
       console.log(`☁️  ${uploadedFiles.length} PDF(s) subidos a Cloudinary correctamente.`);
+      
+      // Enviar notificación Push (sin bloquear la respuesta HTTP)
+      if (!clienteEsMoroso) {
+        const examNames = resultsData.map(r => r.nombre_examen).join(', ');
+        notifyUser(id_usuario, {
+          title: 'Nuevo Resultado Disponible 🧪',
+          body: req.files.length === 1 
+            ? `Se ha publicado el resultado de tu examen: ${resultsData[0].nombre_examen}`
+            : `Se han publicado ${req.files.length} nuevos resultados: ${examNames}`,
+          icon: '/logo.png',
+          data: { url: '/client.html' }
+        });
+      }
+
       const morosoNote = clienteEsMoroso ? ' (retenidos hasta que el cliente esté al día)' : '';
       res.status(200).json({
         success: true,
@@ -298,6 +377,49 @@ app.post('/api/admin/upload', upload.array('pdf', 20), async (req, res) => {
   } catch (error) {
     console.error('Error en subida de PDFs a Cloudinary:', error);
     res.status(500).json({ success: false, message: `Error al subir archivos: ${error.message}` });
+  }
+});
+
+// ============================================================
+// ENDPOINTS PARA NOTIFICACIONES PUSH (WEB PUSH)
+// ============================================================
+
+// API: Obtener clave pública VAPID
+app.get('/api/push/key', (req, res) => {
+  res.json({ publicKey: vapidKeys.publicKey });
+});
+
+// API: Suscribirse a notificaciones
+app.post('/api/push/subscribe', async (req, res) => {
+  const { id_usuario, subscription } = req.body;
+
+  if (!id_usuario || !subscription) {
+    return res.status(400).json({ success: false, message: 'El ID de usuario y el objeto de suscripción son obligatorios.' });
+  }
+
+  try {
+    const result = await db.saveSubscription(id_usuario, subscription);
+    res.json(result);
+  } catch (error) {
+    console.error('Error al guardar suscripción push:', error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
+// API: Desuscribirse de notificaciones
+app.post('/api/push/unsubscribe', async (req, res) => {
+  const { id_usuario, endpoint } = req.body;
+
+  if (!id_usuario || !endpoint) {
+    return res.status(400).json({ success: false, message: 'El ID de usuario y el endpoint son obligatorios.' });
+  }
+
+  try {
+    const result = await db.deleteSubscription(id_usuario, endpoint);
+    res.json(result);
+  } catch (error) {
+    console.error('Error al eliminar suscripción push:', error);
+    res.status(500).json({ success: false, message: error.message });
   }
 });
 

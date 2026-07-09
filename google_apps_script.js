@@ -87,6 +87,9 @@ function doPost(e) {
     else if (action === "addPortafolioExamen") { response = addPortafolioExamen(doc, data); }
     else if (action === "deletePortafolioExamen") { response = deletePortafolioExamen(doc, data); }
     else if (action === "releaseRetainedResults") { response = releaseRetainedResults(doc, data); }
+    else if (action === "saveSubscription") { response = saveSubscription(doc, data); }
+    else if (action === "deleteSubscription") { response = deleteSubscription(doc, data); }
+    else if (action === "getSubscriptions") { response = getSubscriptions(doc, data); }
     else { response.message = "Accion no reconocida: " + action; }
 
   } catch (error) {
@@ -180,7 +183,8 @@ function checkAndInitSheets(doc) {
     "Accesos":   ["id_log","usuario","rol","fecha_hora","estado"],
     "Configuracion": ["clave", "valor"],
     "Estado_Portafolio": ["clave", "valor"],
-    "Portafolio": ["id_examen", "seccion", "examen", "precio", "tiempo_reporte", "muestra", "recipiente"]
+    "Portafolio": ["id_examen", "seccion", "examen", "precio", "tiempo_reporte", "muestra", "recipiente"],
+    "Push_Subscriptions": ["id_usuario", "endpoint", "p256dh", "auth"]
   };
 
   for (var name in sheetsConfig) {
@@ -1220,4 +1224,104 @@ function deletePortafolioExamen(doc, data) {
   }
   return { success: false, message: "Examen no encontrado." };
 }
+
+// ============================================================
+// NOTIFICACIONES PUSH (GUARDAR SUSCRIPCIÓN)
+// ============================================================
+function saveSubscription(doc, data) {
+  var sheet = doc.getSheetByName("Push_Subscriptions");
+  if (!sheet) return { success: false, message: "La hoja Push_Subscriptions no existe." };
+  
+  var rows = sheet.getDataRange().getValues();
+  var headers = rows[0];
+  var colMap = buildColMap(headers);
+  
+  var idUser = data.id_usuario;
+  var sub = data.subscription;
+  var endpoint = sub.endpoint;
+  var p256dh = sub.keys.p256dh;
+  var auth = sub.keys.auth;
+  
+  // Buscar si ya existe la suscripción de este usuario para este endpoint
+  var foundIndex = -1;
+  for (var i = 1; i < rows.length; i++) {
+    if (rows[i][colMap["id_usuario"]].toString().trim() === idUser.toString().trim() &&
+        rows[i][colMap["endpoint"]].toString().trim() === endpoint.trim()) {
+      foundIndex = i;
+      break;
+    }
+  }
+  
+  if (foundIndex !== -1) {
+    // Actualizar claves si cambiaron
+    sheet.getRange(foundIndex + 1, colMap["p256dh"] + 1).setValue(p256dh);
+    sheet.getRange(foundIndex + 1, colMap["auth"] + 1).setValue(auth);
+  } else {
+    // Insertar nueva fila
+    var newRow = new Array(headers.length).fill("");
+    newRow[colMap["id_usuario"]] = idUser;
+    newRow[colMap["endpoint"]] = endpoint;
+    newRow[colMap["p256dh"]] = p256dh;
+    newRow[colMap["auth"]] = auth;
+    sheet.appendRow(newRow);
+  }
+  
+  return { success: true, message: "Suscripción registrada correctamente." };
+}
+
+// ============================================================
+// NOTIFICACIONES PUSH (ELIMINAR SUSCRIPCIÓN)
+// ============================================================
+function deleteSubscription(doc, data) {
+  var sheet = doc.getSheetByName("Push_Subscriptions");
+  if (!sheet) return { success: false, message: "La hoja Push_Subscriptions no existe." };
+  
+  var rows = sheet.getDataRange().getValues();
+  var headers = rows[0];
+  var colMap = buildColMap(headers);
+  
+  var idUser = data.id_usuario;
+  var endpoint = data.endpoint;
+  
+  var count = 0;
+  for (var i = rows.length - 1; i >= 1; i--) {
+    if (rows[i][colMap["id_usuario"]].toString().trim() === idUser.toString().trim() &&
+        rows[i][colMap["endpoint"]].toString().trim() === endpoint.trim()) {
+      sheet.deleteRow(i + 1);
+      count++;
+    }
+  }
+  
+  return { success: true, message: "Se eliminaron " + count + " suscripción(es)." };
+}
+
+// ============================================================
+// NOTIFICACIONES PUSH (OBTENER SUSCRIPCIONES DE UN CLIENTE)
+// ============================================================
+function getSubscriptions(doc, data) {
+  var sheet = doc.getSheetByName("Push_Subscriptions");
+  if (!sheet) return { success: true, subscriptions: [] }; // Si no existe la hoja aún, retornar vacío sin fallar
+  
+  var rows = sheet.getDataRange().getValues();
+  var headers = rows[0];
+  var colMap = buildColMap(headers);
+  
+  var idUser = data.id_usuario;
+  var list = [];
+  
+  for (var i = 1; i < rows.length; i++) {
+    if (rows[i][colMap["id_usuario"]].toString().trim() === idUser.toString().trim()) {
+      list.push({
+        endpoint: rows[i][colMap["endpoint"]].toString().trim(),
+        keys: {
+          p256dh: rows[i][colMap["p256dh"]].toString().trim(),
+          auth: rows[i][colMap["auth"]].toString().trim()
+        }
+      });
+    }
+  }
+  
+  return { success: true, subscriptions: list };
+}
+
 

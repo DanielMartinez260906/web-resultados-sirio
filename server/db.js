@@ -93,7 +93,8 @@ function createDefaultMockDB() {
       gemini_api_key: "CONFIGURAR_DESDE_PANEL_ADMIN"
     },
     Portafolio: defaultPortafolio,
-    Pacientes: []
+    Pacientes: [],
+    Suscripciones: []
   };
   fs.writeFileSync(MOCK_DB_PATH, JSON.stringify(defaultData, null, 2));
 }
@@ -589,6 +590,36 @@ function handleMockAction(action, data) {
       return { success: true, message: "Examen eliminado correctamente en modo Demo." };
     }
 
+    case 'saveSubscription': {
+      db.Suscripciones = db.Suscripciones || [];
+      const { id_usuario, subscription } = data;
+      // Una suscripción viene con endpoint y claves (auth, p256dh)
+      // Buscar si ya existe la suscripción de este usuario para este endpoint
+      const index = db.Suscripciones.findIndex(s => s.id_usuario === id_usuario && s.endpoint === subscription.endpoint);
+      if (index !== -1) {
+        db.Suscripciones[index] = { id_usuario, ...subscription };
+      } else {
+        db.Suscripciones.push({ id_usuario, ...subscription });
+      }
+      writeMockDB(db);
+      return { success: true, message: "Suscripción guardada localmente (Modo Demo)." };
+    }
+
+    case 'deleteSubscription': {
+      db.Suscripciones = db.Suscripciones || [];
+      const { id_usuario, endpoint } = data;
+      db.Suscripciones = db.Suscripciones.filter(s => !(s.id_usuario === id_usuario && s.endpoint === endpoint));
+      writeMockDB(db);
+      return { success: true, message: "Suscripción eliminada localmente (Modo Demo)." };
+    }
+
+    case 'getSubscriptions': {
+      db.Suscripciones = db.Suscripciones || [];
+      const idCliente = data.id_usuario;
+      const list = db.Suscripciones.filter(s => s.id_usuario === idCliente);
+      return { success: true, subscriptions: list };
+    }
+
     default:
       return { success: false, message: `Acción desconocida en MockDB: ${action}` };
   }
@@ -619,5 +650,8 @@ module.exports = {
   savePortafolioPrecios: (preciosData) => callSheetsAPI('savePortafolioPrecios', preciosData),
   addPortafolioExamen: (examenData) => callSheetsAPI('addPortafolioExamen', examenData),
   deletePortafolioExamen: (id_examen) => callSheetsAPI('deletePortafolioExamen', { id_examen }),
-  ingresarPaciente: (pacienteData) => callPacientesAPI('ingresarPaciente', pacienteData)
+  ingresarPaciente: (pacienteData) => callPacientesAPI('ingresarPaciente', pacienteData),
+  saveSubscription: (id_usuario, subscription) => callSheetsAPI('saveSubscription', { id_usuario, subscription }),
+  deleteSubscription: (id_usuario, endpoint) => callSheetsAPI('deleteSubscription', { id_usuario, endpoint }),
+  getSubscriptions: (id_usuario) => callSheetsAPI('getSubscriptions', { id_usuario })
 };
