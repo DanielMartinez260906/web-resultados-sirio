@@ -235,9 +235,17 @@ app.post('/api/admin/upload', upload.array('pdf', 20), async (req, res) => {
 
     // Subir cada PDF a Cloudinary en paralelo
     const uploadPromises = req.files.map(async (file) => {
+      // Corregir codificación incorrecta de caracteres especiales (ej: Ñ, tildes) en Multer
+      let originalNameCorrected = file.originalname;
+      try {
+        originalNameCorrected = Buffer.from(file.originalname, 'latin1').toString('utf8');
+      } catch (err) {
+        console.error('Error al decodificar originalname:', err);
+      }
+
       // Generar un public_id único y limpio
       const timestamp = Date.now();
-      const safeName = file.originalname
+      const safeName = originalNameCorrected
         .replace(/\.pdf$/i, '')
         .replace(/[^a-zA-Z0-9_\-]/g, '_')
         .substring(0, 60);
@@ -245,7 +253,7 @@ app.post('/api/admin/upload', upload.array('pdf', 20), async (req, res) => {
 
       const cloudResult = await uploadPDF(file.buffer, publicId);
       return {
-        originalname: file.originalname,
+        originalname: originalNameCorrected,
         cloudinary_url: cloudResult.secure_url,
         public_id: cloudResult.public_id
       };
