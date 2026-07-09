@@ -158,6 +158,8 @@ document.addEventListener('DOMContentLoaded', () => {
           }
         }
 
+        lastFilteredResults = allResults;
+        currentResultsPage = 1;
         renderResults(allResults);
       } else {
         showGlobalAlert(data.message || 'Error al obtener tus resultados.', 'error');
@@ -181,9 +183,16 @@ document.addEventListener('DOMContentLoaded', () => {
     return `/uploads/${nombreArchivo}`;
   }
 
-  // Renderizar exámenes como tarjetas
+  // Lógica de paginación de resultados
+  let currentResultsPage = 1;
+  const RESULTS_PAGE_SIZE = 10;
+  let lastFilteredResults = [];
+
+  // Renderizar exámenes como tarjetas con paginación
   function renderResults(results) {
     if (!resultsContainer) return;
+
+    const pagContainer = document.getElementById('results-pagination');
 
     if (results.length === 0) {
       resultsContainer.innerHTML = `
@@ -193,6 +202,7 @@ document.addEventListener('DOMContentLoaded', () => {
           <p>Aun no se han publicado resultados de examenes para tu cuenta. Te notificaremos cuando esten disponibles.</p>
         </div>
       `;
+      if (pagContainer) pagContainer.innerHTML = '';
       return;
     }
 
@@ -201,7 +211,16 @@ document.addEventListener('DOMContentLoaded', () => {
     // Asegurar que la clase del contenedor corresponda al modo seleccionado
     resultsContainer.className = currentViewMode === 'list' ? 'results-list' : 'results-grid';
 
-    results.forEach(res => {
+    // Calcular páginas totales
+    const totalPages = Math.ceil(results.length / RESULTS_PAGE_SIZE);
+    if (currentResultsPage > totalPages) currentResultsPage = totalPages;
+    if (currentResultsPage < 1) currentResultsPage = 1;
+
+    const startIndex = (currentResultsPage - 1) * RESULTS_PAGE_SIZE;
+    const endIndex = startIndex + RESULTS_PAGE_SIZE;
+    const paginatedItems = results.slice(startIndex, endIndex);
+
+    paginatedItems.forEach(res => {
       const card = document.createElement('div');
       card.className = 'result-card';
       
@@ -237,6 +256,93 @@ document.addEventListener('DOMContentLoaded', () => {
       
       resultsContainer.appendChild(card);
     });
+
+    // Dibujar controles de paginación
+    if (pagContainer) {
+      if (totalPages <= 1) {
+        pagContainer.innerHTML = '';
+        return;
+      }
+
+      let pagHTML = '';
+      
+      // Botón Anterior
+      pagHTML += `
+        <button class="btn btn-secondary" id="btn-prev-page" style="height: 38px; padding: 0 14px; font-size: 0.82rem; display: flex; align-items: center; gap: 6px; ${currentResultsPage === 1 ? 'pointer-events: none; opacity: 0.4;' : 'cursor: pointer;'}" ${currentResultsPage === 1 ? 'disabled' : ''}>
+          <i class="fa-solid fa-chevron-left"></i> Anterior
+        </button>
+      `;
+
+      // Números de Página (Reducción inteligente para móvil)
+      const startPage = Math.max(1, currentResultsPage - 2);
+      const endPage = Math.min(totalPages, startPage + 4);
+      const adjustedStartPage = Math.max(1, Math.min(startPage, totalPages - 4));
+
+      if (adjustedStartPage > 1) {
+        pagHTML += `<button class="btn btn-secondary btn-page-num" data-page="1" style="height: 38px; width: 38px; padding: 0; font-size: 0.82rem; font-weight: 600; cursor: pointer;">1</button>`;
+        if (adjustedStartPage > 2) {
+          pagHTML += `<span style="color: var(--text-dark); font-size: 0.82rem; padding: 0 4px;">...</span>`;
+        }
+      }
+
+      for (let i = adjustedStartPage; i <= endPage; i++) {
+        const isActive = i === currentResultsPage;
+        pagHTML += `
+          <button class="btn ${isActive ? 'btn-primary' : 'btn-secondary'} btn-page-num" data-page="${i}" style="height: 38px; width: 38px; padding: 0; font-size: 0.82rem; font-weight: 600; cursor: pointer; ${isActive ? 'pointer-events: none;' : ''}">
+            ${i}
+          </button>
+        `;
+      }
+
+      if (endPage < totalPages) {
+        if (endPage < totalPages - 1) {
+          pagHTML += `<span style="color: var(--text-dark); font-size: 0.82rem; padding: 0 4px;">...</span>`;
+        }
+        pagHTML += `<button class="btn btn-secondary btn-page-num" data-page="${totalPages}" style="height: 38px; width: 38px; padding: 0; font-size: 0.82rem; font-weight: 600; cursor: pointer;">${totalPages}</button>`;
+      }
+
+      // Botón Siguiente
+      pagHTML += `
+        <button class="btn btn-secondary" id="btn-next-page" style="height: 38px; padding: 0 14px; font-size: 0.82rem; display: flex; align-items: center; gap: 6px; ${currentResultsPage === totalPages ? 'pointer-events: none; opacity: 0.4;' : 'cursor: pointer;'}" ${currentResultsPage === totalPages ? 'disabled' : ''}>
+          Siguiente <i class="fa-solid fa-chevron-right"></i>
+        </button>
+      `;
+
+      pagContainer.innerHTML = pagHTML;
+
+      // Eventos de botones
+      const prevBtn = document.getElementById('btn-prev-page');
+      if (prevBtn && currentResultsPage > 1) {
+        prevBtn.addEventListener('click', () => {
+          currentResultsPage--;
+          renderResults(results);
+          const scrollTarget = document.querySelector('.search-container') || resultsContainer;
+          if (scrollTarget) scrollTarget.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        });
+      }
+
+      const nextBtn = document.getElementById('btn-next-page');
+      if (nextBtn && currentResultsPage < totalPages) {
+        nextBtn.addEventListener('click', () => {
+          currentResultsPage++;
+          renderResults(results);
+          const scrollTarget = document.querySelector('.search-container') || resultsContainer;
+          if (scrollTarget) scrollTarget.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        });
+      }
+
+      pagContainer.querySelectorAll('.btn-page-num').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const targetPage = parseInt(btn.getAttribute('data-page'));
+          if (targetPage !== currentResultsPage) {
+            currentResultsPage = targetPage;
+            renderResults(results);
+            const scrollTarget = document.querySelector('.search-container') || resultsContainer;
+            if (scrollTarget) scrollTarget.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          }
+        });
+      });
+    }
   }
 
   // Elementos de filtros adicionales
@@ -279,7 +385,9 @@ document.addEventListener('DOMContentLoaded', () => {
       filtered.sort((a, b) => b.nombre_examen.localeCompare(a.nombre_examen));
     }
 
-    renderResults(filtered);
+    lastFilteredResults = filtered;
+    currentResultsPage = 1;
+    renderResults(lastFilteredResults);
   }
 
   // Eventos de filtros
