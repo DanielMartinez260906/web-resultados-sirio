@@ -15,12 +15,30 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   // Verificar soporte
   const isPushSupported = 'serviceWorker' in navigator && 'PushManager' in window;
+  const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+  const isStandalone = window.navigator.standalone || window.matchMedia('(display-mode: standalone)').matches;
+
   if (!isPushSupported) {
     toggleBtn.disabled = true;
-    toggleBtn.innerHTML = '<i class="fa-solid fa-ban"></i> No Soportado';
-    statusMsg.style.display = 'block';
-    statusMsg.style.color = '#ef4444';
-    statusMsg.innerText = 'Este navegador no soporta Notificaciones Push.';
+    if (isIOS && !isStandalone) {
+      toggleBtn.innerHTML = '<i class="fa-solid fa-circle-info"></i> Requiere PWA';
+      statusMsg.style.display = 'block';
+      statusMsg.style.color = '#eab308';
+      statusMsg.innerHTML = `
+        <div style="background: rgba(234, 179, 8, 0.08); border: 1px solid rgba(234, 179, 8, 0.2); padding: 12px; border-radius: 8px; font-size: 0.82rem; line-height: 1.45; text-align: left; margin-top: 8px;">
+          <strong style="color: #eab308; display: block; margin-bottom: 4px;"><i class="fa-solid fa-circle-exclamation"></i> Requisito de iPhone (iOS):</strong>
+          Para activar las notificaciones push, debes agregar esta web a tu pantalla de inicio:<br>
+          1. Toca el botón de <strong>Compartir</strong> <span style="display:inline-block; transform: translateY(1px); font-size: 0.9rem;"><i class="fa-solid fa-share-nodes"></i></span> o <span style="display:inline-block; transform: translateY(1px); font-size: 0.9rem;"><i class="fa-solid fa-arrow-up-from-bracket"></i></span> en tu navegador.<br>
+          2. Desplázate hacia abajo y selecciona <strong>"Agregar a la pantalla de inicio"</strong>.<br>
+          3. Abre la aplicación desde el ícono de tu pantalla de inicio e inicia sesión para activar las notificaciones.
+        </div>
+      `;
+    } else {
+      toggleBtn.innerHTML = '<i class="fa-solid fa-ban"></i> No Soportado';
+      statusMsg.style.display = 'block';
+      statusMsg.style.color = '#ef4444';
+      statusMsg.innerText = 'Este navegador no soporta Notificaciones Push.';
+    }
     return;
   }
 
