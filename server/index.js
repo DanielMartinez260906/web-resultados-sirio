@@ -26,8 +26,13 @@ if (process.env.VAPID_PUBLIC_KEY && process.env.VAPID_PRIVATE_KEY) {
   console.log('\x1b[33m%s\x1b[0m', 'Guárdalas en tu archivo .env para mantener las suscripciones de los clientes.');
 }
 
+let vapidEmail = process.env.VAPID_EMAIL || 'contacto@laboratoriosirio.com';
+if (!vapidEmail.startsWith('mailto:') && !vapidEmail.startsWith('https://') && !vapidEmail.startsWith('http://')) {
+  vapidEmail = `mailto:${vapidEmail}`;
+}
+
 webpush.setVapidDetails(
-  process.env.VAPID_EMAIL || 'mailto:contacto@laboratoriosirio.com',
+  vapidEmail,
   vapidKeys.publicKey,
   vapidKeys.privateKey
 );
