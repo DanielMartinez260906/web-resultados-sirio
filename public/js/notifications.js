@@ -10,6 +10,8 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   const toggleBtn = document.getElementById('push-toggle-btn');
   const statusMsg = document.getElementById('push-status-message');
+  const testContainer = document.getElementById('push-test-container');
+  const testBtn = document.getElementById('push-test-btn');
 
   if (!toggleBtn || !statusMsg) return;
 
@@ -80,12 +82,14 @@ document.addEventListener('DOMContentLoaded', async () => {
       statusMsg.style.display = 'block';
       statusMsg.style.color = '#34d399';
       statusMsg.innerText = '¡Notificaciones activadas correctamente en este dispositivo!';
+      if (testContainer) testContainer.style.display = 'flex';
     } else {
       toggleBtn.innerHTML = '<i class="fa-solid fa-bell-slash"></i> Desactivadas';
       toggleBtn.style.background = 'rgba(255, 255, 255, 0.05)';
       toggleBtn.style.borderColor = 'rgba(255, 255, 255, 0.15)';
       toggleBtn.style.color = 'var(--text-muted)';
       statusMsg.style.display = 'none';
+      if (testContainer) testContainer.style.display = 'none';
     }
   }
 
@@ -226,6 +230,39 @@ document.addEventListener('DOMContentLoaded', async () => {
       toggleBtn.disabled = false;
     }
   });
+
+  // Manejador del clic del botón de prueba
+  if (testBtn) {
+    testBtn.addEventListener('click', async () => {
+      testBtn.disabled = true;
+      const originalText = testBtn.innerHTML;
+      testBtn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> Enviando...';
+      try {
+        const response = await fetch(`${SirioAuth.API_BASE}/api/push/test`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ id_usuario: currentUser.id_usuario })
+        });
+        const data = await response.json();
+        if (data.success) {
+          testBtn.innerHTML = '<i class="fa-solid fa-check" style="color: #34d399;"></i> ¡Enviada!';
+          setTimeout(() => {
+            testBtn.innerHTML = originalText;
+            testBtn.disabled = false;
+          }, 3000);
+        } else {
+          showGlobalAlert(data.message || 'Error al enviar notificación de prueba.', 'error');
+          testBtn.innerHTML = originalText;
+          testBtn.disabled = false;
+        }
+      } catch (err) {
+        console.error('Error al probar notificaciones:', err);
+        showGlobalAlert('Fallo de red al enviar la prueba.', 'error');
+        testBtn.innerHTML = originalText;
+        testBtn.disabled = false;
+      }
+    });
+  }
 
   // Inicializar
   await initPush();

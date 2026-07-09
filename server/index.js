@@ -428,6 +428,27 @@ app.post('/api/push/unsubscribe', async (req, res) => {
   }
 });
 
+// API: Enviar notificación de prueba (Para depuración/verificación de clientes)
+app.post('/api/push/test', async (req, res) => {
+  const { id_usuario } = req.body;
+  if (!id_usuario) {
+    return res.status(400).json({ success: false, message: 'El ID de usuario es obligatorio.' });
+  }
+
+  try {
+    await notifyUser(id_usuario, {
+      title: 'Notificación de Prueba 🧪',
+      body: '¡Hola! Las notificaciones del Laboratorio SIRIO están activas y listas en este dispositivo.',
+      icon: '/logo.png',
+      data: { url: '/client.html' }
+    });
+    res.json({ success: true, message: 'Notificación de prueba enviada.' });
+  } catch (error) {
+    console.error('Error al enviar notificación de prueba:', error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
 // API: Obtener exámenes (Para Clientes)
 app.get('/api/client/results', async (req, res) => {
   const { id_usuario } = req.query;
