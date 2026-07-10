@@ -419,12 +419,11 @@ app.post('/api/admin/upload', upload.array('pdf', 20), async (req, res) => {
 
       // Enviar notificación Push (sin bloquear la respuesta HTTP)
       if (!clienteEsMoroso) {
-        const examNames = resultsData.map(r => r.nombre_examen).join(', ');
         notifyUser(id_usuario, {
           title: 'Nuevo Resultado Disponible 🧪',
-          body: req.files.length === 1 
+          body: resultsData.length === 1 
             ? `Se ha publicado el resultado de tu examen: ${resultsData[0].nombre_examen}`
-            : `Se han publicado ${req.files.length} nuevos resultados: ${examNames}`,
+            : `Has recibido ${resultsData.length} nuevos resultados de exámenes.`,
           icon: '/logo.png',
           data: { url: '/client.html' }
         });
