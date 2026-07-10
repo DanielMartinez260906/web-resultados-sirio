@@ -12,6 +12,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   const statusMsg = document.getElementById('push-status-message');
   const testContainer = document.getElementById('push-test-container');
   const testBtn = document.getElementById('push-test-btn');
+  const headerPushBtn = document.getElementById('header-push-btn');
 
   if (!toggleBtn || !statusMsg) return;
 
@@ -35,11 +36,29 @@ document.addEventListener('DOMContentLoaded', async () => {
           3. Abre la aplicación desde el ícono de tu pantalla de inicio e inicia sesión para activar las notificaciones.
         </div>
       `;
+      
+      if (headerPushBtn) {
+        headerPushBtn.className = 'btn btn-secondary btn-icon';
+        headerPushBtn.style.color = '#eab308';
+        headerPushBtn.style.borderColor = 'rgba(234, 179, 8, 0.4)';
+        headerPushBtn.title = 'Requiere instalar en pantalla de inicio';
+        headerPushBtn.addEventListener('click', () => {
+          showGlobalAlert(
+            'Para recibir notificaciones en iPhone: toca Compartir <i class="fa-solid fa-arrow-up-from-bracket"></i> y selecciona "Agregar a la pantalla de inicio".', 
+            'info'
+          );
+        });
+      }
     } else {
       toggleBtn.innerHTML = '<i class="fa-solid fa-ban"></i> No Soportado';
       statusMsg.style.display = 'block';
       statusMsg.style.color = '#ef4444';
       statusMsg.innerText = 'Este navegador no soporta Notificaciones Push.';
+      
+      if (headerPushBtn) {
+        headerPushBtn.disabled = true;
+        headerPushBtn.title = 'Notificaciones no soportadas en este navegador';
+      }
     }
     return;
   }
@@ -71,6 +90,12 @@ document.addEventListener('DOMContentLoaded', async () => {
       statusMsg.style.display = 'block';
       statusMsg.style.color = '#fca5a5';
       statusMsg.innerText = 'Las notificaciones están bloqueadas en tu navegador. Por favor, cambia los permisos del sitio para poder activarlas.';
+      
+      if (headerPushBtn) {
+        headerPushBtn.className = 'btn btn-secondary btn-icon status-blocked';
+        headerPushBtn.innerHTML = '<i class="fa-solid fa-bell-slash"></i>';
+        headerPushBtn.title = 'Notificaciones bloqueadas';
+      }
       return;
     }
 
@@ -83,6 +108,12 @@ document.addEventListener('DOMContentLoaded', async () => {
       statusMsg.style.color = '#34d399';
       statusMsg.innerText = '¡Notificaciones activadas correctamente en este dispositivo!';
       if (testContainer) testContainer.style.display = 'flex';
+
+      if (headerPushBtn) {
+        headerPushBtn.className = 'btn btn-secondary btn-icon status-active';
+        headerPushBtn.innerHTML = '<i class="fa-solid fa-bell"></i>';
+        headerPushBtn.title = 'Notificaciones activadas';
+      }
     } else {
       toggleBtn.innerHTML = '<i class="fa-solid fa-bell-slash"></i> Desactivadas';
       toggleBtn.style.background = 'rgba(255, 255, 255, 0.05)';
@@ -90,6 +121,12 @@ document.addEventListener('DOMContentLoaded', async () => {
       toggleBtn.style.color = 'var(--text-muted)';
       statusMsg.style.display = 'none';
       if (testContainer) testContainer.style.display = 'none';
+
+      if (headerPushBtn) {
+        headerPushBtn.className = 'btn btn-secondary btn-icon pulse-inactive';
+        headerPushBtn.innerHTML = '<i class="fa-solid fa-bell-slash"></i>';
+        headerPushBtn.title = 'Activar notificaciones';
+      }
     }
   }
 
@@ -209,9 +246,10 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
   }
 
-  // Manejador del clic del botón
-  toggleBtn.addEventListener('click', async () => {
+  // Manejador del clic del botón (Unificado para cabecera y perfil)
+  const handleToggleClick = async (clickedBtn) => {
     toggleBtn.disabled = true;
+    if (headerPushBtn) headerPushBtn.disabled = true;
     try {
       if (isSubscribed) {
         await unsubscribeUser();
@@ -228,8 +266,14 @@ document.addEventListener('DOMContentLoaded', async () => {
       console.error('[Push] Error en toggle:', err);
     } finally {
       toggleBtn.disabled = false;
+      if (headerPushBtn) headerPushBtn.disabled = false;
     }
-  });
+  };
+
+  toggleBtn.addEventListener('click', () => handleToggleClick(toggleBtn));
+  if (headerPushBtn) {
+    headerPushBtn.addEventListener('click', () => handleToggleClick(headerPushBtn));
+  }
 
   // Manejador del clic del botón de prueba
   if (testBtn) {
