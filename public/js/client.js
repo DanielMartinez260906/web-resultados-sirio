@@ -13,24 +13,24 @@ document.addEventListener('DOMContentLoaded', () => {
   if (clientIdText) {
     clientIdText.innerText = currentUser.identificacion;
   }
-  
+
   // Mensaje de Bienvenida en Primer Login
   const welcomeKey = `sirio_welcome_shown_${currentUser.usuario}`;
   const welcomeModal = document.getElementById('welcome-modal');
   const closeWelcomeBtn = document.getElementById('close-welcome-btn');
-  
+
   if (welcomeModal && closeWelcomeBtn && !localStorage.getItem(welcomeKey)) {
     const welcomeClinicName = document.getElementById('welcome-clinic-name');
     if (welcomeClinicName) welcomeClinicName.innerText = currentUser.nombre;
-    
+
     welcomeModal.style.display = 'flex';
-    
+
     closeWelcomeBtn.addEventListener('click', () => {
       welcomeModal.style.display = 'none';
       localStorage.setItem(welcomeKey, 'true');
     });
   }
-  
+
   // Botón de cerrar sesión
   document.getElementById('logout-btn').addEventListener('click', () => SirioAuth.logout());
 
@@ -51,10 +51,10 @@ document.addEventListener('DOMContentLoaded', () => {
   tabButtons.forEach(btn => {
     btn.addEventListener('click', () => {
       const targetTab = btn.getAttribute('data-tab');
-      
+
       tabButtons.forEach(b => b.classList.remove('active'));
       tabContents.forEach(c => c.style.display = 'none');
-      
+
       btn.classList.add('active');
       document.getElementById(targetTab).style.display = 'block';
 
@@ -79,7 +79,7 @@ document.addEventListener('DOMContentLoaded', () => {
   function setViewMode(mode) {
     currentViewMode = mode;
     localStorage.setItem('sirio_client_view_mode', mode);
-    
+
     if (mode === 'list') {
       if (resultsContainer) resultsContainer.className = 'results-list';
       if (viewListBtn) viewListBtn.classList.add('active');
@@ -104,7 +104,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (nameVal) nameVal.innerText = currentUser.nombre;
     if (usernameVal) usernameVal.innerText = currentUser.usuario;
-    
+
     const pwdVal = document.getElementById('profile-password-val');
     if (pwdVal) {
       pwdVal.setAttribute('data-password', currentUser.contrasena || '');
@@ -116,7 +116,7 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     }
   }
-  
+
   initProfile();
 
   // Botón para alternar visibilidad de contraseña
@@ -145,7 +145,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
       if (data.success) {
         allResults = data.results;
-        
+
         // Mostrar aviso de resultados retenidos si aplica
         const alertContainer = document.getElementById('client-debt-alert-container');
         if (alertContainer) {
@@ -206,8 +206,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const dateObj = new Date(dateString);
     const todayObj = new Date();
     return dateObj.getFullYear() === todayObj.getFullYear() &&
-           dateObj.getMonth() === todayObj.getMonth() &&
-           dateObj.getDate() === todayObj.getDate();
+      dateObj.getMonth() === todayObj.getMonth() &&
+      dateObj.getDate() === todayObj.getDate();
   }
 
   // Lógica de paginación de resultados
@@ -234,7 +234,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     resultsContainer.innerHTML = '';
-    
+
     // Asegurar que la clase del contenedor corresponda al modo seleccionado
     resultsContainer.className = currentViewMode === 'list' ? 'results-list' : 'results-grid';
 
@@ -250,7 +250,7 @@ document.addEventListener('DOMContentLoaded', () => {
     paginatedItems.forEach(res => {
       const card = document.createElement('div');
       card.className = 'result-card';
-      
+
       const dateLabel = SirioAuth.formatDate(res.fecha_subida);
       const pdfUrl = getPdfUrl(res.nombre_archivo);
       const isRecibidoHoy = isToday(res.fecha_subida);
@@ -282,7 +282,7 @@ document.addEventListener('DOMContentLoaded', () => {
           </button>
         </div>
       `;
-      
+
       resultsContainer.appendChild(card);
     });
 
@@ -294,7 +294,7 @@ document.addEventListener('DOMContentLoaded', () => {
       }
 
       let pagHTML = '';
-      
+
       // Botón Anterior
       pagHTML += `
         <button class="btn btn-secondary" id="btn-prev-page" style="height: 38px; padding: 0 14px; font-size: 0.82rem; display: flex; align-items: center; gap: 6px; ${currentResultsPage === 1 ? 'pointer-events: none; opacity: 0.4;' : 'cursor: pointer;'}" ${currentResultsPage === 1 ? 'disabled' : ''}>
@@ -389,7 +389,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // 1. Filtrar por buscador
     if (query) {
-      filtered = filtered.filter(res => 
+      filtered = filtered.filter(res =>
         res.nombre_examen.toLowerCase().includes(query)
       );
     }
@@ -432,7 +432,7 @@ document.addEventListener('DOMContentLoaded', () => {
   if (searchExamInput) searchExamInput.addEventListener('keyup', () => filterAndRenderResults());
   if (filterDateInput) filterDateInput.addEventListener('change', () => filterAndRenderResults());
   if (sortOrderSelect) sortOrderSelect.addEventListener('change', () => filterAndRenderResults());
-  
+
   const todayToggle = document.getElementById('filter-today-toggle');
   if (todayToggle) {
     todayToggle.addEventListener('click', () => {
@@ -456,7 +456,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (!globalAlert || !globalAlertText) return;
     globalAlert.className = `alert alert-${type}`;
     globalAlertText.innerText = message;
-    
+
     const icon = globalAlert.querySelector('i');
     if (icon) {
       if (type === 'error') {
@@ -469,7 +469,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     globalAlert.style.display = 'flex';
-    
+
     setTimeout(() => {
       globalAlert.style.display = 'none';
     }, 5000);
@@ -518,7 +518,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // Función para solicitar la interpretación y manejar las vistas (Carga, Resultado, Error)
   async function performInterpretation(idResultado, nombreArchivo) {
     if (!idResultado || !nombreArchivo) return;
-    
+
     // Guardar para posibles reintentos
     lastSelectedInterpretExam = { idResultado, nombreArchivo };
 
@@ -550,7 +550,7 @@ document.addEventListener('DOMContentLoaded', () => {
       if (data.success) {
         if (interpretLoading) interpretLoading.style.display = 'none';
         if (interpretResult) interpretResult.style.display = 'block';
-        
+
         let formattedText = '';
         // Formatear texto interpretativo
         if (interpretTextContent) {
@@ -600,7 +600,7 @@ document.addEventListener('DOMContentLoaded', () => {
     resultsContainer.addEventListener('click', (e) => {
       const btn = e.target.closest('.btn-interpret-ia');
       if (!btn) return;
-      
+
       const idResultado = btn.dataset.id;
       const nombreArchivo = btn.dataset.archivo;
       performInterpretation(idResultado, nombreArchivo);
@@ -623,7 +623,7 @@ document.addEventListener('DOMContentLoaded', () => {
   function initRealtimeUpdates() {
     if (typeof EventSource !== 'undefined') {
       const eventSource = new EventSource(`${SirioAuth.API_BASE}/api/client/events?id_usuario=${currentUser.id_usuario}`);
-      
+
       eventSource.addEventListener('new_result', (event) => {
         console.log('[SSE] Nuevo resultado recibido:', event.data);
         loadResultsSilently();
@@ -738,12 +738,12 @@ document.addEventListener('DOMContentLoaded', () => {
       const response = await fetch(`${SirioAuth.API_BASE}/api/client/portafolio`);
       if (!response.ok) throw new Error(`HTTP ${response.status}`);
       const data = await response.json();
-      
+
       if (data.success) {
         const portafolioTabBtn = document.querySelector('[data-tab="tab-client-portafolio"]');
         const maintenanceView = document.getElementById('portafolio-maintenance-view');
         const mainContent = document.getElementById('portafolio-main-content');
-        
+
         // El botón de la pestaña siempre permanece visible
         if (portafolioTabBtn) {
           portafolioTabBtn.style.setProperty('display', 'flex', 'important');
@@ -819,12 +819,12 @@ document.addEventListener('DOMContentLoaded', () => {
     if (!recipiente) return '';
     const text = recipiente.toLowerCase();
     let bg = 'rgba(255,255,255,0.05)', color = 'var(--text-muted)';
-    if (text.includes('lila') || text.includes('edta'))           { bg = 'rgba(168,85,247,0.15)'; color = '#d8b4fe'; }
-    else if (text.includes('celeste') || text.includes('citrato')){ bg = 'rgba(14,165,233,0.15)'; color = '#7dd3fc'; }
-    else if (text.includes('roja') || text.includes('rojo'))      { bg = 'rgba(239,68,68,0.15)';  color = '#fca5a5'; }
-    else if (text.includes('amarilla') || text.includes('amarillo')){ bg = 'rgba(234,179,8,0.15)';color = '#fde047'; }
-    else if (text.includes('verde') || text.includes('heparina')) { bg = 'rgba(34,197,94,0.15)';  color = '#86efac'; }
-    else if (text.includes('gris') || text.includes('fluoruro'))  { bg = 'rgba(148,163,184,0.15)';color = '#cbd5e1'; }
+    if (text.includes('lila') || text.includes('edta')) { bg = 'rgba(168,85,247,0.15)'; color = '#d8b4fe'; }
+    else if (text.includes('celeste') || text.includes('citrato')) { bg = 'rgba(14,165,233,0.15)'; color = '#7dd3fc'; }
+    else if (text.includes('roja') || text.includes('rojo')) { bg = 'rgba(239,68,68,0.15)'; color = '#fca5a5'; }
+    else if (text.includes('amarilla') || text.includes('amarillo')) { bg = 'rgba(234,179,8,0.15)'; color = '#fde047'; }
+    else if (text.includes('verde') || text.includes('heparina')) { bg = 'rgba(34,197,94,0.15)'; color = '#86efac'; }
+    else if (text.includes('gris') || text.includes('fluoruro')) { bg = 'rgba(148,163,184,0.15)'; color = '#cbd5e1'; }
     return `<span style="background:${bg};color:${color};padding:3px 8px;border-radius:4px;font-size:0.72rem;font-weight:500;border:1px solid rgba(255,255,255,0.06);display:inline-block;">${recipiente}</span>`;
   }
 
@@ -1071,43 +1071,43 @@ document.addEventListener('DOMContentLoaded', () => {
   ];
 
   const EXAMS_INDIVIDUALES = [
-    'Ácido Fólico/Vitamina B9', 'Ácido úrico', 'Ácidos Biliares (Una muestra)', 'Ácidos Biliares Pre - Post', 
-    'Albúmina', 'Aldosterona', 'Alanina aminotransferasa (ALT/GPT)', 'Amilasa Pancreática', 
-    'Análisis de cálculo urinario (Vejiga)', 'Análisis de cálculo vesiculares', 
-    'Análisis de líquidos corporales (Examen físico - químico - bioquímico - citológico y microbiológico)', 
-    'Análisis para diarrea persistente (Coprograma + Coloración Ziehl Neelsen/Kinyoun + Coprocultivo)', 
-    'Anticuerpos Tiroglobulina (TgAb)', 'Aspartato aminotransferasa (AST)', 'Bilirrubina directa (BD)', 
-    'Bilirrubina total (BT)', 'Brucella canis', 'BUN + Urea', 'Biopsia Análisis histopatológico de 1 fragmento adicional', 
-    'Calcio ionizado', 'Calcio sérico', 'Citología vaginal canina (Ciclo estral)', 'Coloración GRAM (Infecciosa)', 
-    'Cloro', 'Colesterol HDL', 'Colesterol total', 'Coloración Kinyoun', 'Coloración wright', 
-    'Coloración Ziehl-Neelsen', 'Coprograma (Coprológico + azucares reductores + sangre oculta + pH + coloración Gram + coloración Wright)', 
-    'Cortisol en suero (Específico canino)', 'Cortisol en suero 3 muestras (Específico canino)', 'Cortisol en suero (No específico)', 
-    'Cortisol en suero 3 muestras (No específico)', 'Cortisol en orina', 'Coronavirus felino + Índice A/G + Prueba de rivalta Peritonitis infecciosa felina', 
-    'Creatinina', 'Creatina Quinasa MB (CK-MB) (Fracción MB - específica del miocardio)', 'Creatina Quinasa Total (CK o CPK total)', 
-    'Detección semicuantitativa de grasa neutra y ácidos grasos *Se recomienda para evaluar insuficiencia pancreática enzimática', 
-    'Dímero D no específico', 'Dímero D específico canino', 'Espermograma (Examen físico - químico - morfológico - citológico - microbiológico)', 
-    'Estradiol', 'Exámen directo (cualquier muestra)', 'Fenobarbital', 'Ferritina', 'Fosfatasa alcalina (FA)', 
-    'Fósforo', 'Fructosamina', 'Gamma Glutamil Transferasa (GGT)', 'Glucosa', 'Glucosa en orina (Cuantitativa)', 
-    'Hemoglobina glicada (HBA1C)', 'Hierro', 'Hormona Adrenocorticótropica (ACTH)', 'Hormona folículo estimulante (FSH)', 
-    'Hormona de crecimiento (GH)', 'Hormona estimulante de tiroides específica canina (TSH)', 'Hormona estimulante de tiroides Inespecífica (TSH)', 
-    'Hormona luteinizante (LH)', 'Insulina', 'Lactato Deshidrogenasa (LDH)', 'Lactato (Ácido lactico)', 
-    'Lipasa pancreática especifica canina', 'Lipasa pancreática especifica felina', 
-    'Leptospira canino Ac IgG contra 4 serovares Canicola - Icterohaemorrhagiae (Copenhague y RGA) - Pomona y Grippotyphosa', 
-    'Magnesio', 'Distemper Canino', 'Parathormona', 'Parvovirus + Coronavirus Canino', 'Parvovirus + Coronavirus + Giardia Canino', 
-    'Proteína C reactiva no específica (PCR cuantitativa)', 'Proteína C reactiva específica canina (PCR cuantitativa)', 
-    'Plasma rico en plaquetas', 'Potasio', 'Prolactina', 'Proteínas diferenciadas (Albumina – Globulinas - Proteínas totales -I ndíce A/G)', 
-    'Proteínas totales séricas', 'Pruebas cruzadas de compatibilidad (mayor y menor)', 'Prueba de Coombs específica canina (Prueba de antiglobulina directa)', 
-    'Relación Proteína/Creatinina en orina (UPC)', 'Relación Cortisol/Creatinina en orina (UCCR)', 
-    'Raspado de piel + Tricograma + Examen con luz de wood', 'Dimetilarginina Simétrica (SDMA) + Creatinina', 
-    'Virus de Inmunodeficiencia Felina - Virus de la Leucemia (VIF - VLEU) Felino', 
-    'Virus de Inmunodeficiencia Felina/Leucemia/Dirofilaria IDEXX Felino', 'SNAP 4DX IDEXX (Dirofilaria - Enfermedad de Lyme – Ehrlichia - Anaplasma)', 
-    'Sodio', 'Somatomedina C', 'Suero autólogo', 'Testosterona libre', 'Testosterona total', 
-    'Títulos de rabia (Fluorescent Antibody Virus Neutralization - FAVN Test)', 
-    'Tiempo de Protrombina TP (Coordinar con el laboratorio la hora de recolección)', 
-    'Tiempo Parcial de Tromboplastina TPT (Coordinar con el laboratorio la hora de recolección)', 'Tiroxina libre T4L', 
-    'Tiroxina total específico canino o felino (T4T)', 'Tiroxina total inespecífica (T4T)', 'Toxoplasma IgG', 
-    'Toxoplasma IgM', 'Tricograma + Examen con luz de wood', 'Triglicéridos', 'Triyodotironina total T3T', 
-    'Tripsina inmunorreactiva Canina', 'Triple viral felina IgG Panleucopenia – Calicivirus - Herpesvirus (Vaccicheck)', 
+    'Ácido Fólico/Vitamina B9', 'Ácido úrico', 'Ácidos Biliares (Una muestra)', 'Ácidos Biliares Pre - Post',
+    'Albúmina', 'Aldosterona', 'Alanina aminotransferasa (ALT/GPT)', 'Amilasa Pancreática',
+    'Análisis de cálculo urinario (Vejiga)', 'Análisis de cálculo vesiculares',
+    'Análisis de líquidos corporales (Examen físico - químico - bioquímico - citológico y microbiológico)',
+    'Análisis para diarrea persistente (Coprograma + Coloración Ziehl Neelsen/Kinyoun + Coprocultivo)',
+    'Anticuerpos Tiroglobulina (TgAb)', 'Aspartato aminotransferasa (AST)', 'Bilirrubina directa (BD)',
+    'Bilirrubina total (BT)', 'Brucella canis', 'BUN + Urea', 'Biopsia Análisis histopatológico de 1 fragmento adicional',
+    'Calcio ionizado', 'Calcio sérico', 'Citología vaginal canina (Ciclo estral)', 'Coloración GRAM (Infecciosa)',
+    'Cloro', 'Colesterol HDL', 'Colesterol total', 'Coloración Kinyoun', 'Coloración wright',
+    'Coloración Ziehl-Neelsen', 'Coprograma (Coprológico + azucares reductores + sangre oculta + pH + coloración Gram + coloración Wright)',
+    'Cortisol en suero (Específico canino)', 'Cortisol en suero 3 muestras (Específico canino)', 'Cortisol en suero (No específico)',
+    'Cortisol en suero 3 muestras (No específico)', 'Cortisol en orina', 'Coronavirus felino + Índice A/G + Prueba de rivalta Peritonitis infecciosa felina',
+    'Creatinina', 'Creatina Quinasa MB (CK-MB) (Fracción MB - específica del miocardio)', 'Creatina Quinasa Total (CK o CPK total)',
+    'Detección semicuantitativa de grasa neutra y ácidos grasos *Se recomienda para evaluar insuficiencia pancreática enzimática',
+    'Dímero D no específico', 'Dímero D específico canino', 'Espermograma (Examen físico - químico - morfológico - citológico - microbiológico)',
+    'Estradiol', 'Exámen directo (cualquier muestra)', 'Fenobarbital', 'Ferritina', 'Fosfatasa alcalina (FA)',
+    'Fósforo', 'Fructosamina', 'Gamma Glutamil Transferasa (GGT)', 'Glucosa', 'Glucosa en orina (Cuantitativa)',
+    'Hemoglobina glicada (HBA1C)', 'Hierro', 'Hormona Adrenocorticótropica (ACTH)', 'Hormona folículo estimulante (FSH)',
+    'Hormona de crecimiento (GH)', 'Hormona estimulante de tiroides específica canina (TSH)', 'Hormona estimulante de tiroides Inespecífica (TSH)',
+    'Hormona luteinizante (LH)', 'Insulina', 'Lactato Deshidrogenasa (LDH)', 'Lactato (Ácido lactico)',
+    'Lipasa pancreática especifica canina', 'Lipasa pancreática especifica felina',
+    'Leptospira canino Ac IgG contra 4 serovares Canicola - Icterohaemorrhagiae (Copenhague y RGA) - Pomona y Grippotyphosa',
+    'Magnesio', 'Distemper Canino', 'Parathormona', 'Parvovirus + Coronavirus Canino', 'Parvovirus + Coronavirus + Giardia Canino',
+    'Proteína C reactiva no específica (PCR cuantitativa)', 'Proteína C reactiva específica canina (PCR cuantitativa)',
+    'Plasma rico en plaquetas', 'Potasio', 'Prolactina', 'Proteínas diferenciadas (Albumina – Globulinas - Proteínas totales -I ndíce A/G)',
+    'Proteínas totales séricas', 'Pruebas cruzadas de compatibilidad (mayor y menor)', 'Prueba de Coombs específica canina (Prueba de antiglobulina directa)',
+    'Relación Proteína/Creatinina en orina (UPC)', 'Relación Cortisol/Creatinina en orina (UCCR)',
+    'Raspado de piel + Tricograma + Examen con luz de wood', 'Dimetilarginina Simétrica (SDMA) + Creatinina',
+    'Virus de Inmunodeficiencia Felina - Virus de la Leucemia (VIF - VLEU) Felino',
+    'Virus de Inmunodeficiencia Felina/Leucemia/Dirofilaria IDEXX Felino', 'SNAP 4DX IDEXX (Dirofilaria - Enfermedad de Lyme – Ehrlichia - Anaplasma)',
+    'Sodio', 'Somatomedina C', 'Suero autólogo', 'Testosterona libre', 'Testosterona total',
+    'Títulos de rabia (Fluorescent Antibody Virus Neutralization - FAVN Test)',
+    'Tiempo de Protrombina TP (Coordinar con el laboratorio la hora de recolección)',
+    'Tiempo Parcial de Tromboplastina TPT (Coordinar con el laboratorio la hora de recolección)', 'Tiroxina libre T4L',
+    'Tiroxina total específico canino o felino (T4T)', 'Tiroxina total inespecífica (T4T)', 'Toxoplasma IgG',
+    'Toxoplasma IgM', 'Tricograma + Examen con luz de wood', 'Triglicéridos', 'Triyodotironina total T3T',
+    'Tripsina inmunorreactiva Canina', 'Triple viral felina IgG Panleucopenia – Calicivirus - Herpesvirus (Vaccicheck)',
     'Troponina I', 'Vitamina B12 cianocobalamina', 'Vitamina D25', 'Vitamina D 1.25 Dihidroxi (Calcitrol)'
   ];
 
@@ -1254,21 +1254,21 @@ document.addEventListener('DOMContentLoaded', () => {
         const raza = document.getElementById('ingresar-raza');
         const edad = document.getElementById('ingresar-edad');
         const sexo = document.getElementById('ingresar-sexo');
-        
+
         if (!medico.checkValidity() || !propietario.checkValidity() || !pacienteHc.checkValidity() || !especie.checkValidity() || !raza.checkValidity() || !edad.checkValidity() || !sexo.checkValidity()) {
           showGlobalAlert('Por favor complete todos los campos obligatorios del Paso 1.', 'error');
           document.getElementById('form-ingreso-paciente').reportValidity();
           return;
         }
       }
-      
+
       if (from === 2) {
         const muestrasChecked = document.querySelectorAll('input[name="ingresar-muestra"]:checked');
         if (muestrasChecked.length === 0) {
           showGlobalAlert('Debe seleccionar al menos un tipo de muestra.', 'error');
           return;
         }
-        
+
         const otros = document.getElementById('ingresar-otros').value.trim();
         if (selectedIngresarExams.size === 0 && otros === '') {
           showGlobalAlert('Debe seleccionar al menos un examen de la lista o indicar otro.', 'error');
@@ -1324,7 +1324,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const consistencia = document.getElementById('biopsia-consistencia').value;
         const ubicacion = document.getElementById('biopsia-ubicacion').value.trim();
         const tiempo = document.getElementById('biopsia-tiempo').value.trim();
-        
+
         if (!muestra || !aspecto || !consistencia || !ubicacion || !tiempo) {
           showGlobalAlert('Por favor complete todos los datos obligatorios para la Biopsia.', 'error');
           return;
@@ -1400,7 +1400,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (data.success) {
           showGlobalAlert('Paciente ingresado con éxito y comprobante generado.', 'success');
-          
+
           // Generar comprobante impreso
           const regData = {
             fecha: data.fecha || new Date().toLocaleString('es-CO'),
@@ -1424,7 +1424,7 @@ document.addEventListener('DOMContentLoaded', () => {
             datos_especiales_tipo: payload.datos_especiales_tipo,
             datos_especiales_detalle: payload.datos_especiales_detalle
           };
-          
+
           if (typeof SirioComprobantes !== 'undefined') {
             SirioComprobantes.printIngresoPaciente(regData);
           }
@@ -1449,11 +1449,11 @@ document.addEventListener('DOMContentLoaded', () => {
     selectedIngresarExams.clear();
     updateIngresarSelectedPills();
     renderIngresarExams();
-    
+
     document.getElementById('condicional-biopsia').style.display = 'none';
     document.getElementById('condicional-pcr').style.display = 'none';
     document.getElementById('ingresar-custom-delivery-grid').style.display = 'none';
-    
+
     if (ingresarVetInput && currentUser) {
       ingresarVetInput.value = currentUser.nombre;
     }
@@ -1545,7 +1545,7 @@ document.addEventListener('DOMContentLoaded', () => {
       if (document.getElementById('ingresar-direccion')) document.getElementById('ingresar-direccion').value = data.direccion || '';
       if (document.getElementById('ingresar-telefono')) document.getElementById('ingresar-telefono').value = data.telefono || '';
       if (document.getElementById('ingresar-quien')) document.getElementById('ingresar-quien').value = data.quien_diligencia || '';
-      
+
       const dirHabitual = document.getElementById('ingresar-dir-habitual');
       if (dirHabitual) {
         dirHabitual.checked = data.dir_habitual || false;
@@ -1570,7 +1570,7 @@ document.addEventListener('DOMContentLoaded', () => {
         datosEspecialesSelect.value = data.datos_especiales_tipo || '';
         const condicionalBiopsia = document.getElementById('condicional-biopsia');
         const condicionalPcr = document.getElementById('condicional-pcr');
-        
+
         if (datosEspecialesSelect.value === 'Biopsia') {
           if (condicionalBiopsia) condicionalBiopsia.style.display = 'block';
           if (condicionalPcr) condicionalPcr.style.display = 'none';
@@ -1617,4 +1617,4 @@ document.addEventListener('DOMContentLoaded', () => {
   // Restaurar borrador al cargar
   restoreFormDraft();
 
-});
+}); 
