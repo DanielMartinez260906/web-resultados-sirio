@@ -49,13 +49,16 @@
       this.isConstellation = isConstellation;
       this.constellationOffset = offset; // Guardar offset para reposicionamiento en resize
 
-      // Velocidad inicial constante y sutil para las estrellas de fondo
+      // Velocidad inicial constante (más dinámico en celulares)
       const angle = Math.random() * Math.PI * 2;
       if (isConstellation) {
         this.vx = 0;
         this.vy = 0;
       } else {
-        const speed = 0.05 + Math.random() * 0.12; // Velocidad muy sutil y constante
+        const isMobile = window.innerWidth < 600;
+        const speed = isMobile 
+          ? (0.18 + Math.random() * 0.32)  // En celular: movimiento más rápido
+          : (0.05 + Math.random() * 0.12); // En escritorio: movimiento sutil
         this.vx = Math.cos(angle) * speed;
         this.vy = Math.sin(angle) * speed;
       }
