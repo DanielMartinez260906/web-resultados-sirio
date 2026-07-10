@@ -49,23 +49,22 @@
       this.isConstellation = isConstellation;
       this.constellationOffset = offset; // Guardar offset para reposicionamiento en resize
 
-      // Velocidad inicial
+      // Velocidad inicial constante y sutil para las estrellas de fondo
       const angle = Math.random() * Math.PI * 2;
-      // Estrellas de constelación se mueven extremadamente lento para no deformar su figura
-      const baseSpeed = isConstellation ? 0.25 : 1.8;
-      const speed = baseSpeed + Math.random() * (isConstellation ? 0.35 : 2.5);
-      this.vx = Math.cos(angle) * speed;
-      this.vy = Math.sin(angle) * speed;
+      if (isConstellation) {
+        this.vx = 0;
+        this.vy = 0;
+      } else {
+        const speed = 0.05 + Math.random() * 0.12; // Velocidad muy sutil y constante
+        this.vx = Math.cos(angle) * speed;
+        this.vy = Math.sin(angle) * speed;
+      }
     }
 
     update(w, h) {
-      // Aplicar movimiento
+      // Aplicar movimiento sin fricción
       this.x += this.vx;
       this.y += this.vy;
-
-      // Aplicar fricción (desaceleración)
-      this.vx *= friction;
-      this.vy *= friction;
 
       // Rebote en bordes (solo para estrellas libres, las de constelación quedan en su sitio relativo)
       if (!this.isConstellation) {
@@ -198,20 +197,21 @@
       constellationStarsMap[star.id] = p;
     });
 
-    // 3. Generar Estrellas Libres de Fondo (Cantidad y tamaño balanceados)
-    const backgroundStarCount = Math.min(65, Math.floor((canvas.width * canvas.height) / 20000));
+    // 3. Generar Estrellas Libres de Fondo (Mayor cantidad y variedad de tamaños)
+    const backgroundStarCount = Math.min(130, Math.floor((canvas.width * canvas.height) / 9500));
 
     for (let i = 0; i < backgroundStarCount; i++) {
       const x = Math.random() * canvas.width;
       const y = Math.random() * canvas.height;
-      // Puntos en tamaño intermedio elegante (de 2.2px a 4.7px)
-      const radius = 2.2 + Math.random() * 2.5;
+      // Estrellas de distintos tamaños: unas muy pequeñas y lejanas (0.6px) y otras más grandes y brillantes (3.8px)
+      const radius = 0.6 + Math.random() * 3.2;
+      const opacity = 0.3 + Math.random() * 0.6; // Opacidad aleatoria para dar profundidad tridimensional
       
-      let color = 'rgba(14, 165, 233, 0.85)'; // Predomina Azul (85%) con opacidad del 85%
+      let color = `rgba(14, 165, 233, ${opacity})`; // Predomina Azul (85%)
       let type = 'blue';
       
       if (Math.random() > 0.85) {
-        color = 'rgba(212, 175, 55, 0.85)'; // 15% Amarillo/Oro con opacidad del 85%
+        color = `rgba(212, 175, 55, ${opacity})`; // 15% Amarillo/Oro
         type = 'gold';
       }
 
@@ -355,28 +355,13 @@
   function animate() {
     drawFrame();
 
-    let maxVelocity = 0;
-
     // Actualizar movimiento de estrellas
     particles.forEach(p => {
       p.update(canvas.width, canvas.height);
-      const vel = Math.sqrt(p.vx * p.vx + p.vy * p.vy);
-      if (vel > maxVelocity) {
-        maxVelocity = vel;
-      }
     });
 
-    // Si aún se mueven por encima del umbral, seguir
-    if (maxVelocity > stopThreshold) {
-      animationId = requestAnimationFrame(animate);
-    } else {
-      console.log('[Fondo Red] Constelación de Sirio estabilizada. Animación en pausa.');
-      cancelAnimationFrame(animationId);
-      animationId = null;
-      
-      // Dibujar último frame en estático
-      drawFrame();
-    }
+    // Se mueven indefinidamente a velocidad sutil constante
+    animationId = requestAnimationFrame(animate);
   }
 
   // Ejecución automática al cargar el DOM
