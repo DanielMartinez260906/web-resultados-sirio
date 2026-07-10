@@ -866,6 +866,7 @@ select::-ms-expand {
   transition: var(--transition-smooth);
   touch-action: manipulation;
   min-height: 48px;
+  flex-shrink: 0;
 }
 
 .client-item:hover {
@@ -880,9 +881,16 @@ select::-ms-expand {
   box-shadow: inset 0 0 10px rgba(14, 165, 233, 0.05);
 }
 
+.client-item-info {
+  flex-grow: 1;
+  min-width: 0;
+  padding-right: 12px;
+}
+
 .client-item-info h4 {
   font-size: 0.9rem;
   font-weight: 600;
+  line-height: 1.35;
 }
 
 .client-item-info p {
