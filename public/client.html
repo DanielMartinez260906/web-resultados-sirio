@@ -792,8 +792,25 @@
           </div>
         </div>
 
+        <!-- Vista de Error -->
+        <div id="interpret-error" style="display: none; flex-direction: column; align-items: center; justify-content: center; padding: 2rem 0; text-align: center; gap: 1rem;">
+          <div style="width: 64px; height: 64px; border-radius: 50%; background: rgba(239, 68, 68, 0.1); display: flex; align-items: center; justify-content: center; color: #ef4444; border: 2px solid rgba(239, 68, 68, 0.2);">
+            <i class="fa-solid fa-circle-exclamation" style="font-size: 2rem;"></i>
+          </div>
+          <h4 style="color: var(--text-main); font-size: 1.15rem; font-weight: 600; margin: 0;">Error de Conexión</h4>
+          <p id="interpret-error-msg" style="font-size: 0.82rem; color: #fca5a5; max-width: 340px; line-height: 1.45; margin: 0; word-break: break-word;">
+            No se pudo establecer conexión con el servicio de Inteligencia Artificial (generativelanguage.googleapis.com).
+          </p>
+          <button class="btn btn-accent" id="retry-interpret-btn" style="margin-top: 10px; gap: 6px; padding: 8px 20px;">
+            <i class="fa-solid fa-rotate-right"></i> Volver a intentar
+          </button>
+        </div>
+
       </div>
-      <div class="modal-footer" style="border-top: 1px solid var(--border-light); padding-top: 1rem; display: flex; justify-content: flex-end;">
+      <div class="modal-footer" style="border-top: 1px solid var(--border-light); padding-top: 1rem; display: flex; justify-content: flex-end; gap: 8px;">
+        <button class="btn btn-accent" id="print-interpret-btn" style="gap: 6px; display: none;">
+          <i class="fa-solid fa-file-pdf"></i> Descargar PDF
+        </button>
         <button class="btn btn-secondary" id="close-interpret-btn">Cerrar</button>
       </div>
     </div>
@@ -824,7 +841,11 @@
     </div>
   </footer>
 
+  <!-- html2pdf.js para descarga directa de comprobantes en PDF -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+  
   <script src="js/auth.js"></script>
+  <script src="js/comprobantes.js"></script>
   <script src="js/client.js"></script>
   <script src="js/notifications.js"></script>
   <script src="js/pwa-install.js"></script>

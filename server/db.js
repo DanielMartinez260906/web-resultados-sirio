@@ -303,13 +303,30 @@ function handleMockAction(action, data) {
 
     case 'ingresarPaciente': {
       db.Pacientes = db.Pacientes || [];
+      const now = new Date();
+      const code = 2180000 + db.Pacientes.length + 1;
       const newPaciente = {
-        fecha_ingreso: new Date().toISOString(),
+        fecha_ingreso: now.toISOString(),
+        codigo_registro: String(code),
         ...data
       };
       db.Pacientes.push(newPaciente);
       writeMockDB(db);
-      return { success: true, message: "Paciente ingresado localmente (Modo Demo)." };
+      return { 
+        success: true, 
+        message: "Paciente ingresado localmente (Modo Demo).",
+        codigo_registro: String(code),
+        fecha: now.toLocaleString('es-CO', { 
+          timeZone: 'America/Bogota',
+          year: 'numeric',
+          month: 'numeric',
+          day: 'numeric',
+          hour: '2-digit',
+          minute: '2-digit',
+          second: '2-digit',
+          hour12: false
+        })
+      };
     }
     
     case 'getClientResults': {

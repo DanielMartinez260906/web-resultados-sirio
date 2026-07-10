@@ -436,6 +436,13 @@ document.addEventListener('DOMContentLoaded', () => {
   const interpretLoading = document.getElementById('interpret-loading');
   const interpretResult = document.getElementById('interpret-result');
   const interpretTextContent = document.getElementById('interpret-text-content');
+  const printInterpretBtn = document.getElementById('print-interpret-btn');
+  const interpretError = document.getElementById('interpret-error');
+  const interpretErrorMsg = document.getElementById('interpret-error-msg');
+  const retryInterpretBtn = document.getElementById('retry-interpret-btn');
+
+  let activeInterpretationData = null;
+  let lastSelectedInterpretExam = null; // Guarda idResultado y nombreArchivo para reintentar
 
   function closeInterpretModal() {
     if (interpretModal) interpretModal.style.display = 'none';
@@ -444,6 +451,15 @@ document.addEventListener('DOMContentLoaded', () => {
   if (closeInterpretModalBtn) closeInterpretModalBtn.addEventListener('click', closeInterpretModal);
   if (closeInterpretBtn) closeInterpretBtn.addEventListener('click', closeInterpretModal);
 
+  if (printInterpretBtn) {
+    printInterpretBtn.addEventListener('click', () => {
+      if (activeInterpretationData && typeof SirioComprobantes !== 'undefined') {
+        SirioComprobantes.printInterpretacionIa(activeInterpretationData);
+      }
+    });
+  }
+
+
   // Cerrar haciendo clic fuera del contenido
   window.addEventListener('click', (e) => {
     if (e.target === interpretModal) {
@@ -451,57 +467,103 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
+  // Función para solicitar la interpretación y manejar las vistas (Carga, Resultado, Error)
+  async function performInterpretation(idResultado, nombreArchivo) {
+    if (!idResultado || !nombreArchivo) return;
+    
+    // Guardar para posibles reintentos
+    lastSelectedInterpretExam = { idResultado, nombreArchivo };
+
+    // Resetear datos de impresión
+    activeInterpretationData = null;
+    if (printInterpretBtn) printInterpretBtn.style.display = 'none';
+
+    // Mostrar pantalla de carga y ocultar el resto
+    if (interpretModal) interpretModal.style.display = 'flex';
+    if (interpretLoading) interpretLoading.style.display = 'flex';
+    if (interpretResult) interpretResult.style.display = 'none';
+    if (interpretError) interpretError.style.display = 'none';
+    if (interpretTextContent) interpretTextContent.innerHTML = '';
+
+    try {
+      const response = await fetch(`${SirioAuth.API_BASE}/api/client/interpret-exam`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          id_resultado: idResultado,
+          nombre_archivo: nombreArchivo
+        })
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        if (interpretLoading) interpretLoading.style.display = 'none';
+        if (interpretResult) interpretResult.style.display = 'block';
+        
+        let formattedText = '';
+        // Formatear texto interpretativo
+        if (interpretTextContent) {
+          formattedText = data.interpretation
+            .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+            .replace(/\*(.*?)\*/g, '<em>$1</em>');
+          interpretTextContent.innerHTML = formattedText;
+        }
+
+        // Guardar datos para impresión (SOLO la clínica, sin datos de pacientes como código/nombre!)
+        const resultObject = allResults.find(r => r.id_resultado === idResultado);
+        activeInterpretationData = {
+          fecha: new Date().toLocaleString('es-CO'),
+          codigo_interpretacion: 'IA-' + idResultado,
+          centro_veterinario: currentUser.nombre || 'N/A',
+          nombre_examen: resultObject ? resultObject.nombre_examen : nombreArchivo,
+          fecha_examen: resultObject ? SirioAuth.formatDate(resultObject.fecha_subida) : 'N/A',
+          analisis_html: formattedText
+        };
+
+        if (printInterpretBtn) printInterpretBtn.style.display = 'inline-flex';
+      } else {
+        // Mostrar error en la tarjeta
+        if (interpretLoading) interpretLoading.style.display = 'none';
+        if (interpretError) {
+          interpretError.style.display = 'flex';
+          if (interpretErrorMsg) {
+            interpretErrorMsg.innerText = data.message || 'Error en el servicio de interpretación por IA.';
+          }
+        }
+      }
+    } catch (error) {
+      // Mostrar error de conexión/red en la tarjeta
+      if (interpretLoading) interpretLoading.style.display = 'none';
+      if (interpretError) {
+        interpretError.style.display = 'flex';
+        if (interpretErrorMsg) {
+          interpretErrorMsg.innerText = error.message || 'Error de conexión con el servidor (generativelanguage.googleapis.com).';
+        }
+      }
+      console.error('Error al solicitar interpretación por IA:', error);
+    }
+  }
+
   // Delegación de eventos para el botón "Interpretar (IA)"
   if (resultsContainer) {
-    resultsContainer.addEventListener('click', async (e) => {
+    resultsContainer.addEventListener('click', (e) => {
       const btn = e.target.closest('.btn-interpret-ia');
       if (!btn) return;
-
+      
       const idResultado = btn.dataset.id;
       const nombreArchivo = btn.dataset.archivo;
+      performInterpretation(idResultado, nombreArchivo);
+    });
+  }
 
-      if (!idResultado || !nombreArchivo) return;
-
-      // Abrir modal y mostrar pantalla de carga
-      if (interpretModal) interpretModal.style.display = 'flex';
-      if (interpretLoading) interpretLoading.style.display = 'flex';
-      if (interpretResult) interpretResult.style.display = 'none';
-      if (interpretTextContent) interpretTextContent.innerHTML = '';
-
-      try {
-        const response = await fetch(`${SirioAuth.API_BASE}/api/client/interpret-exam`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({
-            id_resultado: idResultado,
-            nombre_archivo: nombreArchivo
-          })
-        });
-
-        const data = await response.json();
-
-        if (data.success) {
-          if (interpretLoading) interpretLoading.style.display = 'none';
-          if (interpretResult) interpretResult.style.display = 'block';
-          
-          // Formatear texto interpretativo
-          if (interpretTextContent) {
-            // Renderizado básico de Markdown simple para negritas y listas
-            let formattedText = data.interpretation
-              .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-              .replace(/\*(.*?)\*/g, '<em>$1</em>');
-            interpretTextContent.innerHTML = formattedText;
-          }
-        } else {
-          closeInterpretModal();
-          showGlobalAlert(data.message || 'Error al obtener la interpretación del examen.', 'error');
-        }
-      } catch (error) {
-        closeInterpretModal();
-        console.error('Error al solicitar interpretación por IA:', error);
-        showGlobalAlert('Error de conexión con el servidor al intentar interpretar el examen.', 'error');
+  // Listener para el botón de reintentar dentro del modal
+  if (retryInterpretBtn) {
+    retryInterpretBtn.addEventListener('click', () => {
+      if (lastSelectedInterpretExam) {
+        performInterpretation(lastSelectedInterpretExam.idResultado, lastSelectedInterpretExam.nombreArchivo);
       }
     });
   }
@@ -1200,7 +1262,36 @@ document.addEventListener('DOMContentLoaded', () => {
         SirioAuth.hideLoading();
 
         if (data.success) {
-          showGlobalAlert('Paciente ingresado con éxito y recolección programada.', 'success');
+          showGlobalAlert('Paciente ingresado con éxito y comprobante generado.', 'success');
+          
+          // Generar comprobante impreso
+          const regData = {
+            fecha: data.fecha || new Date().toLocaleString('es-CO'),
+            codigo_registro: data.codigo_registro || "2180001",
+            correo_centro: currentUser.correo || 'N/A',
+            centro_veterinario: currentUser.nombre || 'N/A',
+            medico: payload.medico,
+            propietario: payload.propietario,
+            paciente_nombre: payload.paciente_nombre,
+            especie: payload.especie,
+            raza: payload.raza,
+            edad: payload.edad,
+            sexo: payload.sexo,
+            muestra: payload.tipo_muestra || 'Ninguna',
+            examenes_solicitados: payload.examenes_solicitados || 'Ninguno',
+            otros_examenes: payload.otros_examenes || '',
+            observaciones: payload.observaciones || '',
+            direccion_recoleccion: payload.direccion_recoleccion,
+            contacto_recoleccion: payload.contacto_recoleccion,
+            quien_diligencia: payload.quien_diligencia,
+            datos_especiales_tipo: payload.datos_especiales_tipo,
+            datos_especiales_detalle: payload.datos_especiales_detalle
+          };
+          
+          if (typeof SirioComprobantes !== 'undefined') {
+            SirioComprobantes.printIngresoPaciente(regData);
+          }
+
           resetIngresarForm();
           changeStep(3, 1);
           const resultsTabBtn = document.querySelector('[data-tab="tab-client-results"]');

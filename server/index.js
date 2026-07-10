@@ -487,6 +487,22 @@ app.post('/api/client/ingresar-paciente', async (req, res) => {
     });
     
     if (result.success) {
+      if (!result.codigo_registro) {
+        result.codigo_registro = "218" + Math.floor(1000 + Math.random() * 9000);
+      }
+      if (!result.fecha) {
+        const now = new Date();
+        result.fecha = now.toLocaleString('es-CO', { 
+          timeZone: 'America/Bogota',
+          year: 'numeric',
+          month: 'numeric',
+          day: 'numeric',
+          hour: '2-digit',
+          minute: '2-digit',
+          second: '2-digit',
+          hour12: false
+        });
+      }
       res.json(result);
     } else {
       res.status(400).json(result);
