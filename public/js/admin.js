@@ -11,6 +11,18 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('admin-name').innerText = currentUser.nombre;
   document.getElementById('logout-btn').addEventListener('click', () => SirioAuth.logout());
 
+  // Lógica del botón de recarga
+  const reloadBtn = document.getElementById('reload-btn');
+  if (reloadBtn) {
+    reloadBtn.addEventListener('click', () => {
+      const icon = reloadBtn.querySelector('i');
+      if (icon) icon.classList.add('fa-spin');
+      setTimeout(() => {
+        window.location.reload();
+      }, 300);
+    });
+  }
+
   // Variables de estado
   let allClients = [];
   let selectedClient = null;
