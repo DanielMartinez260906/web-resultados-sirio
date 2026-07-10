@@ -743,6 +743,56 @@ app.post('/api/admin/delete-client', async (req, res) => {
   }
 });
 
+// API: Obtener personal del laboratorio (Solo Admins)
+app.get('/api/admin/staff', async (req, res) => {
+  try {
+    const result = await db.getAdmins();
+    res.json(result);
+  } catch (error) {
+    console.error('Error al obtener personal:', error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
+// API: Actualizar perfil de personal del laboratorio (Solo Admins)
+app.post('/api/admin/staff/update', async (req, res) => {
+  const { id_usuario, nombre, identificacion, contrasena } = req.body;
+  if (!id_usuario) {
+    return res.status(400).json({ success: false, message: 'El ID de usuario es requerido.' });
+  }
+  try {
+    const result = await db.updateAdmin({ id_usuario, nombre, identificacion, contrasena });
+    res.json(result);
+  } catch (error) {
+    console.error('Error al actualizar personal:', error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
+// API: Eliminar personal del laboratorio (Solo Admins)
+app.post('/api/admin/staff/delete', async (req, res) => {
+  const { id_usuario, active_user_id } = req.body;
+  if (!id_usuario) {
+    return res.status(400).json({ success: false, message: 'El ID de usuario es requerido.' });
+  }
+
+  // Evitar que el administrador principal o la cuenta activa se auto-elimine
+  if (id_usuario === 'U000') {
+    return res.status(400).json({ success: false, message: 'No se puede eliminar la cuenta del administrador principal (U000).' });
+  }
+  if (active_user_id && id_usuario === active_user_id) {
+    return res.status(400).json({ success: false, message: 'No puedes eliminar tu propio perfil mientras tienes la sesión activa.' });
+  }
+
+  try {
+    const result = await db.deleteAdmin(id_usuario);
+    res.json(result);
+  } catch (error) {
+    console.error('Error al eliminar personal:', error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
 // API: Eliminar todos los exámenes y sus PDFs (Solo Admins)
 app.post('/api/admin/delete-all-results', async (req, res) => {
   try {

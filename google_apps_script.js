@@ -90,6 +90,9 @@ function doPost(e) {
     else if (action === "saveSubscription") { response = saveSubscription(doc, data); }
     else if (action === "deleteSubscription") { response = deleteSubscription(doc, data); }
     else if (action === "getSubscriptions") { response = getSubscriptions(doc, data); }
+    else if (action === "getAdmins") { response = getAdmins(doc); }
+    else if (action === "updateAdmin") { response = updateAdmin(doc, data); }
+    else if (action === "deleteAdmin") { response = deleteAdmin(doc, data); }
     else { response.message = "Accion no reconocida: " + action; }
 
   } catch (error) {
@@ -128,6 +131,17 @@ function migrateSheets(doc) {
         cell.setFontWeight("bold");
         cell.setBackground("#0a192f");
         cell.setFontColor("#ffffff");
+        SpreadsheetApp.flush();
+      }
+
+      // Agregar columna admin_id si no existe
+      if (!("admin_id" in colMap)) {
+        var newColId = sheet.getLastColumn() + 1;
+        var cellId   = sheet.getRange(1, newColId);
+        cellId.setValue("admin_id");
+        cellId.setFontWeight("bold");
+        cellId.setBackground("#0a192f");
+        cellId.setFontColor("#ffffff");
         SpreadsheetApp.flush();
       }
 
@@ -179,7 +193,7 @@ function migrateSheets(doc) {
 function checkAndInitSheets(doc) {
   var sheetsConfig = {
     "Usuarios":  ["id_usuario","nombre","identificacion","usuario","contrasena","rol","fecha_registro","direccion","correo","telefono","moroso"],
-    "Resultados":["id_resultado","id_usuario","nombre_examen","nombre_archivo","fecha_subida","admin_nombre","retenido"],
+    "Resultados":["id_resultado","id_usuario","nombre_examen","nombre_archivo","fecha_subida","admin_id","admin_nombre","retenido"],
     "Accesos":   ["id_log","usuario","rol","fecha_hora","estado"],
     "Configuracion": ["clave", "valor"],
     "Estado_Portafolio": ["clave", "valor"],
@@ -631,6 +645,7 @@ function addResult(doc, data) {
     if ("nombre_examen" in colMap) newRow[colMap["nombre_examen"]] = item.nombre_examen || "";
     if ("nombre_archivo"in colMap) newRow[colMap["nombre_archivo"]]= item.nombre_archivo|| "";
     if ("fecha_subida"  in colMap) newRow[colMap["fecha_subida"]]  = today;
+    if ("admin_id"      in colMap) newRow[colMap["admin_id"]]      = item.admin_id      || "";
     if ("admin_nombre"  in colMap) newRow[colMap["admin_nombre"]]  = item.admin_nombre  || "";
     if ("retenido"     in colMap) newRow[colMap["retenido"]]     = item.retenido ? "true" : "false";
 
@@ -1322,6 +1337,97 @@ function getSubscriptions(doc, data) {
   }
   
   return { success: true, subscriptions: list };
+}
+
+// ============================================================
+// OBTENER PERSONAL DEL LABORATORIO (ADMINS) Y SUS ESTADÍSTICAS
+// ============================================================
+function getAdmins(doc) {
+  var userSheet = doc.getSheetByName("Usuarios");
+  var userRows  = userSheet.getDataRange().getValues();
+  var userHeaders = userRows[0];
+  var userColMap = buildColMap(userHeaders);
+
+  var resSheet = doc.getSheetByName("Resultados");
+  var resRows = resSheet.getDataRange().getValues();
+  var resHeaders = resRows[0];
+  var resColMap = buildColMap(resHeaders);
+
+  // Contar los resultados por admin_id
+  var resultsCountMap = {};
+  for (var k = 1; k < resRows.length; k++) {
+    var adminId = resColMap["admin_id"] !== undefined ? resRows[k][resColMap["admin_id"]].toString().trim() : "";
+    if (adminId) {
+      resultsCountMap[adminId] = (resultsCountMap[adminId] || 0) + 1;
+    }
+  }
+
+  var list = [];
+  for (var i = 1; i < userRows.length; i++) {
+    if (userRows[i][userColMap["rol"]] === "admin") {
+      var id = userRows[i][userColMap["id_usuario"]].toString().trim();
+      list.push({
+        id_usuario: id,
+        nombre: userRows[i][userColMap["nombre"]],
+        identificacion: userRows[i][userColMap["identificacion"]],
+        usuario: userRows[i][userColMap["usuario"]],
+        contrasena: userRows[i][userColMap["contrasena"]],
+        rol: "admin",
+        fecha_registro: userRows[i][userColMap["fecha_registro"]],
+        total_enviados: resultsCountMap[id] || 0
+      });
+    }
+  }
+  return { success: true, admins: list };
+}
+
+// ============================================================
+// ACTUALIZAR ADMINISTRADOR (PERSONAL)
+// ============================================================
+function updateAdmin(doc, data) {
+  var sheet = doc.getSheetByName("Usuarios");
+  var rows  = sheet.getDataRange().getValues();
+  var headers = rows[0];
+  var colMap = buildColMap(headers);
+  var idUsuario = data.id_usuario;
+
+  for (var i = 1; i < rows.length; i++) {
+    if (rows[i][colMap["id_usuario"]].toString().trim() === idUsuario.toString().trim() && rows[i][colMap["rol"]] === "admin") {
+      var rowNum = i + 1;
+      if (data.nombre !== undefined) {
+        sheet.getRange(rowNum, colMap["nombre"] + 1).setValue(data.nombre);
+      }
+      if (data.identificacion !== undefined) {
+        sheet.getRange(rowNum, colMap["identificacion"] + 1).setValue(data.identificacion);
+      }
+      if (data.contrasena !== undefined && data.contrasena.trim() !== "") {
+        sheet.getRange(rowNum, colMap["contrasena"] + 1).setValue(data.contrasena.trim());
+      }
+      SpreadsheetApp.flush();
+      return { success: true, message: "Perfil de personal actualizado correctamente." };
+    }
+  }
+  return { success: false, message: "El miembro del personal especificado no existe." };
+}
+
+// ============================================================
+// ELIMINAR ADMINISTRADOR (PERSONAL)
+// ============================================================
+function deleteAdmin(doc, data) {
+  var sheet = doc.getSheetByName("Usuarios");
+  var rows  = sheet.getDataRange().getValues();
+  var headers = rows[0];
+  var colMap = buildColMap(headers);
+  var idUsuario = data.id_usuario;
+
+  for (var i = 1; i < rows.length; i++) {
+    if (rows[i][colMap["id_usuario"]].toString().trim() === idUsuario.toString().trim() && rows[i][colMap["rol"]] === "admin") {
+      sheet.deleteRow(i + 1);
+      SpreadsheetApp.flush();
+      return { success: true, message: "Perfil de personal eliminado de la base de datos." };
+    }
+  }
+  return { success: false, message: "El miembro del personal especificado no existe." };
 }
 
 

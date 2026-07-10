@@ -17,6 +17,9 @@ document.addEventListener('DOMContentLoaded', () => {
   let selectedFiles = []; // Almacena el listado de archivos seleccionados/arrastrados
   let allResults = []; // Almacena todos los resultados para el historial general
   let isJefasUnlocked = false; // Estado de autorización para pestañas restringidas
+  let allStaff = [];
+  let selectedStaff = null;
+  let activeDirectory = 'clients'; // 'clients' o 'staff'
 
   // Elementos del DOM
   const clientsContainer = document.getElementById('clients-container');
@@ -1066,10 +1069,15 @@ document.addEventListener('DOMContentLoaded', () => {
       }
 
       if (targetTab === 'tab-clients') {
-        renderDirClients(allClients);
-        selectedDirClient = null;
-        if (dirClientDetailView) dirClientDetailView.style.display = 'none';
-        if (dirNoClientSelected) dirNoClientSelected.style.display = 'flex';
+        const dirToggleClientsBtn = document.getElementById('dir-toggle-clients-btn');
+        if (dirToggleClientsBtn) {
+          dirToggleClientsBtn.click();
+        } else {
+          renderDirClients(allClients);
+          selectedDirClient = null;
+          if (dirClientDetailView) dirClientDetailView.style.display = 'none';
+          if (dirNoClientSelected) dirNoClientSelected.style.display = 'flex';
+        }
       }
 
       if (targetTab === 'tab-config') {
@@ -1504,6 +1512,369 @@ document.addEventListener('DOMContentLoaded', () => {
     dirDeleteClientBtn.addEventListener('click', () => {
       if (selectedDirClient) {
         openDeleteClientModal(selectedDirClient);
+      }
+    });
+  }
+
+  // ==========================================================================
+  // LÓGICA DEL DIRECTORIO DEL PERSONAL DEL LABORATORIO
+  // ==========================================================================
+  const dirToggleClientsBtn = document.getElementById('dir-toggle-clients-btn');
+  const dirToggleStaffBtn = document.getElementById('dir-toggle-staff-btn');
+  const dirClientsSection = document.getElementById('dir-clients-section');
+  const dirStaffSection = document.getElementById('dir-staff-section');
+  const dirNoStaffSelected = document.getElementById('dir-no-staff-selected');
+  const dirStaffDetailView = document.getElementById('dir-staff-detail-view');
+  const searchDirStaffInput = document.getElementById('search-dir-staff');
+  const dirStaffContainer = document.getElementById('dir-staff-container');
+
+  // Cargar personal del laboratorio
+  async function loadStaff() {
+    try {
+      const response = await fetch(`${SirioAuth.API_BASE}/api/admin/staff`);
+      const data = await response.json();
+      if (data.success) {
+        allStaff = data.admins;
+        renderDirStaff(allStaff);
+      } else {
+        showGlobalAlert(data.message || 'Error al cargar el personal del laboratorio.', 'error');
+      }
+    } catch (error) {
+      console.error('Error al cargar personal:', error);
+      showGlobalAlert('No se pudo establecer conexión para cargar personal.', 'error');
+    }
+  }
+
+  // Renderizar directorio de personal
+  function renderDirStaff(staffList) {
+    if (!dirStaffContainer) return;
+    dirStaffContainer.innerHTML = '';
+    
+    if (staffList.length === 0) {
+      dirStaffContainer.innerHTML = '<p style="text-align: center; color: var(--text-dark); padding: 1rem 0;">No se encontró personal.</p>';
+      return;
+    }
+    
+    staffList.forEach(member => {
+      const item = document.createElement('div');
+      item.className = 'client-item';
+      if (selectedStaff && selectedStaff.id_usuario === member.id_usuario) {
+        item.classList.add('active');
+      }
+      
+      item.innerHTML = `
+        <div class="client-item-info">
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <h4 style="margin: 0;">${member.nombre}</h4>
+          </div>
+          <p style="margin-top: 4px;"><i class="fa-solid fa-passport"></i> DNI: ${member.identificacion || '00000000'} | U: ${member.usuario}</p>
+        </div>
+        <span class="client-item-badge" style="background: var(--color-accent); color: #000; border-color: var(--color-accent); font-weight: 700; font-size: 0.72rem;">${member.total_enviados} env.</span>
+      `;
+      
+      item.addEventListener('click', () => {
+        selectStaff(member);
+        document.querySelectorAll('#dir-staff-container .client-item').forEach(el => el.classList.remove('active'));
+        item.classList.add('active');
+      });
+      
+      dirStaffContainer.appendChild(item);
+    });
+  }
+
+  // Seleccionar miembro de personal en el directorio
+  function selectStaff(member) {
+    selectedStaff = member;
+    
+    // Ocultar formulario de edición y mostrar vista lectura
+    if (document.getElementById('dir-edit-staff-form')) {
+      document.getElementById('dir-edit-staff-form').style.display = 'none';
+    }
+    if (dirStaffDetailView) dirStaffDetailView.style.display = 'block';
+    if (dirNoStaffSelected) dirNoStaffSelected.style.display = 'none';
+    
+    if (document.getElementById('dir-staff-name')) {
+      document.getElementById('dir-staff-name').innerText = member.nombre;
+    }
+    if (document.getElementById('dir-staff-id-val')) {
+      document.getElementById('dir-staff-id-val').innerText = member.identificacion || '00000000';
+    }
+    if (document.getElementById('dir-staff-username-val')) {
+      document.getElementById('dir-staff-username-val').innerText = member.usuario;
+    }
+    if (document.getElementById('dir-staff-sent-count-val')) {
+      document.getElementById('dir-staff-sent-count-val').innerText = member.total_enviados || 0;
+    }
+    if (document.getElementById('dir-staff-date-val')) {
+      document.getElementById('dir-staff-date-val').innerText = member.fecha_registro ? member.fecha_registro.split('T')[0] : '...';
+    }
+
+    const dirStaffPwdVal = document.getElementById('dir-staff-password-val');
+    if (dirStaffPwdVal) {
+      dirStaffPwdVal.setAttribute('data-password', member.contrasena || '');
+      dirStaffPwdVal.innerText = '••••••••';
+      const dirStaffToggleBtn = document.getElementById('toggle-dir-staff-pwd-btn');
+      if (dirStaffToggleBtn) {
+        dirStaffToggleBtn.innerHTML = '<i class="fa-solid fa-eye"></i>';
+      }
+    }
+    
+    // Rellenar formulario de edición
+    if (document.getElementById('edit-dir-staff-name')) {
+      document.getElementById('edit-dir-staff-name').value = member.nombre;
+    }
+    if (document.getElementById('edit-dir-staff-id')) {
+      document.getElementById('edit-dir-staff-id').value = member.identificacion || '00000000';
+    }
+    if (document.getElementById('edit-dir-staff-password')) {
+      document.getElementById('edit-dir-staff-password').value = '';
+    }
+  }
+
+  // Toggles de selección de directorio
+  if (dirToggleClientsBtn) {
+    dirToggleClientsBtn.addEventListener('click', () => {
+      activeDirectory = 'clients';
+      dirToggleClientsBtn.style.background = 'var(--color-primary)';
+      dirToggleClientsBtn.style.color = '#fff';
+      dirToggleStaffBtn.style.background = 'transparent';
+      dirToggleStaffBtn.style.color = 'var(--text-muted)';
+      
+      dirClientsSection.style.display = 'flex';
+      dirStaffSection.style.display = 'none';
+      
+      dirStaffDetailView.style.display = 'none';
+      dirNoStaffSelected.style.display = 'none';
+      
+      if (selectedDirClient) {
+        selectDirClient(selectedDirClient);
+      } else {
+        if (dirClientDetailView) dirClientDetailView.style.display = 'none';
+        if (dirNoClientSelected) dirNoClientSelected.style.display = 'flex';
+      }
+    });
+  }
+
+  if (dirToggleStaffBtn) {
+    dirToggleStaffBtn.addEventListener('click', () => {
+      activeDirectory = 'staff';
+      dirToggleStaffBtn.style.background = 'var(--color-accent)';
+      dirToggleStaffBtn.style.color = '#000';
+      dirToggleClientsBtn.style.background = 'transparent';
+      dirToggleClientsBtn.style.color = 'var(--text-muted)';
+      
+      dirClientsSection.style.display = 'none';
+      dirStaffSection.style.display = 'flex';
+      
+      if (dirClientDetailView) dirClientDetailView.style.display = 'none';
+      if (dirNoClientSelected) dirNoClientSelected.style.display = 'none';
+      
+      loadStaff();
+      
+      if (selectedStaff) {
+        selectStaff(selectedStaff);
+      } else {
+        if (dirStaffDetailView) dirStaffDetailView.style.display = 'none';
+        if (dirNoStaffSelected) dirNoStaffSelected.style.display = 'flex';
+      }
+    });
+  }
+
+  // Botón para alternar visibilidad de contraseña del personal
+  const toggleDirStaffPwdBtn = document.getElementById('toggle-dir-staff-pwd-btn');
+  if (toggleDirStaffPwdBtn) {
+    toggleDirStaffPwdBtn.addEventListener('click', () => {
+      const dirStaffPwdVal = document.getElementById('dir-staff-password-val');
+      if (dirStaffPwdVal && toggleDirStaffPwdBtn) {
+        if (dirStaffPwdVal.innerText === '••••••••') {
+          dirStaffPwdVal.innerText = dirStaffPwdVal.getAttribute('data-password') || '';
+          toggleDirStaffPwdBtn.innerHTML = '<i class="fa-solid fa-eye-slash"></i>';
+        } else {
+          dirStaffPwdVal.innerText = '••••••••';
+          toggleDirStaffPwdBtn.innerHTML = '<i class="fa-solid fa-eye"></i>';
+        }
+      }
+    });
+  }
+
+  // Filtrar directorio de personal
+  if (searchDirStaffInput) {
+    searchDirStaffInput.addEventListener('keyup', () => {
+      const query = searchDirStaffInput.value.toLowerCase().trim();
+      const filtered = allStaff.filter(s => 
+        s.nombre.toLowerCase().includes(query) || 
+        s.usuario.toLowerCase().includes(query) ||
+        (s.identificacion || '').toString().includes(query)
+      );
+      renderDirStaff(filtered);
+    });
+  }
+
+  // Botón mostrar edición de personal
+  const dirEditStaffBtn = document.getElementById('dir-edit-staff-btn');
+  const dirEditStaffForm = document.getElementById('dir-edit-staff-form');
+  const cancelEditDirStaffBtn = document.getElementById('cancel-edit-dir-staff-btn');
+
+  if (dirEditStaffBtn) {
+    dirEditStaffBtn.addEventListener('click', () => {
+      if (dirEditStaffForm) dirEditStaffForm.style.display = 'block';
+    });
+  }
+
+  // Botón cancelar edición de personal
+  if (cancelEditDirStaffBtn) {
+    cancelEditDirStaffBtn.addEventListener('click', () => {
+      if (dirEditStaffForm) dirEditStaffForm.style.display = 'none';
+    });
+  }
+
+  // Formulario de edición del personal
+  if (dirEditStaffForm) {
+    dirEditStaffForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      if (!selectedStaff) return;
+      
+      const nombre = document.getElementById('edit-dir-staff-name').value.trim();
+      const identificacion = document.getElementById('edit-dir-staff-id').value.trim();
+      const contrasena = document.getElementById('edit-dir-staff-password').value;
+      
+      SirioAuth.showLoading('Guardando cambios del personal...');
+      
+      try {
+        const response = await fetch(`${SirioAuth.API_BASE}/api/admin/staff/update`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            id_usuario: selectedStaff.id_usuario,
+            nombre,
+            identificacion,
+            contrasena
+          })
+        });
+        
+        const result = await response.json();
+        SirioAuth.hideLoading();
+        
+        if (result.success) {
+          showGlobalAlert('Perfil del personal actualizado correctamente.', 'success');
+          if (dirEditStaffForm) dirEditStaffForm.style.display = 'none';
+          
+          // Actualizar nombre del admin si se editó a sí mismo
+          if (selectedStaff.id_usuario === currentUser.id_usuario) {
+            currentUser.nombre = nombre;
+            document.getElementById('admin-name').innerText = nombre;
+            localStorage.setItem('sirio_user', JSON.stringify(currentUser));
+          }
+
+          await loadStaff();
+          
+          const updated = allStaff.find(s => s.id_usuario === selectedStaff.id_usuario);
+          if (updated) {
+            selectStaff(updated);
+          }
+        } else {
+          showGlobalAlert(result.message || 'Error al actualizar el personal.', 'error');
+        }
+      } catch (err) {
+        SirioAuth.hideLoading();
+        console.error('Error al actualizar personal:', err);
+        showGlobalAlert('Error de red al intentar actualizar el personal.', 'error');
+      }
+    });
+  }
+
+  // Elementos del Modal de Eliminación de Personal
+  const deleteStaffModal = document.getElementById('delete-staff-modal');
+  const deleteStaffModalName = document.getElementById('delete-staff-modal-name');
+  const deleteStaffModalUsername = document.getElementById('delete-staff-modal-username');
+  const deleteStaffConfirmInput = document.getElementById('delete-staff-confirm-input');
+  const confirmDeleteStaffBtn = document.getElementById('confirm-delete-staff-btn');
+  const cancelDeleteStaffBtn = document.getElementById('cancel-delete-staff-btn');
+  const closeDeleteStaffModalBtn = document.getElementById('close-delete-staff-modal');
+  const dirDeleteStaffBtn = document.getElementById('dir-delete-staff-btn');
+
+  function closeDeleteStaffModalFunc() {
+    if (deleteStaffModal) deleteStaffModal.style.display = 'none';
+    if (deleteStaffConfirmInput) deleteStaffConfirmInput.value = '';
+    if (confirmDeleteStaffBtn) confirmDeleteStaffBtn.disabled = true;
+  }
+
+  function openDeleteStaffModal(member) {
+    if (!member) return;
+    if (deleteStaffModalName) deleteStaffModalName.innerText = member.nombre;
+    if (deleteStaffModalUsername) deleteStaffModalUsername.innerText = member.usuario;
+    if (deleteStaffConfirmInput) deleteStaffConfirmInput.value = '';
+    if (confirmDeleteStaffBtn) confirmDeleteStaffBtn.disabled = true;
+    if (deleteStaffModal) deleteStaffModal.style.display = 'flex';
+  }
+
+  if (deleteStaffConfirmInput) {
+    deleteStaffConfirmInput.addEventListener('input', () => {
+      const inputVal = deleteStaffConfirmInput.value.trim().toLowerCase();
+      const expectedVal = selectedStaff ? selectedStaff.usuario.toLowerCase() : '';
+      if (inputVal === expectedVal && expectedVal !== '') {
+        if (confirmDeleteStaffBtn) confirmDeleteStaffBtn.disabled = false;
+      } else {
+        if (confirmDeleteStaffBtn) confirmDeleteStaffBtn.disabled = true;
+      }
+    });
+  }
+
+  if (cancelDeleteStaffBtn) cancelDeleteStaffBtn.addEventListener('click', closeDeleteStaffModalFunc);
+  if (closeDeleteStaffModalBtn) closeDeleteStaffModalBtn.addEventListener('click', closeDeleteStaffModalFunc);
+
+  if (confirmDeleteStaffBtn) {
+    confirmDeleteStaffBtn.addEventListener('click', async () => {
+      if (selectedStaff) {
+        closeDeleteStaffModalFunc();
+        
+        SirioAuth.showLoading(`Eliminando al miembro del personal ${selectedStaff.nombre}...`);
+        
+        try {
+          const response = await fetch(`${SirioAuth.API_BASE}/api/admin/staff/delete`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              id_usuario: selectedStaff.id_usuario,
+              active_user_id: currentUser.id_usuario
+            })
+          });
+          
+          const result = await response.json();
+          SirioAuth.hideLoading();
+          
+          if (result.success) {
+            showGlobalAlert('Miembro del personal eliminado correctamente.', 'success');
+            selectedStaff = null;
+            if (dirStaffDetailView) dirStaffDetailView.style.display = 'none';
+            if (dirNoStaffSelected) dirNoStaffSelected.style.display = 'flex';
+            
+            await loadStaff();
+          } else {
+            showGlobalAlert(result.message || 'Error al eliminar al personal.', 'error');
+          }
+        } catch (error) {
+          SirioAuth.hideLoading();
+          console.error('Error al eliminar personal:', error);
+          showGlobalAlert('Error de red al intentar eliminar al personal.', 'error');
+        }
+      }
+    });
+  }
+
+  if (dirDeleteStaffBtn) {
+    dirDeleteStaffBtn.addEventListener('click', () => {
+      if (selectedStaff) {
+        // Validación de seguridad adicional
+        if (selectedStaff.id_usuario === 'U000') {
+          showGlobalAlert('No se puede eliminar la cuenta del administrador principal (U000).', 'error');
+          return;
+        }
+        if (selectedStaff.id_usuario === currentUser.id_usuario) {
+          showGlobalAlert('No puedes eliminar tu propio perfil mientras tienes la sesión activa.', 'error');
+          return;
+        }
+        openDeleteStaffModal(selectedStaff);
       }
     });
   }

@@ -141,6 +141,18 @@ async function callSheetsAPI(action, data = {}) {
       },
       timeout: 15000 // 15 segundos de timeout
     });
+    
+    // Fallback si la acción no está implementada en el Google Sheets remoto
+    if (response.data && response.data.success === false && 
+        response.data.message && (
+          response.data.message.toLowerCase().includes('accion no reconocida') || 
+          response.data.message.toLowerCase().includes('action no reconocida') ||
+          response.data.message.toLowerCase().includes('no reconocida')
+        )) {
+      console.warn(`⚠️  Google Sheets remoto no tiene la acción "${action}". Usando base de datos local.`);
+      return handleMockAction(action, data);
+    }
+    
     return response.data;
   } catch (error) {
     console.warn(`⚠️  Google Sheets no disponible para acción "${action}". Usando base de datos local como respaldo. (${error.message})`);
@@ -537,6 +549,58 @@ function handleMockAction(action, data) {
       };
     }
 
+    case 'getAdmins': {
+      const admins = db.Usuarios.filter(u => u.rol === 'admin');
+      const resultsCountMap = {};
+      db.Resultados.forEach(r => {
+        if (r.admin_id) {
+          resultsCountMap[r.admin_id] = (resultsCountMap[r.admin_id] || 0) + 1;
+        }
+      });
+      const adminsWithStats = admins.map(admin => ({
+        id_usuario: admin.id_usuario,
+        nombre: admin.nombre,
+        identificacion: admin.identificacion,
+        usuario: admin.usuario,
+        contrasena: admin.contrasena,
+        rol: admin.rol,
+        fecha_registro: admin.fecha_registro,
+        total_enviados: resultsCountMap[admin.id_usuario] || 0
+      }));
+      return { success: true, admins: adminsWithStats };
+    }
+
+    case 'updateAdmin': {
+      const idUsuario = data.id_usuario;
+      const admin = db.Usuarios.find(u => u.id_usuario === idUsuario && u.rol === 'admin');
+      
+      if (!admin) {
+        return { success: false, message: "El administrador especificado no existe." };
+      }
+      
+      if (data.nombre !== undefined) admin.nombre = data.nombre;
+      if (data.identificacion !== undefined) admin.identificacion = data.identificacion;
+      if (data.contrasena !== undefined && data.contrasena.trim() !== "") {
+        admin.contrasena = data.contrasena.trim();
+      }
+      
+      writeMockDB(db);
+      return { success: true, message: "Perfil de personal actualizado correctamente.", user: admin };
+    }
+
+    case 'deleteAdmin': {
+      const idUsuario = data.id_usuario;
+      const adminIndex = db.Usuarios.findIndex(u => u.id_usuario === idUsuario && u.rol === 'admin');
+      
+      if (adminIndex === -1) {
+        return { success: false, message: "El administrador especificado no existe en la base de datos local." };
+      }
+      
+      db.Usuarios.splice(adminIndex, 1);
+      writeMockDB(db);
+      return { success: true, message: "Perfil de personal eliminado de la base de datos local." };
+    }
+
     case 'getConfig': {
       return { success: true, config: db.Configuracion || {} };
     }
@@ -670,5 +734,8 @@ module.exports = {
   ingresarPaciente: (pacienteData) => callPacientesAPI('ingresarPaciente', pacienteData),
   saveSubscription: (id_usuario, subscription) => callSheetsAPI('saveSubscription', { id_usuario, subscription }),
   deleteSubscription: (id_usuario, endpoint) => callSheetsAPI('deleteSubscription', { id_usuario, endpoint }),
-  getSubscriptions: (id_usuario) => callSheetsAPI('getSubscriptions', { id_usuario })
+  getSubscriptions: (id_usuario) => callSheetsAPI('getSubscriptions', { id_usuario }),
+  getAdmins: () => callSheetsAPI('getAdmins'),
+  updateAdmin: (adminData) => callSheetsAPI('updateAdmin', adminData),
+  deleteAdmin: (id_usuario) => callSheetsAPI('deleteAdmin', { id_usuario })
 };

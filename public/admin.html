@@ -359,28 +359,68 @@
     <!-- Pestaña 4: Ver Clientes y Perfiles -->
     <div id="tab-clients" class="tab-content" style="display: none;">
       <div class="dashboard-grid admin-layout">
-        <!-- Lista de Clientes -->
+        <!-- Lista de Clientes y Personal -->
         <div class="panel-card" style="flex-grow: 1; max-height: 600px; display: flex; flex-direction: column;">
-          <h3 class="panel-card-title" style="margin-bottom: 1rem;">
-            <i class="fa-solid fa-address-book"></i> Directorio de Clientes
-          </h3>
-          <div class="search-container" style="margin-bottom: 1rem;">
-            <i class="fa-solid fa-magnifying-glass"></i>
-            <input type="text" id="search-dir-client" placeholder="Buscar cliente por nombre o DNI...">
+          
+          <!-- Selector de Directorio -->
+          <div style="display: flex; gap: 10px; border: 1px solid var(--border-light); border-radius: 12px; padding: 6px; background: rgba(255,255,255,0.02); margin-bottom: 1rem;">
+            <button type="button" id="dir-toggle-clients-btn"
+              style="flex: 1; padding: 10px 8px; border-radius: 8px; border: none; cursor: pointer; font-family: var(--font-family); font-size: 0.82rem; font-weight: 600; transition: var(--transition-smooth); background: var(--color-primary); color: #fff; display: flex; align-items: center; justify-content: center; gap: 8px;">
+              <i class="fa-solid fa-address-book"></i> Clientes
+            </button>
+            <button type="button" id="dir-toggle-staff-btn"
+              style="flex: 1; padding: 10px 8px; border-radius: 8px; border: none; cursor: pointer; font-family: var(--font-family); font-size: 0.82rem; font-weight: 600; transition: var(--transition-smooth); background: transparent; color: var(--text-muted); display: flex; align-items: center; justify-content: center; gap: 8px;">
+              <i class="fa-solid fa-user-shield"></i> Personal
+            </button>
           </div>
-          <div class="client-list" id="dir-clients-container" style="flex-grow: 1; overflow-y: auto;">
-            <!-- Cargar lista de clientes aquí -->
+
+          <!-- Sección: Directorio de Clientes -->
+          <div id="dir-clients-section" style="display: flex; flex-direction: column; flex-grow: 1; min-height: 0;">
+            <h3 class="panel-card-title" style="margin-bottom: 1rem;">
+              <i class="fa-solid fa-address-book"></i> Directorio de Clientes
+            </h3>
+            <div class="search-container" style="margin-bottom: 1rem;">
+              <i class="fa-solid fa-magnifying-glass"></i>
+              <input type="text" id="search-dir-client" placeholder="Buscar cliente por nombre o DNI...">
+            </div>
+            <div class="client-list" id="dir-clients-container" style="flex-grow: 1; overflow-y: auto;">
+              <!-- Cargar lista de clientes aquí -->
+            </div>
           </div>
+
+          <!-- Sección: Directorio del Personal -->
+          <div id="dir-staff-section" style="display: none; flex-direction: column; flex-grow: 1; min-height: 0;">
+            <h3 class="panel-card-title" style="margin-bottom: 1rem;">
+              <i class="fa-solid fa-user-shield"></i> Personal del Laboratorio
+            </h3>
+            <div class="search-container" style="margin-bottom: 1rem;">
+              <i class="fa-solid fa-magnifying-glass"></i>
+              <input type="text" id="search-dir-staff" placeholder="Buscar personal por nombre o usuario...">
+            </div>
+            <div class="client-list" id="dir-staff-container" style="flex-grow: 1; overflow-y: auto;">
+              <!-- Cargar lista del personal aquí -->
+            </div>
+          </div>
+
         </div>
 
-        <!-- Detalle del Cliente Seleccionado -->
+        <!-- Detalle Seleccionado -->
         <div class="panel-card" style="flex-grow: 2; min-height: 350px;">
+          
+          <!-- Placeholders de vista vacía -->
           <div id="dir-no-client-selected" class="detail-view-placeholder" style="height: 100%;">
             <i class="fa-solid fa-address-card" style="font-size: 3rem; color: var(--text-dark); opacity: 0.3; margin-bottom: 1rem;"></i>
             <h3>Seleccione un Cliente</h3>
             <p>Seleccione un cliente de la lista de la izquierda para ver su perfil completo e información de contacto.</p>
           </div>
+
+          <div id="dir-no-staff-selected" class="detail-view-placeholder" style="display: none; height: 100%;">
+            <i class="fa-solid fa-user-gear" style="font-size: 3rem; color: var(--text-dark); opacity: 0.3; margin-bottom: 1rem;"></i>
+            <h3>Seleccione un Miembro del Personal</h3>
+            <p>Seleccione un miembro del personal de la lista de la izquierda para gestionar su perfil, cambiar contraseña o eliminar su cuenta.</p>
+          </div>
           
+          <!-- Detalle del Cliente -->
           <div id="dir-client-detail-view" style="display: none;">
             <div class="active-client-header" style="border-color: var(--color-primary); margin-bottom: 1.5rem; display: flex; justify-content: space-between; align-items: center; gap: 15px; flex-wrap: wrap; padding-bottom: 0.75rem;">
               <div class="active-client-details">
@@ -463,6 +503,79 @@
               </div>
             </form>
           </div>
+
+          <!-- Detalle del Personal (Personal) -->
+          <div id="dir-staff-detail-view" style="display: none;">
+            <div class="active-client-header" style="border-color: var(--color-accent); margin-bottom: 1.5rem; display: flex; justify-content: space-between; align-items: center; gap: 15px; flex-wrap: wrap; padding-bottom: 0.75rem;">
+              <div class="active-client-details">
+                <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 4px;">
+                  <h3 id="dir-staff-name" style="font-size: 1.25rem; font-weight: 700; color: var(--color-accent); margin: 0;">...</h3>
+                  <span id="dir-staff-role-badge" class="badge" style="background: rgba(14, 165, 233, 0.15); color: #38bdf8; border: 1.5px solid rgba(14, 165, 233, 0.3); font-size: 0.68rem; padding: 2px 7px; border-radius: 4px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;">PERSONAL</span>
+                </div>
+                <p style="margin: 0;"><i class="fa-solid fa-passport"></i> Identificación: <span id="dir-staff-id-val" style="font-weight: 600;">...</span></p>
+              </div>
+            </div>
+            
+            <div class="profile-details-grid" style="display: grid; grid-template-columns: 1fr; gap: 1rem; margin-bottom: 1.5rem;">
+              <div class="profile-detail-item" style="background: rgba(255, 255, 255, 0.02); padding: 12px; border-radius: 8px; border: 1px solid var(--border-light);">
+                <span style="font-size: 0.78rem; color: var(--text-muted); display: block; margin-bottom: 4px;">Usuario de Acceso</span>
+                <span id="dir-staff-username-val" style="font-weight: 600; color: var(--text-main);">...</span>
+              </div>
+              <div class="profile-detail-item" style="background: rgba(255, 255, 255, 0.02); padding: 12px; border-radius: 8px; border: 1px solid var(--border-light);">
+                <span style="font-size: 0.78rem; color: var(--text-muted); display: block; margin-bottom: 4px;">Contraseña de Acceso</span>
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                  <span id="dir-staff-password-val" style="font-weight: 600; color: var(--text-main); font-family: monospace; letter-spacing: 2px;">••••••••</span>
+                  <button type="button" id="toggle-dir-staff-pwd-btn" style="background: transparent; border: none; color: var(--color-accent); cursor: pointer; padding: 2px 6px;">
+                    <i class="fa-solid fa-eye"></i>
+                  </button>
+                </div>
+              </div>
+              <div class="profile-detail-item" style="background: rgba(255, 255, 255, 0.02); padding: 12px; border-radius: 8px; border: 1px solid var(--border-light);">
+                <span style="font-size: 0.78rem; color: var(--text-muted); display: block; margin-bottom: 4px;">Exámenes Enviados (Acumulado)</span>
+                <div style="display: flex; align-items: center; gap: 8px;">
+                  <div style="width: 28px; height: 28px; border-radius: 50%; background: rgba(212, 175, 55, 0.15); display: flex; align-items: center; justify-content: center; color: var(--color-accent); font-size: 0.85rem;">
+                    <i class="fa-solid fa-paper-plane"></i>
+                  </div>
+                  <span id="dir-staff-sent-count-val" style="font-weight: 700; color: var(--text-main); font-size: 1.1rem;">0</span>
+                </div>
+              </div>
+              <div class="profile-detail-item" style="background: rgba(255, 255, 255, 0.02); padding: 12px; border-radius: 8px; border: 1px solid var(--border-light);">
+                <span style="font-size: 0.78rem; color: var(--text-muted); display: block; margin-bottom: 4px;">Fecha de Registro</span>
+                <span id="dir-staff-date-val" style="font-weight: 600; color: var(--text-main);">...</span>
+              </div>
+            </div>
+            
+            <button id="dir-edit-staff-btn" class="btn btn-accent" style="width: 100%; gap: 8px; justify-content: center;">
+              <i class="fa-solid fa-user-pen"></i> Editar Perfil de Personal
+            </button>
+            <button id="dir-delete-staff-btn" class="btn btn-danger" style="width: 100%; gap: 8px; justify-content: center; margin-top: 0.75rem;">
+              <i class="fa-solid fa-user-slash"></i> Eliminar del Laboratorio
+            </button>
+            
+            <!-- Formulario de edición de personal (inicialmente oculto) -->
+            <form id="dir-edit-staff-form" style="display: none; margin-top: 1.5rem; border-top: 1px solid var(--border-light); padding-top: 1.5rem;">
+              <h4 style="margin-bottom: 1rem; color: var(--color-accent);"><i class="fa-solid fa-pen-to-square"></i> Modificar Datos de Personal</h4>
+              
+              <div class="form-group">
+                <label for="edit-dir-staff-name">Nombre Completo</label>
+                <input type="text" id="edit-dir-staff-name" class="form-control" required>
+              </div>
+              <div class="form-group">
+                <label for="edit-dir-staff-id">Identificación</label>
+                <input type="text" id="edit-dir-staff-id" class="form-control" required>
+              </div>
+              <div class="form-group">
+                <label for="edit-dir-staff-password">Nueva Contraseña (Dejar vacío para conservar actual)</label>
+                <input type="text" id="edit-dir-staff-password" class="form-control" placeholder="Escribir nueva contraseña si desea cambiarla...">
+              </div>
+              
+              <div style="display: flex; gap: 10px; margin-top: 1rem;">
+                <button type="submit" class="btn btn-primary" style="flex: 1;"><i class="fa-solid fa-circle-check"></i> Guardar</button>
+                <button type="button" id="cancel-edit-dir-staff-btn" class="btn btn-secondary" style="flex: 1;">Cancelar</button>
+              </div>
+            </form>
+          </div>
+
         </div>
       </div>
     </div>
@@ -663,6 +776,37 @@
         <button class="btn btn-secondary" id="cancel-delete-client-btn">Cancelar</button>
         <button class="btn btn-danger" id="confirm-delete-client-btn" disabled>
           <i class="fa-solid fa-trash-can"></i> Eliminar Cliente
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal de Confirmación de Eliminación de Personal -->
+  <div id="delete-staff-modal" class="modal-overlay" style="display: none;">
+    <div class="modal-content" style="max-width: 460px;">
+      <div class="modal-header">
+        <h3 class="modal-title" style="color: var(--error);">
+          <i class="fa-solid fa-user-slash"></i> Eliminar Personal del Laboratorio
+        </h3>
+        <button class="btn-close-modal" id="close-delete-staff-modal">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+      <div class="modal-body">
+        <p style="margin-bottom: 1rem; font-size: 0.9rem;">
+          Está a punto de eliminar al miembro del personal <strong id="delete-staff-modal-name"></strong> de manera definitiva del sistema. Ya no tendrá acceso al panel.
+        </p>
+        <p style="margin-bottom: 1.25rem; font-size: 0.85rem; color: var(--text-muted);">
+          Esta acción es <strong>IRREVERSIBLE</strong>. Para proceder, escriba exactamente el usuario de acceso (<strong id="delete-staff-modal-username" style="color: var(--color-primary);"></strong>):
+        </p>
+        <input type="text" id="delete-staff-confirm-input" class="form-control" autocomplete="off"
+               placeholder="Escriba el usuario para confirmar..."
+               style="text-align: center; font-weight: 600; text-transform: lowercase;">
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" id="cancel-delete-staff-btn">Cancelar</button>
+        <button class="btn btn-danger" id="confirm-delete-staff-btn" disabled>
+          <i class="fa-solid fa-trash-can"></i> Confirmar Eliminación
         </button>
       </div>
     </div>
