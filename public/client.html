@@ -825,6 +825,22 @@
     </div>
   </div>
 
+  <!-- Modal de Bienvenida -->
+  <div class="modal-overlay" id="welcome-modal" style="display: none; align-items: center; justify-content: center;">
+    <div class="modal-content" style="max-width: 400px; text-align: center; padding: 2.5rem 2rem;">
+      <div style="width: 80px; height: 80px; border-radius: 50%; background: rgba(37, 99, 235, 0.1); display: flex; align-items: center; justify-content: center; color: var(--accent-color); margin: 0 auto 1.5rem; border: 2px solid rgba(37, 99, 235, 0.2);">
+        <i class="fa-solid fa-hand-sparkles" style="font-size: 2.5rem;"></i>
+      </div>
+      <h3 style="color: var(--text-main); font-size: 1.5rem; margin-bottom: 0.8rem;">¡Te damos la bienvenida!</h3>
+      <p style="color: var(--text-dark); font-size: 1rem; line-height: 1.5; margin-bottom: 2rem;">
+        Nos alegra verte,<br><strong id="welcome-clinic-name" style="color: var(--accent-color); font-size: 1.25rem;"></strong>
+      </p>
+      <button class="btn btn-accent" id="close-welcome-btn" style="width: 100%; padding: 12px; font-size: 1.1rem; border-radius: 8px; justify-content: center;">
+        Continuar <i class="fa-solid fa-arrow-right" style="margin-left: 8px;"></i>
+      </button>
+    </div>
+  </div>
+
   <!-- ── WhatsApp Flotante ──────────────────────────────────────────────── -->
   <a href="https://wa.me/573106606973?text=Hola%20Laboratorio%20SIRIO%2C%20tengo%20una%20consulta%20sobre%20mis%20resultados."
      class="whatsapp-float"

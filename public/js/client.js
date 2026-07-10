@@ -14,6 +14,23 @@ document.addEventListener('DOMContentLoaded', () => {
     clientIdText.innerText = currentUser.identificacion;
   }
   
+  // Mensaje de Bienvenida en Primer Login
+  const welcomeKey = `sirio_welcome_shown_${currentUser.usuario}`;
+  const welcomeModal = document.getElementById('welcome-modal');
+  const closeWelcomeBtn = document.getElementById('close-welcome-btn');
+  
+  if (welcomeModal && closeWelcomeBtn && !localStorage.getItem(welcomeKey)) {
+    const welcomeClinicName = document.getElementById('welcome-clinic-name');
+    if (welcomeClinicName) welcomeClinicName.innerText = currentUser.nombre;
+    
+    welcomeModal.style.display = 'flex';
+    
+    closeWelcomeBtn.addEventListener('click', () => {
+      welcomeModal.style.display = 'none';
+      localStorage.setItem(welcomeKey, 'true');
+    });
+  }
+  
   // Botón de cerrar sesión
   document.getElementById('logout-btn').addEventListener('click', () => SirioAuth.logout());
 
