@@ -265,7 +265,7 @@ document.addEventListener('DOMContentLoaded', () => {
         </div>
         
         <div class="result-card-body" style="padding-top: 4px;">
-          <h3 style="font-size: 0.95rem; font-weight: 600; color: var(--text-main); word-break: break-all; line-height: 1.45;" title="${res.nombre_examen}">
+          <h3 style="font-size: 0.95rem; font-weight: 600; color: var(--text-main); word-break: break-word; overflow-wrap: break-word; line-height: 1.45;" title="${res.nombre_examen}">
             ${res.nombre_examen}
           </h3>
         </div>
@@ -379,7 +379,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const sortOrderSelect = document.getElementById('sort-order');
   const clearFiltersBtn = document.getElementById('clear-filters-btn');
 
-  function filterAndRenderResults() {
+  function filterAndRenderResults(keepPage = false) {
     if (!searchExamInput) return;
     const query = searchExamInput.value.toLowerCase().trim();
     const dateVal = filterDateInput ? filterDateInput.value : ''; // formato YYYY-MM-DD
@@ -422,14 +422,16 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     lastFilteredResults = filtered;
-    currentResultsPage = 1;
+    if (!keepPage) {
+      currentResultsPage = 1;
+    }
     renderResults(lastFilteredResults);
   }
 
   // Eventos de filtros
-  if (searchExamInput) searchExamInput.addEventListener('keyup', filterAndRenderResults);
-  if (filterDateInput) filterDateInput.addEventListener('change', filterAndRenderResults);
-  if (sortOrderSelect) sortOrderSelect.addEventListener('change', filterAndRenderResults);
+  if (searchExamInput) searchExamInput.addEventListener('keyup', () => filterAndRenderResults());
+  if (filterDateInput) filterDateInput.addEventListener('change', () => filterAndRenderResults());
+  if (sortOrderSelect) sortOrderSelect.addEventListener('change', () => filterAndRenderResults());
   
   const todayToggle = document.getElementById('filter-today-toggle');
   if (todayToggle) {
@@ -616,6 +618,95 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Inicializar cargando los resultados
   loadResults();
+
+  // Conectar a Server-Sent Events (SSE) para actualizaciones en tiempo real
+  function initRealtimeUpdates() {
+    if (typeof EventSource !== 'undefined') {
+      const eventSource = new EventSource(`${SirioAuth.API_BASE}/api/client/events?id_usuario=${currentUser.id_usuario}`);
+      
+      eventSource.addEventListener('new_result', (event) => {
+        console.log('[SSE] Nuevo resultado recibido:', event.data);
+        loadResultsSilently();
+      });
+
+      eventSource.onerror = (err) => {
+        console.error('[SSE] Error de conexión SSE:', err);
+      };
+    } else {
+      console.warn('[SSE] EventSource no está soportado. Usando fallback de consulta periódica.');
+      setInterval(loadResultsSilently, 30000);
+    }
+  }
+
+  // Carga silenciosa en segundo plano
+  async function loadResultsSilently() {
+    try {
+      const response = await fetch(`${SirioAuth.API_BASE}/api/client/results?id_usuario=${currentUser.id_usuario}`);
+      const data = await response.json();
+
+      if (data.success) {
+        // Verificar si la cantidad de resultados o los IDs cambiaron
+        const lengthChanged = data.results.length !== allResults.length;
+        const idsChanged = !lengthChanged && data.results.some((res, idx) => res.id_resultado !== allResults[idx].id_resultado);
+
+        if (lengthChanged || idsChanged) {
+          allResults = data.results;
+
+          // Actualizar aviso de resultados retenidos
+          const alertContainer = document.getElementById('client-debt-alert-container');
+          if (alertContainer) {
+            if (data.has_retained) {
+              alertContainer.innerHTML = `
+                <div class="panel-card" style="background: linear-gradient(135deg, rgba(245, 158, 11, 0.08) 0%, rgba(217, 119, 6, 0.04) 100%); border: 1px dashed rgba(245, 158, 11, 0.35); border-radius: 12px; padding: 1.25rem 1.5rem; margin-bottom: 1.5rem; display: flex; gap: 1.25rem; align-items: center; justify-content: space-between; flex-wrap: wrap; animation: floatIn 0.3s ease;">
+                  <div style="display: flex; gap: 1rem; align-items: center; min-width: 280px; flex: 1;">
+                    <div style="width: 44px; height: 44px; border-radius: 50%; background: rgba(245, 158, 11, 0.12); display: flex; align-items: center; justify-content: center; flex-shrink: 0; color: #fbbf24; border: 1px solid rgba(245, 158, 11, 0.2);">
+                      <i class="fa-solid fa-clock-rotate-left" style="font-size: 1.15rem;"></i>
+                    </div>
+                    <div>
+                      <h4 style="margin: 0 0 3px 0; color: #fbbf24; font-weight: 700; font-size: 0.92rem; text-transform: uppercase; letter-spacing: 0.5px;">Estimado Médico Veterinario</h4>
+                      <p style="margin: 0; color: var(--text-muted); font-size: 0.82rem; line-height: 1.45;">
+                        Le informamos que disponemos de <strong>nuevos resultados de laboratorio listos</strong> para su consulta. Estos serán publicados en su portal una vez que se regularice el estado de cuenta de su veterinaria. Agradecemos su comprensión.
+                      </p>
+                    </div>
+                  </div>
+                  <div style="display: flex; gap: 8px; align-items: center; flex-shrink: 0;">
+                    <span style="font-size: 0.72rem; font-weight: 700; color: #fca5a5; padding: 4px 10px; border-radius: 20px; background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.2); text-transform: uppercase; letter-spacing: 0.5px;">
+                      <i class="fa-solid fa-circle-exclamation"></i> Pendiente de Pago
+                    </span>
+                  </div>
+                </div>
+              `;
+            } else {
+              alertContainer.innerHTML = '';
+            }
+          }
+
+          // Volver a renderizar los resultados manteniendo la página activa
+          filterAndRenderResults(true);
+          showGlobalAlert('Tus resultados se han actualizado automáticamente.', 'success');
+        }
+      }
+    } catch (error) {
+      console.error('Error al recargar resultados en segundo plano:', error);
+    }
+  }
+
+  // Inicializar actualizaciones en tiempo real
+  initRealtimeUpdates();
+
+  // Configurar botón de recarga manual (Especial para iPhone)
+  const headerReloadBtn = document.getElementById('header-reload-btn');
+  if (headerReloadBtn) {
+    headerReloadBtn.addEventListener('click', () => {
+      const icon = headerReloadBtn.querySelector('i');
+      if (icon) {
+        icon.classList.add('fa-spin');
+      }
+      setTimeout(() => {
+        window.location.reload();
+      }, 300);
+    });
+  }
 
   // ==========================================================================
   // PORTAFOLIO DE SERVICIOS INTERACTIVO

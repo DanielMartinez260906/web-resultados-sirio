@@ -1720,6 +1720,7 @@ body.light-theme .nav-tab[data-tab="tab-danger"]:hover {
 .results-list .result-card-body {
   flex-grow: 1;
   padding-top: 0;
+  min-width: 180px;
 }
 
 .results-list .result-card-body h3 {
@@ -1742,7 +1743,7 @@ body.light-theme .nav-tab[data-tab="tab-danger"]:hover {
   height: 34px;
 }
 
-@media (max-width: 640px) {
+@media (max-width: 992px) {
   .results-list .result-card {
     flex-direction: column;
     align-items: stretch;
@@ -1754,6 +1755,7 @@ body.light-theme .nav-tab[data-tab="tab-danger"]:hover {
   }
   .results-list .result-card-body {
     padding-top: 4px;
+    min-width: 0;
   }
   .results-list .result-card-footer {
     border-top: 1px solid var(--border-light);

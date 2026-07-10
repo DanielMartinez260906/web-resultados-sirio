@@ -102,6 +102,62 @@ app.use('/uploads', express.static(UPLOADS_DIR, {
   }
 }));
 
+// Almacén de conexiones SSE activas por usuario
+const sseClients = new Map();
+
+// API: Server-Sent Events para actualización en tiempo real
+app.get('/api/client/events', (req, res) => {
+  const { id_usuario } = req.query;
+  if (!id_usuario) {
+    return res.status(400).json({ success: false, message: "id_usuario es requerido" });
+  }
+
+  res.setHeader('Content-Type', 'text/event-stream');
+  res.setHeader('Cache-Control', 'no-cache, no-transform');
+  res.setHeader('Connection', 'keep-alive');
+  res.flushHeaders();
+
+  // Registrar cliente
+  if (!sseClients.has(id_usuario)) {
+    sseClients.set(id_usuario, []);
+  }
+  sseClients.get(id_usuario).push(res);
+  console.log(`[SSE] Cliente conectado para id_usuario: ${id_usuario}. Total activos: ${sseClients.get(id_usuario).length}`);
+
+  // Ping para mantener la conexión activa (cada 25s para evitar timeouts de proxies/etc.)
+  const pingInterval = setInterval(() => {
+    res.write('event: ping\ndata: keepalive\n\n');
+  }, 25000);
+
+  req.on('close', () => {
+    clearInterval(pingInterval);
+    const clients = sseClients.get(id_usuario) || [];
+    const idx = clients.indexOf(res);
+    if (idx !== -1) {
+      clients.splice(idx, 1);
+    }
+    if (clients.length === 0) {
+      sseClients.delete(id_usuario);
+    }
+    console.log(`[SSE] Cliente desconectado para id_usuario: ${id_usuario}`);
+  });
+});
+
+// Función para enviar eventos en tiempo real al cliente (SSE)
+function sendSSEEvent(id_usuario, eventName, data) {
+  const clients = sseClients.get(String(id_usuario));
+  if (clients && clients.length > 0) {
+    const eventPayload = `event: ${eventName}\ndata: ${JSON.stringify(data)}\n\n`;
+    clients.forEach(clientRes => {
+      try {
+        clientRes.write(eventPayload);
+      } catch (err) {
+        console.error(`[SSE] Error al escribir al cliente para id_usuario ${id_usuario}:`, err.message);
+      }
+    });
+  }
+}
+
 // API: Obtener estado del servidor
 app.get('/api/status', (req, res) => {
   res.json({
@@ -229,6 +285,11 @@ app.post('/api/client/update-profile', async (req, res) => {
               icon: '/logo.png',
               data: { url: '/client.html' }
             });
+            // Enviar evento SSE en tiempo real
+            sendSSEEvent(id_usuario, 'new_result', {
+              success: true,
+              message: 'Resultados liberados'
+            });
           }
         } catch (err) {
           console.error("Error al liberar resultados retenidos:", err);
@@ -349,6 +410,13 @@ app.post('/api/admin/upload', upload.array('pdf', 20), async (req, res) => {
     if (result.success) {
       console.log(`☁️  ${uploadedFiles.length} PDF(s) subidos a Cloudinary correctamente.`);
       
+      // Enviar evento SSE en tiempo real al cliente
+      sendSSEEvent(id_usuario, 'new_result', {
+        success: true,
+        message: 'Nuevos resultados cargados',
+        count: resultsData.length
+      });
+
       // Enviar notificación Push (sin bloquear la respuesta HTTP)
       if (!clienteEsMoroso) {
         const examNames = resultsData.map(r => r.nombre_examen).join(', ');
