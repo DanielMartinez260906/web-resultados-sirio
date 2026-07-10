@@ -491,22 +491,24 @@ select::-ms-expand {
    ========================================================================== */
 
 .main-header {
-  display: flex;
-  justify-content: space-between;
+  display: grid;
+  grid-template-areas:
+    "user logout"
+    "utilities utilities";
+  grid-template-columns: 1fr auto;
   align-items: center;
   padding-bottom: var(--space-md);
   border-bottom: 1px solid var(--border-light);
   margin-bottom: var(--space-lg);
-  gap: var(--space-sm);
-  flex-wrap: wrap;
+  gap: 12px var(--space-sm);
 }
 
 .header-user-info {
+  grid-area: user;
   display: flex;
   align-items: center;
   gap: 10px;
   min-width: 0;
-  flex: 1;
 }
 
 /* Logo scales with viewport */
@@ -517,7 +519,7 @@ select::-ms-expand {
 }
 
 @media (min-width: 480px) { .header-user-info img { height: 76px; } }
-@media (min-width: 768px) { .header-user-info img { height: 98px; } .main-header { margin-bottom: var(--space-xl); } }
+@media (min-width: 768px) { .header-user-info img { height: 98px; } }
 
 .header-divider {
   border-left: 1px solid var(--border-light);
@@ -551,15 +553,56 @@ select::-ms-expand {
 @media (min-width: 480px) { .header-divider p { font-size: 0.85rem; } }
 
 .header-actions {
+  display: contents;
+}
+
+.header-utilities {
+  grid-area: utilities;
   display: flex;
   align-items: center;
   gap: 8px;
-  flex-shrink: 0;
+}
+
+#logout-btn {
+  grid-area: logout;
 }
 
 /* On very small screens, shrink logout button to icon only */
-.header-actions .btn-logout-text { display: none; }
-@media (min-width: 420px) { .header-actions .btn-logout-text { display: inline; } }
+.btn-logout-text { display: none; }
+@media (min-width: 420px) { .btn-logout-text { display: inline; } }
+
+/* Desktop version (screens 576px and wider) */
+@media (min-width: 576px) {
+  .main-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: var(--space-sm);
+  }
+  
+  .header-user-info {
+    flex: 1;
+  }
+  
+  .header-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-shrink: 0;
+  }
+  
+  .header-utilities {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+}
+
+@media (min-width: 768px) {
+  .main-header {
+    margin-bottom: var(--space-xl);
+  }
+}
 
 /* ==========================================================================
    DASHBOARD GRID
@@ -1965,4 +2008,43 @@ body.light-theme .dev-logo {
   50% {
     box-shadow: 0 0 10px 2px rgba(14, 165, 233, 0.4);
   }
+}
+
+/* Badge for results received today */
+.badge-today {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--success);
+  background: rgba(16, 185, 129, 0.1);
+  border: 1px solid rgba(16, 185, 129, 0.3);
+  padding: 4px 10px;
+  border-radius: 20px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  animation: pulse-badge-green 2.5s infinite ease-in-out;
+}
+
+@keyframes pulse-badge-green {
+  0%, 100% {
+    box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.15);
+  }
+  50% {
+    box-shadow: 0 0 8px 1px rgba(16, 185, 129, 0.3);
+  }
+}
+
+/* Active state for today's filter toggle pill */
+.filter-group-pill.active-pill {
+  border-color: var(--success) !important;
+  background: rgba(16, 185, 129, 0.08) !important;
+  color: var(--success) !important;
+  font-weight: 600;
+}
+
+.filter-group-pill.active-pill:hover {
+  background: rgba(16, 185, 129, 0.15) !important;
+  box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.2) !important;
 }

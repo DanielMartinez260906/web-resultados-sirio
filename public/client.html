@@ -28,15 +28,17 @@
         </div>
       </div>
       <div class="header-actions">
-        <button class="btn btn-secondary btn-icon" id="pwa-install-btn" title="Instalar Aplicación" style="display: none;">
-          <i class="fa-solid fa-mobile-screen-button"></i>
-        </button>
-        <button class="btn btn-secondary btn-icon" id="header-push-btn" title="Configurar Notificaciones">
-          <i class="fa-solid fa-bell-slash"></i>
-        </button>
-        <button class="btn btn-secondary btn-icon" id="theme-toggle" title="Cambiar tema">
-          <i class="fa-solid fa-sun"></i>
-        </button>
+        <div class="header-utilities">
+          <button class="btn btn-secondary btn-icon" id="pwa-install-btn" title="Instalar Aplicación" style="display: none;">
+            <i class="fa-solid fa-mobile-screen-button"></i>
+          </button>
+          <button class="btn btn-secondary btn-icon" id="header-push-btn" title="Configurar Notificaciones">
+            <i class="fa-solid fa-bell-slash"></i>
+          </button>
+          <button class="btn btn-secondary btn-icon" id="theme-toggle" title="Cambiar tema">
+            <i class="fa-solid fa-sun"></i>
+          </button>
+        </div>
         <button class="btn btn-secondary" id="logout-btn">
           <i class="fa-solid fa-right-from-bracket"></i>
           <span class="btn-logout-text">Cerrar Sesión</span>
@@ -108,6 +110,13 @@
             </span>
             <span class="filter-pill-divider"></span>
             <input type="date" id="filter-date" class="filter-pill-input" style="width: 120px;">
+          </div>
+
+          <!-- Filtro Recibidos Hoy -->
+          <div class="filter-group-pill" id="filter-today-toggle" style="flex: 0 1 auto; cursor: pointer; user-select: none;">
+            <span class="filter-pill-label" style="gap: 6px;">
+              <i class="fa-solid fa-clock"></i> Recibidos Hoy
+            </span>
           </div>
 
           <!-- Ordenamiento -->
@@ -799,7 +808,7 @@
           </div>
           <h4 style="color: var(--text-main); font-size: 1.15rem; font-weight: 600; margin: 0;">Error de Conexión</h4>
           <p id="interpret-error-msg" style="font-size: 0.82rem; color: #fca5a5; max-width: 340px; line-height: 1.45; margin: 0; word-break: break-word;">
-            No se pudo establecer conexión con el servicio de Inteligencia Artificial (generativelanguage.googleapis.com).
+            Hubo un problema, puedes reintentar. Si el problema persiste inténtalo de nuevo más tarde.
           </p>
           <button class="btn btn-accent" id="retry-interpret-btn" style="margin-top: 10px; gap: 6px; padding: 8px 20px;">
             <i class="fa-solid fa-rotate-right"></i> Volver a intentar

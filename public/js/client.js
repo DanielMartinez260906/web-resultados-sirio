@@ -183,6 +183,16 @@ document.addEventListener('DOMContentLoaded', () => {
     return `/uploads/${nombreArchivo}`;
   }
 
+  // Helper: verificar si una fecha (string ISO) corresponde al día de hoy en hora local
+  function isToday(dateString) {
+    if (!dateString) return false;
+    const dateObj = new Date(dateString);
+    const todayObj = new Date();
+    return dateObj.getFullYear() === todayObj.getFullYear() &&
+           dateObj.getMonth() === todayObj.getMonth() &&
+           dateObj.getDate() === todayObj.getDate();
+  }
+
   // Lógica de paginación de resultados
   let currentResultsPage = 1;
   const RESULTS_PAGE_SIZE = 10;
@@ -226,12 +236,14 @@ document.addEventListener('DOMContentLoaded', () => {
       
       const dateLabel = SirioAuth.formatDate(res.fecha_subida);
       const pdfUrl = getPdfUrl(res.nombre_archivo);
+      const isRecibidoHoy = isToday(res.fecha_subida);
 
       card.innerHTML = `
         <div class="result-card-header">
           <div class="result-icon" style="background: rgba(14, 165, 233, 0.1); color: var(--color-primary);">
             <i class="fa-solid fa-file-pdf" style="color: var(--error); font-size: 1.25rem;"></i>
           </div>
+          ${isRecibidoHoy ? '<span class="badge-today"><i class="fa-solid fa-clock"></i> Hoy</span>' : ''}
           <span class="result-date"><i class="fa-solid fa-calendar-day"></i> ${dateLabel}</span>
         </div>
         
@@ -374,6 +386,13 @@ document.addEventListener('DOMContentLoaded', () => {
       });
     }
 
+    // 2.5. Filtrar por recibidos hoy
+    const todayToggle = document.getElementById('filter-today-toggle');
+    const isTodayFilterActive = todayToggle ? todayToggle.classList.contains('active-pill') : false;
+    if (isTodayFilterActive) {
+      filtered = filtered.filter(res => isToday(res.fecha_subida));
+    }
+
     // 3. Ordenar
     if (sortVal === 'date-desc') {
       filtered.sort((a, b) => new Date(b.fecha_subida) - new Date(a.fecha_subida));
@@ -394,11 +413,21 @@ document.addEventListener('DOMContentLoaded', () => {
   if (searchExamInput) searchExamInput.addEventListener('keyup', filterAndRenderResults);
   if (filterDateInput) filterDateInput.addEventListener('change', filterAndRenderResults);
   if (sortOrderSelect) sortOrderSelect.addEventListener('change', filterAndRenderResults);
+  
+  const todayToggle = document.getElementById('filter-today-toggle');
+  if (todayToggle) {
+    todayToggle.addEventListener('click', () => {
+      todayToggle.classList.toggle('active-pill');
+      filterAndRenderResults();
+    });
+  }
+
   if (clearFiltersBtn) {
     clearFiltersBtn.addEventListener('click', () => {
       if (searchExamInput) searchExamInput.value = '';
       if (filterDateInput) filterDateInput.value = '';
       if (sortOrderSelect) sortOrderSelect.value = 'date-desc';
+      if (todayToggle) todayToggle.classList.remove('active-pill');
       filterAndRenderResults();
     });
   }
