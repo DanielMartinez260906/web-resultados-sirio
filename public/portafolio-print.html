@@ -243,6 +243,25 @@
       const res  = await fetch(`${API_BASE}/api/client/portafolio`);
       const data = await res.json();
       if (!data.success) throw new Error('API error');
+      
+      if (data.visible === false && !isQuote) {
+        // Ocultar barra de herramientas
+        const toolbar = document.querySelector('.toolbar');
+        if (toolbar) toolbar.style.display = 'none';
+        
+        document.getElementById('portafolio-content').innerHTML = `
+          <div class="loading-msg" style="color: #f59e0b; font-weight: 700; font-size: 1.15rem; margin-top: 3rem; padding: 2rem; text-align: center; border: 1.5px dashed rgba(245, 158, 11, 0.35); border-radius: 12px; background: rgba(245, 158, 11, 0.04);">
+            <i class="fa-solid fa-screwdriver-wrench" style="font-size: 2.5rem; display: block; margin-bottom: 1.25rem;"></i>
+            EL PORTAFOLIO SE ENCUENTRA EN MANTENIMIENTO ACTUALMENTE
+            <span style="font-size: 0.88rem; color: #64748b; font-weight: 400; margin-top: 8px; display: block; line-height: 1.5;">
+              Estimado Médico Veterinario, en este momento nos encontramos actualizando las tarifas y el catálogo de nuestros servicios.<br>
+              Esta sección estará disponible nuevamente en unos instantes. Disculpe las molestias.
+            </span>
+          </div>
+        `;
+        return;
+      }
+      
       renderPortafolio(data.portafolio);
     } catch (e) {
       document.getElementById('portafolio-content').innerHTML =

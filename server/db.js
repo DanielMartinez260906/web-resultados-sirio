@@ -90,7 +90,8 @@ function createDefaultMockDB() {
     ],
     Accesos: [],
     Configuracion: {
-      gemini_api_key: "CONFIGURAR_DESDE_PANEL_ADMIN"
+      gemini_api_key: "CONFIGURAR_DESDE_PANEL_ADMIN",
+      portafolio_visible: "true"
     },
     Portafolio: defaultPortafolio,
     Pacientes: [],
@@ -550,7 +551,7 @@ function handleMockAction(action, data) {
     }
 
     case 'getAdmins': {
-      const admins = db.Usuarios.filter(u => u.rol === 'admin');
+      const admins = db.Usuarios.filter(u => ['admin', 'jefas', 'programadores'].includes(u.rol));
       const resultsCountMap = {};
       db.Resultados.forEach(r => {
         if (r.admin_id) {
@@ -572,7 +573,7 @@ function handleMockAction(action, data) {
 
     case 'updateAdmin': {
       const idUsuario = data.id_usuario;
-      const admin = db.Usuarios.find(u => u.id_usuario === idUsuario && u.rol === 'admin');
+      const admin = db.Usuarios.find(u => u.id_usuario === idUsuario && ['admin', 'jefas', 'programadores'].includes(u.rol));
       
       if (!admin) {
         return { success: false, message: "El administrador especificado no existe." };
@@ -580,6 +581,7 @@ function handleMockAction(action, data) {
       
       if (data.nombre !== undefined) admin.nombre = data.nombre;
       if (data.identificacion !== undefined) admin.identificacion = data.identificacion;
+      if (data.rol !== undefined) admin.rol = data.rol;
       if (data.contrasena !== undefined && data.contrasena.trim() !== "") {
         admin.contrasena = data.contrasena.trim();
       }
@@ -590,7 +592,7 @@ function handleMockAction(action, data) {
 
     case 'deleteAdmin': {
       const idUsuario = data.id_usuario;
-      const adminIndex = db.Usuarios.findIndex(u => u.id_usuario === idUsuario && u.rol === 'admin');
+      const adminIndex = db.Usuarios.findIndex(u => u.id_usuario === idUsuario && ['admin', 'jefas', 'programadores'].includes(u.rol));
       
       if (adminIndex === -1) {
         return { success: false, message: "El administrador especificado no existe en la base de datos local." };
@@ -598,7 +600,7 @@ function handleMockAction(action, data) {
       
       db.Usuarios.splice(adminIndex, 1);
       writeMockDB(db);
-      return { success: true, message: "Perfil de personal eliminado de la base de datos local." };
+      return { success: true, message: "Miembro del personal eliminado de la base de datos de demostración." };
     }
 
     case 'getConfig': {

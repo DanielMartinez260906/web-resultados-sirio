@@ -47,6 +47,21 @@ document.addEventListener('DOMContentLoaded', () => {
   // Alternador de pestañas (Tabs)
   const tabButtons = document.querySelectorAll('#client-nav .nav-tab');
   const tabContents = document.querySelectorAll('.tab-content');
+  
+  // Elementos del Desplegable Personalizado
+  const dropdownTrigger = document.getElementById('dropdown-trigger');
+  const dropdownTriggerText = document.getElementById('dropdown-trigger-text');
+  const dropdownTriggerChevron = document.getElementById('dropdown-trigger-chevron');
+  const dropdownMenuList = document.getElementById('dropdown-menu-list');
+  const dropdownItems = document.querySelectorAll('.dropdown-item');
+
+  // Nombres descriptivos para el disparador
+  const triggerLabels = {
+    'tab-client-results': 'Mis Resultados 📊',
+    'tab-client-ingresar': 'Ingresar Paciente ✍️',
+    'tab-client-portafolio': 'Portafolio de Servicios 📑',
+    'tab-client-profile': 'Mi Perfil 👤'
+  };
 
   tabButtons.forEach(btn => {
     btn.addEventListener('click', () => {
@@ -56,12 +71,62 @@ document.addEventListener('DOMContentLoaded', () => {
       tabContents.forEach(c => c.style.display = 'none');
 
       btn.classList.add('active');
-      document.getElementById(targetTab).style.display = 'block';
+      const targetEl = document.getElementById(targetTab);
+      if (targetEl) targetEl.style.display = 'block';
+
+      // Sincronizar con el desplegable personalizado
+      if (dropdownTriggerText) {
+        dropdownTriggerText.innerText = triggerLabels[targetTab] || 'Seleccionar Sección';
+      }
+      dropdownItems.forEach(item => {
+        if (item.getAttribute('data-value') === targetTab) {
+          item.classList.add('active');
+        } else {
+          item.classList.remove('active');
+        }
+      });
 
       // Guardar pestaña activa
       sessionStorage.setItem('sirio_active_tab_client', targetTab);
     });
   });
+
+  // Manejar el toggle del desplegable
+  if (dropdownTrigger && dropdownMenuList) {
+    dropdownTrigger.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const isOpen = dropdownMenuList.style.display === 'block';
+      dropdownMenuList.style.display = isOpen ? 'none' : 'block';
+      if (dropdownTriggerChevron) {
+        dropdownTriggerChevron.style.transform = isOpen ? 'rotate(0deg)' : 'rotate(180deg)';
+      }
+    });
+
+    // Manejar clics en las opciones del desplegable
+    dropdownItems.forEach(item => {
+      item.addEventListener('click', () => {
+        const val = item.getAttribute('data-value');
+        const matchingBtn = document.querySelector(`#client-nav .nav-tab[data-tab="${val}"]`);
+        if (matchingBtn) {
+          matchingBtn.click();
+        }
+        dropdownMenuList.style.display = 'none';
+        if (dropdownTriggerChevron) {
+          dropdownTriggerChevron.style.transform = 'rotate(0deg)';
+        }
+      });
+    });
+
+    // Cerrar el desplegable si se hace clic fuera de él
+    document.addEventListener('click', (e) => {
+      if (!dropdownTrigger.contains(e.target) && !dropdownMenuList.contains(e.target)) {
+        dropdownMenuList.style.display = 'none';
+        if (dropdownTriggerChevron) {
+          dropdownTriggerChevron.style.transform = 'rotate(0deg)';
+        }
+      }
+    });
+  }
 
   // Restaurar pestaña activa guardada al iniciar
   const savedClientTab = sessionStorage.getItem('sirio_active_tab_client');

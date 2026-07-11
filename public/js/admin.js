@@ -9,6 +9,33 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Mostrar nombre del administrador en la cabecera
   document.getElementById('admin-name').innerText = currentUser.nombre;
+  
+  function updateHeaderRoleDisplay(role) {
+    const textEl = document.getElementById('admin-role-text');
+    const iconEl = document.getElementById('admin-role-icon');
+    const displayEl = document.getElementById('admin-role-display');
+    
+    if (!textEl || !displayEl) return;
+    
+    const normalizedRole = (role || 'admin').toLowerCase().trim();
+    
+    if (normalizedRole === 'jefas') {
+      textEl.innerText = 'Jefa / Jefe de Laboratorio 👑';
+      displayEl.style.color = '#f472b6'; // Pink
+      if (iconEl) iconEl.className = 'fa-solid fa-crown';
+    } else if (normalizedRole === 'programadores') {
+      textEl.innerText = 'Programador del Sistema 💻';
+      displayEl.style.color = '#c084fc'; // Purple
+      if (iconEl) iconEl.className = 'fa-solid fa-code';
+    } else {
+      textEl.innerText = 'Personal del Laboratorio';
+      displayEl.style.color = 'var(--text-muted)';
+      if (iconEl) iconEl.className = 'fa-solid fa-user-shield';
+    }
+  }
+
+  updateHeaderRoleDisplay(currentUser.rol);
+
   document.getElementById('logout-btn').addEventListener('click', () => SirioAuth.logout());
 
   // Lógica del botón de recarga
@@ -89,6 +116,11 @@ document.addEventListener('DOMContentLoaded', () => {
         allClients = data.clients;
         renderClients(allClients);
         renderDirClients(allClients);
+        
+        const activeTab = sessionStorage.getItem('sirio_active_tab_admin');
+        if (activeTab === 'tab-stats') {
+          loadAndRenderStats();
+        }
       } else {
         showGlobalAlert(data.message || 'Error al cargar los clientes.', 'error');
       }
@@ -116,6 +148,11 @@ document.addEventListener('DOMContentLoaded', () => {
       if (data.success) {
         allResults = data.results;
         renderGeneralOverview(allResults);
+        
+        const activeTab = sessionStorage.getItem('sirio_active_tab_admin');
+        if (activeTab === 'tab-stats') {
+          loadAndRenderStats();
+        }
       } else {
         allResultsTableBody.innerHTML = `<tr><td colspan="6" style="text-align: center; color: var(--error); padding: 1.5rem;">${data.message || 'Error al obtener historial general.'}</td></tr>`;
       }
@@ -1046,10 +1083,19 @@ document.addEventListener('DOMContentLoaded', () => {
       const targetTab = tab.dataset.tab;
 
       // Interceptar si es de configuración o portafolio y está bloqueado
-      if ((targetTab === 'tab-config' || targetTab === 'tab-portafolio-admin') && !isJefasUnlocked) {
+      const hasSpecialAccess = currentUser && (currentUser.rol === 'jefas' || currentUser.rol === 'programadores');
+      if ((targetTab === 'tab-config' || targetTab === 'tab-portafolio-admin') && !isJefasUnlocked && !hasSpecialAccess) {
         e.preventDefault();
         e.stopPropagation();
         openJefasPasswordModal(targetTab);
+        return;
+      }
+
+      // Interceptar pestaña de estadísticas
+      if (targetTab === 'tab-stats' && !hasSpecialAccess) {
+        e.preventDefault();
+        e.stopPropagation();
+        showGlobalAlert('Acceso denegado: Se requieren permisos de Jefa/Jefe o Programador.', 'error');
         return;
       }
 
@@ -1065,6 +1111,10 @@ document.addEventListener('DOMContentLoaded', () => {
           content.style.display = 'none';
         }
       });
+
+      if (targetTab === 'tab-stats') {
+        loadAndRenderStats();
+      }
 
       // Guardar pestaña activa
       sessionStorage.setItem('sirio_active_tab_admin', targetTab);
@@ -1567,19 +1617,43 @@ document.addEventListener('DOMContentLoaded', () => {
       return;
     }
     
-    staffList.forEach(member => {
+    // Ordenar: Jefas (1), Programadores (2), Admin (3) y secundariamente por orden alfabético
+    const sortedList = [...staffList].sort((a, b) => {
+      const roleOrder = { 'jefas': 1, 'programadores': 2, 'admin': 3 };
+      const roleA = roleOrder[a.rol] || 3;
+      const roleB = roleOrder[b.rol] || 3;
+      
+      if (roleA !== roleB) {
+        return roleA - roleB;
+      }
+      return a.nombre.localeCompare(b.nombre, 'es', { sensitivity: 'base' });
+    });
+    
+    sortedList.forEach(member => {
       const item = document.createElement('div');
       item.className = 'client-item';
       if (selectedStaff && selectedStaff.id_usuario === member.id_usuario) {
         item.classList.add('active');
       }
       
+      const roleNames = {
+        'jefas': 'Jefa / Jefe 👑',
+        'programadores': 'Programador 💻',
+        'admin': 'Admin Normal 👤'
+      };
+      const roleText = roleNames[member.rol] || 'Admin Normal 👤';
+      
       item.innerHTML = `
         <div class="client-item-info">
           <div style="display: flex; align-items: center; gap: 8px;">
             <h4 style="margin: 0;">${member.nombre}</h4>
           </div>
-          <p style="margin-top: 4px;"><i class="fa-solid fa-passport"></i> DNI: ${member.identificacion || '00000000'} | U: ${member.usuario}</p>
+          <p style="margin-top: 4px; display: flex; align-items: center; gap: 6px;">
+            <i class="fa-solid fa-user-tag" style="color: var(--color-accent); font-size: 0.72rem;"></i>
+            <span style="font-weight: 600; text-transform: uppercase; font-size: 0.68rem; letter-spacing: 0.3px; color: var(--color-accent);">${roleText}</span>
+            <span style="color: var(--border-light);">|</span>
+            <span style="color: var(--text-muted); font-size: 0.72rem;">U: ${member.usuario}</span>
+          </p>
         </div>
         <span class="client-item-badge" style="background: var(--color-accent); color: #000; border-color: var(--color-accent); font-weight: 700; font-size: 0.72rem;">${member.total_enviados} env.</span>
       `;
@@ -1640,6 +1714,72 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     if (document.getElementById('edit-dir-staff-password')) {
       document.getElementById('edit-dir-staff-password').value = '';
+    }
+
+    // Actualizar badge de rol y botones de toggle de rol
+    const dirStaffRoleBadge = document.getElementById('dir-staff-role-badge');
+    const dirToggleStaffRoleBtn = document.getElementById('dir-toggle-staff-role-btn');
+    const dirToggleProgrammerRoleBtn = document.getElementById('dir-toggle-programmer-role-btn');
+    
+    if (dirStaffRoleBadge && dirToggleStaffRoleBtn && dirToggleProgrammerRoleBtn) {
+      const currentRole = member.rol || 'admin';
+      
+      // Estilo y texto del badge según el rol
+      if (currentRole === 'jefas') {
+        dirStaffRoleBadge.innerText = 'JEFA / JEFE 👑';
+        dirStaffRoleBadge.style.background = 'rgba(236, 72, 153, 0.15)'; // Pink
+        dirStaffRoleBadge.style.color = '#f472b6';
+        dirStaffRoleBadge.style.borderColor = 'rgba(236, 72, 153, 0.3)';
+        
+        dirToggleStaffRoleBtn.innerHTML = '<i class="fa-solid fa-user-slash"></i> Quitar Rol Jefa/Jefe';
+        dirToggleStaffRoleBtn.style.background = 'rgba(239, 68, 68, 0.15)';
+        dirToggleStaffRoleBtn.style.color = '#f87171';
+        dirToggleStaffRoleBtn.style.borderColor = 'rgba(239, 68, 68, 0.3)';
+        
+        dirToggleProgrammerRoleBtn.innerHTML = '<i class="fa-solid fa-code"></i> Hacer Programador';
+        dirToggleProgrammerRoleBtn.style.background = 'rgba(168, 85, 247, 0.15)';
+        dirToggleProgrammerRoleBtn.style.color = '#c084fc';
+        dirToggleProgrammerRoleBtn.style.borderColor = 'rgba(168, 85, 247, 0.3)';
+      } else if (currentRole === 'programadores') {
+        dirStaffRoleBadge.innerText = 'PROGRAMADOR 💻';
+        dirStaffRoleBadge.style.background = 'rgba(168, 85, 247, 0.15)'; // Purple
+        dirStaffRoleBadge.style.color = '#c084fc';
+        dirStaffRoleBadge.style.borderColor = 'rgba(168, 85, 247, 0.3)';
+        
+        dirToggleStaffRoleBtn.innerHTML = '<i class="fa-solid fa-crown"></i> Hacer Jefa o Jefe';
+        dirToggleStaffRoleBtn.style.background = 'rgba(236, 72, 153, 0.15)';
+        dirToggleStaffRoleBtn.style.color = '#f472b6';
+        dirToggleStaffRoleBtn.style.borderColor = 'rgba(236, 72, 153, 0.3)';
+        
+        dirToggleProgrammerRoleBtn.innerHTML = '<i class="fa-solid fa-user-slash"></i> Quitar Rol Programador';
+        dirToggleProgrammerRoleBtn.style.background = 'rgba(239, 68, 68, 0.15)';
+        dirToggleProgrammerRoleBtn.style.color = '#f87171';
+        dirToggleProgrammerRoleBtn.style.borderColor = 'rgba(239, 68, 68, 0.3)';
+      } else {
+        dirStaffRoleBadge.innerText = 'ADMIN NORMAL 👤';
+        dirStaffRoleBadge.style.background = 'rgba(14, 165, 233, 0.15)'; // Sky
+        dirStaffRoleBadge.style.color = '#38bdf8';
+        dirStaffRoleBadge.style.borderColor = 'rgba(14, 165, 233, 0.3)';
+        
+        dirToggleStaffRoleBtn.innerHTML = '<i class="fa-solid fa-crown"></i> Hacer Jefa o Jefe';
+        dirToggleStaffRoleBtn.style.background = 'rgba(236, 72, 153, 0.15)';
+        dirToggleStaffRoleBtn.style.color = '#f472b6';
+        dirToggleStaffRoleBtn.style.borderColor = 'rgba(236, 72, 153, 0.3)';
+        
+        dirToggleProgrammerRoleBtn.innerHTML = '<i class="fa-solid fa-code"></i> Hacer Programador';
+        dirToggleProgrammerRoleBtn.style.background = 'rgba(168, 85, 247, 0.15)';
+        dirToggleProgrammerRoleBtn.style.color = '#c084fc';
+        dirToggleProgrammerRoleBtn.style.borderColor = 'rgba(168, 85, 247, 0.3)';
+      }
+      
+      // Ocultar botones si es el administrador principal U000
+      if (member.id_usuario === 'U000') {
+        dirToggleStaffRoleBtn.style.display = 'none';
+        dirToggleProgrammerRoleBtn.style.display = 'none';
+      } else {
+        dirToggleStaffRoleBtn.style.display = 'inline-flex';
+        dirToggleProgrammerRoleBtn.style.display = 'inline-flex';
+      }
     }
   }
 
@@ -1705,6 +1845,140 @@ document.addEventListener('DOMContentLoaded', () => {
           dirStaffPwdVal.innerText = '••••••••';
           toggleDirStaffPwdBtn.innerHTML = '<i class="fa-solid fa-eye"></i>';
         }
+      }
+    });
+  }
+
+  // Botón Jefa/Jefe: Alternar entre admin normal y jefas
+  const dirToggleStaffRoleBtn = document.getElementById('dir-toggle-staff-role-btn');
+  if (dirToggleStaffRoleBtn) {
+    dirToggleStaffRoleBtn.addEventListener('click', async () => {
+      if (!selectedStaff) return;
+      
+      const currentRole = selectedStaff.rol || 'admin';
+      const isPromoting = (currentRole !== 'jefas');
+      const newRole = isPromoting ? 'jefas' : 'admin';
+      
+      if (isPromoting) {
+        const password = prompt('Ingrese la contraseña de autorización para asignar privilegios de Jefa o Jefe:');
+        if (password === null) return; // Cancelado
+        if (password !== 'SirioJefas2026*') {
+          alert('Contraseña de autorización incorrecta.');
+          return;
+        }
+      } else {
+        const confirmDemote = confirm(`¿Está seguro de quitar el rol de Jefa/Jefe a ${selectedStaff.nombre} y volverlo Administrador Normal?`);
+        if (!confirmDemote) return;
+      }
+      
+      SirioAuth.showLoading(`Actualizando rol de Jefa/Jefe...`);
+      
+      try {
+        const response = await fetch(`${SirioAuth.API_BASE}/api/admin/staff/update`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            id_usuario: selectedStaff.id_usuario,
+            nombre: selectedStaff.nombre,
+            identificacion: selectedStaff.identificacion,
+            rol: newRole
+          })
+        });
+        
+        const result = await response.json();
+        SirioAuth.hideLoading();
+        
+        if (result.success) {
+          showGlobalAlert(`Rol actualizado correctamente.`, 'success');
+          
+          // Si el admin se editó a sí mismo, actualizar su rol en sesión y cabecera
+          if (selectedStaff.id_usuario === currentUser.id_usuario) {
+            currentUser.rol = newRole;
+            localStorage.setItem('sirio_user', JSON.stringify(currentUser));
+            SirioAuth.setCookie(SirioAuth.STORAGE_KEY, JSON.stringify(currentUser));
+            updateHeaderRoleDisplay(newRole);
+          }
+          
+          await loadStaff();
+          
+          const updated = allStaff.find(s => s.id_usuario === selectedStaff.id_usuario);
+          if (updated) {
+            selectStaff(updated);
+          }
+        } else {
+          showGlobalAlert(result.message || 'Error al actualizar el rol.', 'error');
+        }
+      } catch (err) {
+        SirioAuth.hideLoading();
+        console.error('Error al actualizar rol:', err);
+        showGlobalAlert('Error de red al intentar cambiar el rol.', 'error');
+      }
+    });
+  }
+
+  // Botón Programador: Alternar entre admin normal y programadores
+  const dirToggleProgrammerRoleBtn = document.getElementById('dir-toggle-programmer-role-btn');
+  if (dirToggleProgrammerRoleBtn) {
+    dirToggleProgrammerRoleBtn.addEventListener('click', async () => {
+      if (!selectedStaff) return;
+      
+      const currentRole = selectedStaff.rol || 'admin';
+      const isPromoting = (currentRole !== 'programadores');
+      const newRole = isPromoting ? 'programadores' : 'admin';
+      
+      if (isPromoting) {
+        const password = prompt('Ingrese la contraseña de autorización para asignar privilegios de Programador:');
+        if (password === null) return; // Cancelado
+        if (password !== 'SirioJefas2026*') {
+          alert('Contraseña de autorización incorrecta.');
+          return;
+        }
+      } else {
+        const confirmDemote = confirm(`¿Está seguro de quitar el rol de Programador a ${selectedStaff.nombre} y volverlo Administrador Normal?`);
+        if (!confirmDemote) return;
+      }
+      
+      SirioAuth.showLoading(`Actualizando rol de Programador...`);
+      
+      try {
+        const response = await fetch(`${SirioAuth.API_BASE}/api/admin/staff/update`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            id_usuario: selectedStaff.id_usuario,
+            nombre: selectedStaff.nombre,
+            identificacion: selectedStaff.identificacion,
+            rol: newRole
+          })
+        });
+        
+        const result = await response.json();
+        SirioAuth.hideLoading();
+        
+        if (result.success) {
+          showGlobalAlert(`Rol actualizado correctamente.`, 'success');
+          
+          // Si el admin se editó a sí mismo, actualizar su rol en sesión y cabecera
+          if (selectedStaff.id_usuario === currentUser.id_usuario) {
+            currentUser.rol = newRole;
+            localStorage.setItem('sirio_user', JSON.stringify(currentUser));
+            SirioAuth.setCookie(SirioAuth.STORAGE_KEY, JSON.stringify(currentUser));
+            updateHeaderRoleDisplay(newRole);
+          }
+          
+          await loadStaff();
+          
+          const updated = allStaff.find(s => s.id_usuario === selectedStaff.id_usuario);
+          if (updated) {
+            selectStaff(updated);
+          }
+        } else {
+          showGlobalAlert(result.message || 'Error al actualizar el rol.', 'error');
+        }
+      } catch (err) {
+        SirioAuth.hideLoading();
+        console.error('Error al actualizar rol:', err);
+        showGlobalAlert('Error de red al intentar cambiar el rol.', 'error');
       }
     });
   }
@@ -1776,6 +2050,7 @@ document.addEventListener('DOMContentLoaded', () => {
             currentUser.nombre = nombre;
             document.getElementById('admin-name').innerText = nombre;
             localStorage.setItem('sirio_user', JSON.stringify(currentUser));
+            SirioAuth.setCookie(SirioAuth.STORAGE_KEY, JSON.stringify(currentUser));
           }
 
           await loadStaff();
@@ -1907,6 +2182,12 @@ document.addEventListener('DOMContentLoaded', () => {
           configGeminiKeyInput.value = data.config.gemini_api_key || '';
         }
         
+        // Cargar visibilidad en la pestaña de configuración
+        const configVisibilityToggle = document.getElementById('config-portafolio-visibility-toggle');
+        if (configVisibilityToggle) {
+          configVisibilityToggle.checked = data.config.portafolio_visible !== 'false';
+        }
+        
         // Cargar el tema estacional activo
         const activeTheme = data.config.seasonal_theme || 'default';
         document.querySelectorAll('.theme-btn').forEach(btn => {
@@ -1967,8 +2248,10 @@ document.addEventListener('DOMContentLoaded', () => {
       e.preventDefault();
       
       const gemini_api_key = configGeminiKeyInput.value.trim();
+      const configVisibilityToggle = document.getElementById('config-portafolio-visibility-toggle');
+      const portafolio_visible = configVisibilityToggle ? (configVisibilityToggle.checked ? 'true' : 'false') : 'true';
       
-      SirioAuth.showLoading('Guardando configuración de IA...');
+      SirioAuth.showLoading('Guardando configuración...');
       
       try {
         const response = await fetch(`${SirioAuth.API_BASE}/api/admin/config`, {
@@ -1976,7 +2259,7 @@ document.addEventListener('DOMContentLoaded', () => {
           headers: {
             'Content-Type': 'application/json'
           },
-          body: JSON.stringify({ gemini_api_key })
+          body: JSON.stringify({ gemini_api_key, portafolio_visible })
         });
         
         const result = await response.json();
@@ -1984,6 +2267,12 @@ document.addEventListener('DOMContentLoaded', () => {
         
         if (result.success) {
           showGlobalAlert('Configuración guardada correctamente.', 'success');
+          
+          // Sincronizar el toggle del portafolio si existe
+          const portafolioVisibilityToggle = document.getElementById('admin-portafolio-visibility-toggle');
+          if (portafolioVisibilityToggle) {
+            portafolioVisibilityToggle.checked = (portafolio_visible === 'true');
+          }
         } else {
           showGlobalAlert(result.message || 'Error al guardar la configuración.', 'error');
         }
@@ -2231,6 +2520,14 @@ document.addEventListener('DOMContentLoaded', () => {
         });
         const data = await res.json();
         
+        if (data.success) {
+          // Sincronizar con el toggle de configuración
+          const configVisibilityToggle = document.getElementById('config-portafolio-visibility-toggle');
+          if (configVisibilityToggle) {
+            configVisibilityToggle.checked = visible;
+          }
+        }
+
         if (adminPortafolioAlert) {
           adminPortafolioAlert.style.display = 'block';
           adminPortafolioAlert.style.background = data.success ? 'rgba(34,197,94,0.1)' : 'rgba(239,68,68,0.1)';
@@ -2550,10 +2847,271 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
+  // === SECCIÓN DE MÉTRICAS Y ESTADÍSTICAS DEL SISTEMA ===
+  let chartMonthlyTrend = null;
+  let chartStaffDistribution = null;
+  let chartTopClients = null;
+
+  function loadAndRenderStats() {
+    if (typeof Chart === 'undefined') {
+      console.warn('Chart.js no está cargado.');
+      return;
+    }
+
+    // Configurar defaults visuales de Chart.js para estética oscura premium
+    Chart.defaults.font.family = "'Outfit', 'Inter', sans-serif";
+    Chart.defaults.color = 'rgba(255, 255, 255, 0.65)';
+    Chart.defaults.scale.grid.color = 'rgba(255, 255, 255, 0.05)';
+
+    // Destruir gráficos previos si existen
+    if (chartMonthlyTrend) chartMonthlyTrend.destroy();
+    if (chartStaffDistribution) chartStaffDistribution.destroy();
+    if (chartTopClients) chartTopClients.destroy();
+
+    // 1. Total Exámenes
+    document.getElementById('stats-total-results').innerText = allResults.length;
+
+    // 2. Cliente Estrella
+    const clientCounts = {};
+    allResults.forEach(res => {
+      if (res.id_usuario) {
+        clientCounts[res.id_usuario] = (clientCounts[res.id_usuario] || 0) + 1;
+      }
+    });
+
+    let topClientId = '';
+    let topClientCount = 0;
+    for (const cid in clientCounts) {
+      if (clientCounts[cid] > topClientCount) {
+        topClientCount = clientCounts[cid];
+        topClientId = cid;
+      }
+    }
+
+    let topClientName = 'Ninguno';
+    if (topClientId) {
+      const client = allClients.find(c => c.id_usuario === topClientId);
+      topClientName = client ? `${client.nombre} (${topClientCount} env.)` : `${topClientId} (${topClientCount} env.)`;
+    }
+    const statsTopClientEl = document.getElementById('stats-top-client');
+    if (statsTopClientEl) {
+      statsTopClientEl.innerText = topClientName;
+      statsTopClientEl.title = topClientName;
+    }
+
+    // 3. Colaborador Activo
+    const uploaderCounts = {};
+    allResults.forEach(res => {
+      const name = res.admin_nombre || 'Desconocido';
+      uploaderCounts[name] = (uploaderCounts[name] || 0) + 1;
+    });
+
+    let topUploaderName = 'Ninguno';
+    let topUploaderCount = 0;
+    for (const name in uploaderCounts) {
+      if (name !== 'Desconocido' && uploaderCounts[name] > topUploaderCount) {
+        topUploaderCount = uploaderCounts[name];
+        topUploaderName = `${name} (${topUploaderCount} env.)`;
+      }
+    }
+    const statsTopUploaderEl = document.getElementById('stats-top-uploader');
+    if (statsTopUploaderEl) {
+      statsTopUploaderEl.innerText = topUploaderName;
+      statsTopUploaderEl.title = topUploaderName;
+    }
+
+    // 4. Examen Más Solicitado
+    const examCounts = {};
+    allResults.forEach(res => {
+      const name = (res.nombre_examen || '').trim();
+      if (name) {
+        examCounts[name] = (examCounts[name] || 0) + 1;
+      }
+    });
+
+    let topExamName = 'Ninguno';
+    let topExamCount = 0;
+    for (const name in examCounts) {
+      if (examCounts[name] > topExamCount) {
+        topExamCount = examCounts[name];
+        topExamName = `${name} (${topExamCount} env.)`;
+      }
+    }
+    const statsTopExamEl = document.getElementById('stats-top-exam');
+    if (statsTopExamEl) {
+      statsTopExamEl.innerText = topExamName;
+      statsTopExamEl.title = topExamName;
+    }
+
+    // === GRÁFICO 1: TENDENCIA MENSUAL ===
+    const monthlyData = {};
+    const parseMonth = (dateStr) => {
+      if (!dateStr) return 'Desconocido';
+      if (dateStr.includes('/')) {
+        const parts = dateStr.split('/');
+        if (parts.length >= 3) {
+          const year = parts[2].substring(0, 4);
+          const month = parts[1];
+          return `${year}-${month}`;
+        }
+      }
+      if (dateStr.includes('-')) {
+        const parts = dateStr.split('-');
+        if (parts.length >= 2) {
+          return `${parts[0]}-${parts[1]}`;
+        }
+      }
+      return 'Desconocido';
+    };
+
+    allResults.forEach(res => {
+      const m = parseMonth(res.fecha_subida);
+      if (m !== 'Desconocido') {
+        monthlyData[m] = (monthlyData[m] || 0) + 1;
+      }
+    });
+
+    const sortedMonths = Object.keys(monthlyData).sort();
+    const trendLabels = sortedMonths.map(m => {
+      const parts = m.split('-');
+      if (parts.length < 2) return m;
+      const year = parts[0];
+      const month = parts[1];
+      const monthNames = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
+      const mIndex = parseInt(month, 10) - 1;
+      return mIndex >= 0 && mIndex < 12 ? `${monthNames[mIndex]} ${year}` : m;
+    });
+    const trendValues = sortedMonths.map(m => monthlyData[m]);
+
+    const ctxTrend = document.getElementById('chart-monthly-trend');
+    if (ctxTrend) {
+      chartMonthlyTrend = new Chart(ctxTrend, {
+        type: 'line',
+        data: {
+          labels: trendLabels.length ? trendLabels : ['Sin Datos'],
+          datasets: [{
+            label: 'Exámenes Enviados',
+            data: trendValues.length ? trendValues : [0],
+            borderColor: '#38bdf8',
+            backgroundColor: 'rgba(56, 189, 248, 0.12)',
+            borderWidth: 3,
+            tension: 0.35,
+            fill: true,
+            pointBackgroundColor: '#38bdf8',
+            pointRadius: 4,
+            pointHoverRadius: 6
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { display: false }
+          },
+          scales: {
+            y: { beginAtZero: true, ticks: { stepSize: 1 } }
+          }
+        }
+      });
+    }
+
+    // === GRÁFICO 2: PARTICIPACIÓN DEL PERSONAL ===
+    const staffLabels = [];
+    const staffValues = [];
+    for (const name in uploaderCounts) {
+      if (name !== 'Desconocido') {
+        staffLabels.push(name);
+        staffValues.push(uploaderCounts[name]);
+      }
+    }
+
+    const ctxStaff = document.getElementById('chart-staff-distribution');
+    if (ctxStaff) {
+      chartStaffDistribution = new Chart(ctxStaff, {
+        type: 'doughnut',
+        data: {
+          labels: staffLabels.length ? staffLabels : ['Sin Datos'],
+          datasets: [{
+            data: staffValues.length ? staffValues : [0],
+            backgroundColor: [
+              '#38bdf8', '#c084fc', '#f472b6', '#f59e0b', '#10b981', '#ec4899', '#6366f1'
+            ],
+            borderWidth: 1.5,
+            borderColor: 'var(--panel-bg)'
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              position: 'right',
+              labels: { boxWidth: 12, padding: 12 }
+            }
+          }
+        }
+      });
+    }
+
+    // === GRÁFICO 3: TOP 5 CLIENTES ===
+    const clientDataList = [];
+    for (const cid in clientCounts) {
+      const client = allClients.find(c => c.id_usuario === cid);
+      clientDataList.push({
+        name: client ? client.nombre : cid,
+        count: clientCounts[cid]
+      });
+    }
+    clientDataList.sort((a, b) => b.count - a.count);
+    const top5Clients = clientDataList.slice(0, 5);
+
+    const clientLabels = top5Clients.map(c => c.name);
+    const clientValues = top5Clients.map(c => c.count);
+
+    const ctxClients = document.getElementById('chart-top-clients');
+    if (ctxClients) {
+      chartTopClients = new Chart(ctxClients, {
+        type: 'bar',
+        data: {
+          labels: clientLabels.length ? clientLabels : ['Sin Datos'],
+          datasets: [{
+            label: 'Exámenes Subidos',
+            data: clientValues.length ? clientValues : [0],
+            backgroundColor: 'rgba(236, 72, 153, 0.45)',
+            borderColor: '#f472b6',
+            borderWidth: 1.5,
+            borderRadius: 6
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { display: false }
+          },
+          scales: {
+            y: { beginAtZero: true, ticks: { stepSize: 1 } }
+          }
+        }
+      });
+    }
+  }
+
+  // Mostrar botón de métricas si corresponde
+  const navTabStats = document.getElementById('nav-tab-stats');
+  const hasSpecialAccess = currentUser && (currentUser.rol === 'jefas' || currentUser.rol === 'programadores');
+  if (hasSpecialAccess && navTabStats) {
+    navTabStats.style.display = 'flex';
+  }
+
   // Restaurar pestaña activa guardada al iniciar
   const savedAdminTab = sessionStorage.getItem('sirio_active_tab_admin');
   if (savedAdminTab) {
-    switchTab(savedAdminTab);
+    if (savedAdminTab === 'tab-stats' && !hasSpecialAccess) {
+      switchTab('tab-history');
+    } else {
+      switchTab(savedAdminTab);
+    }
   }
 
 });

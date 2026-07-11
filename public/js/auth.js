@@ -124,7 +124,7 @@ const SirioAuth = {
 
     // Si hay sesión y está en el login, redirigir a su dashboard correspondiente
     if (isLoginPage) {
-      if (user.rol === 'admin') {
+      if (['admin', 'jefas', 'programadores'].includes(user.rol)) {
         window.location.href = '/admin.html';
       } else if (user.rol === 'cliente') {
         window.location.href = '/client.html';
@@ -133,8 +133,11 @@ const SirioAuth = {
     }
 
     // Si el rol del usuario no coincide con el requerido para la página
-    if (requiredRole && user.rol !== requiredRole) {
-      if (user.rol === 'admin') {
+    const isAdminRole = ['admin', 'jefas', 'programadores'].includes(user.rol);
+    const hasRequiredRole = (requiredRole === 'admin') ? isAdminRole : (user.rol === requiredRole);
+    
+    if (requiredRole && !hasRequiredRole) {
+      if (isAdminRole) {
         window.location.href = '/admin.html';
       } else {
         window.location.href = '/client.html';

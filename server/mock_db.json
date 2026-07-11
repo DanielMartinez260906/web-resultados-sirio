@@ -44,10 +44,25 @@
       "rol": "admin",
       "fecha_hora": "8/7/2026, 5:09:18 p. m.",
       "estado": "Exitoso"
+    },
+    {
+      "id_log": "L00003",
+      "usuario": "admin",
+      "rol": "admin",
+      "fecha_hora": "11/7/2026, 3:07:09 p. m.",
+      "estado": "Exitoso"
+    },
+    {
+      "id_log": "L00004",
+      "usuario": "admin",
+      "rol": "admin",
+      "fecha_hora": "11/7/2026, 3:07:39 p. m.",
+      "estado": "Exitoso"
     }
   ],
   "Configuracion": {
-    "gemini_api_key": "CONFIGURAR_DESDE_PANEL_ADMIN"
+    "gemini_api_key": "CONFIGURAR_DESDE_PANEL_ADMIN",
+    "portafolio_visible": "true"
   },
   "Portafolio": [
     {

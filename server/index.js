@@ -756,12 +756,12 @@ app.get('/api/admin/staff', async (req, res) => {
 
 // API: Actualizar perfil de personal del laboratorio (Solo Admins)
 app.post('/api/admin/staff/update', async (req, res) => {
-  const { id_usuario, nombre, identificacion, contrasena } = req.body;
+  const { id_usuario, nombre, identificacion, contrasena, rol } = req.body;
   if (!id_usuario) {
     return res.status(400).json({ success: false, message: 'El ID de usuario es requerido.' });
   }
   try {
-    const result = await db.updateAdmin({ id_usuario, nombre, identificacion, contrasena });
+    const result = await db.updateAdmin({ id_usuario, nombre, identificacion, contrasena, rol });
     res.json(result);
   } catch (error) {
     console.error('Error al actualizar personal:', error);

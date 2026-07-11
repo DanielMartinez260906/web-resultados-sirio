@@ -55,6 +55,65 @@
       <span id="client-global-alert-text"></span>
     </div>
 
+    <!-- ── Desplegable Personalizado de Selección Rápida ───────────────── -->
+    <style>
+      .dropdown-trigger {
+        background: var(--bg-secondary) !important;
+        border: 1.5px solid var(--border-light) !important;
+        color: var(--text-main) !important;
+      }
+      .dropdown-trigger:hover {
+        border-color: var(--color-accent) !important;
+      }
+      .dropdown-menu-list {
+        background: var(--bg-secondary) !important;
+        border: 1.5px solid var(--border-light) !important;
+      }
+      .dropdown-item {
+        color: var(--text-main) !important;
+        background: transparent !important;
+      }
+      .dropdown-item:hover {
+        background: rgba(14, 165, 233, 0.08) !important;
+        color: var(--color-accent) !important;
+      }
+      .dropdown-item.active {
+        background: rgba(14, 165, 233, 0.15) !important;
+        color: var(--color-accent) !important;
+        border-left: 3px solid var(--color-accent) !important;
+        padding-left: 12px !important;
+      }
+      @keyframes slideDown {
+        from { opacity: 0; transform: translateY(-8px); }
+        to { opacity: 1; transform: translateY(0); }
+      }
+    </style>
+    <div class="nav-dropdown-wrapper" style="margin-bottom: 1.25rem; display: flex; flex-direction: column; gap: 6px; position: relative;">
+      <span style="font-size: 0.78rem; font-weight: 600; color: var(--text-muted); display: flex; align-items: center; gap: 6px;">
+        <i class="fa-solid fa-compass" style="color: var(--color-accent);"></i> Seleccionar Sección:
+      </span>
+      <div class="custom-dropdown" id="custom-nav-dropdown" style="position: relative; width: 100%; z-index: 100;">
+        <button type="button" class="dropdown-trigger" id="dropdown-trigger" style="width: 100%; height: 44px; padding: 0 15px; display: flex; align-items: center; justify-content: space-between; font-size: 0.9rem; font-weight: 600; border-radius: 8px; cursor: pointer; transition: all 0.2s; text-align: left; outline: none;">
+          <span id="dropdown-trigger-text">Mis Resultados 📊</span>
+          <i class="fa-solid fa-chevron-down" id="dropdown-trigger-chevron" style="color: var(--color-accent); font-size: 0.85rem; transition: transform 0.2s;"></i>
+        </button>
+        <div class="dropdown-menu-list" id="dropdown-menu-list" style="display: none; position: absolute; top: calc(100% + 6px); left: 0; right: 0; border-radius: 8px; box-shadow: 0 10px 25px rgba(0,0,0,0.35); overflow: hidden; animation: slideDown 0.15s ease-out; backdrop-filter: blur(10px);">
+          <button type="button" class="dropdown-item active" data-value="tab-client-results" style="width: 100%; height: 44px; padding: 0 15px; display: flex; align-items: center; gap: 10px; font-size: 0.88rem; font-weight: 600; border: none; text-align: left; cursor: pointer; transition: all 0.2s; outline: none;">
+            <i class="fa-solid fa-square-poll-horizontal" style="color: var(--color-accent); width: 16px;"></i> Mis Resultados
+          </button>
+          <button type="button" class="dropdown-item" data-value="tab-client-ingresar" style="width: 100%; height: 44px; padding: 0 15px; display: flex; align-items: center; gap: 10px; font-size: 0.88rem; font-weight: 600; border: none; text-align: left; cursor: pointer; transition: all 0.2s; outline: none;">
+            <i class="fa-solid fa-file-signature" style="color: var(--color-accent); width: 16px;"></i> Ingresar Paciente
+          </button>
+          <button type="button" class="dropdown-item" data-value="tab-client-portafolio" style="width: 100%; height: 44px; padding: 0 15px; display: flex; align-items: center; gap: 10px; font-size: 0.88rem; font-weight: 600; border: none; text-align: left; cursor: pointer; transition: all 0.2s; outline: none;">
+            <i class="fa-solid fa-book-medical" style="color: var(--color-accent); width: 16px;"></i> Portafolio de Servicios
+          </button>
+          <button type="button" class="dropdown-item" data-value="tab-client-profile" style="width: 100%; height: 44px; padding: 0 15px; display: flex; align-items: center; gap: 10px; font-size: 0.88rem; font-weight: 600; border: none; text-align: left; cursor: pointer; transition: all 0.2s; outline: none;">
+            <i class="fa-solid fa-user-gear" style="color: var(--color-accent); width: 16px;"></i> Mi Perfil
+          </button>
+        </div>
+      </div>
+    </div>
+
     <!-- ── Barra de Navegación del Cliente ────────────────────────────── -->
     <div class="nav-scroll-wrapper">
       <button class="scroll-arrow left" aria-label="Desplazar a la izquierda"><i class="fa-solid fa-chevron-left"></i></button>
@@ -63,13 +122,13 @@
           <i class="fa-solid fa-square-poll-horizontal"></i>
           <span>Mis Resultados</span>
         </button>
-        <button class="nav-tab" data-tab="tab-client-portafolio">
-          <i class="fa-solid fa-book-medical"></i>
-          <span>Portafolio de Servicios</span>
-        </button>
         <button class="nav-tab" data-tab="tab-client-ingresar">
           <i class="fa-solid fa-file-signature"></i>
           <span>Ingresar Paciente</span>
+        </button>
+        <button class="nav-tab" data-tab="tab-client-portafolio">
+          <i class="fa-solid fa-book-medical"></i>
+          <span>Portafolio de Servicios</span>
         </button>
         <button class="nav-tab" data-tab="tab-client-profile">
           <i class="fa-solid fa-user-gear"></i>

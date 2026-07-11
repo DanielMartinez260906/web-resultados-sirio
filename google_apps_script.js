@@ -169,7 +169,7 @@ function migrateSheets(doc) {
         uColMap[uHeaders[i].toString().trim().toLowerCase()] = i;
       }
 
-      var colsToAdd = ["direccion", "correo", "telefono", "moroso"];
+      var colsToAdd = ["rol", "direccion", "correo", "telefono", "moroso"];
       for (var j = 0; j < colsToAdd.length; j++) {
         var colName = colsToAdd[j];
         if (!(colName in uColMap)) {
@@ -183,6 +183,26 @@ function migrateSheets(doc) {
           SpreadsheetApp.flush();
         }
       }
+    }
+  }
+
+  // 3. Migración de Estado_Portafolio
+  var epSheet = doc.getSheetByName("Estado_Portafolio");
+  if (epSheet) {
+    var epRows = epSheet.getDataRange().getValues();
+    var keysMap = {};
+    for (var k = 1; k < epRows.length; k++) {
+      if (epRows[k][0]) {
+        keysMap[epRows[k][0].toString().trim()] = k;
+      }
+    }
+    if (!("portafolio_visible" in keysMap)) {
+      epSheet.appendRow(["portafolio_visible", "true"]);
+      SpreadsheetApp.flush();
+    }
+    if (!("categorias_adicionales" in keysMap)) {
+      epSheet.appendRow(["categorias_adicionales", ""]);
+      SpreadsheetApp.flush();
     }
   }
 }
@@ -1083,7 +1103,8 @@ function getConfig(doc) {
     for (var i = 1; i < rows.length; i++) {
       var key = rows[i][0];
       if (key) {
-        config[key.toString().trim()] = rows[i][1] ? rows[i][1].toString().trim() : "";
+        var val = rows[i][1];
+        config[key.toString().trim()] = (val !== undefined && val !== null && val !== "") ? val.toString().trim() : "";
       }
     }
   }
@@ -1095,7 +1116,8 @@ function getConfig(doc) {
     for (var j = 1; j < rowsEP.length; j++) {
       var keyEP = rowsEP[j][0];
       if (keyEP) {
-        config[keyEP.toString().trim()] = rowsEP[j][1] ? rowsEP[j][1].toString().trim() : "";
+        var valEP = rowsEP[j][1];
+        config[keyEP.toString().trim()] = (valEP !== undefined && valEP !== null && valEP !== "") ? valEP.toString().trim() : "";
       }
     }
   }
@@ -1364,7 +1386,8 @@ function getAdmins(doc) {
 
   var list = [];
   for (var i = 1; i < userRows.length; i++) {
-    if (userRows[i][userColMap["rol"]] === "admin") {
+    var userRol = (userColMap["rol"] !== undefined && userRows[i][userColMap["rol"]] !== undefined) ? userRows[i][userColMap["rol"]].toString().trim().toLowerCase() : "admin";
+    if (userRol === "admin" || userRol === "jefas" || userRol === "programadores") {
       var id = userRows[i][userColMap["id_usuario"]].toString().trim();
       list.push({
         id_usuario: id,
@@ -1372,7 +1395,7 @@ function getAdmins(doc) {
         identificacion: userRows[i][userColMap["identificacion"]],
         usuario: userRows[i][userColMap["usuario"]],
         contrasena: userRows[i][userColMap["contrasena"]],
-        rol: "admin",
+        rol: userRol,
         fecha_registro: userRows[i][userColMap["fecha_registro"]],
         total_enviados: resultsCountMap[id] || 0
       });
@@ -1392,13 +1415,17 @@ function updateAdmin(doc, data) {
   var idUsuario = data.id_usuario;
 
   for (var i = 1; i < rows.length; i++) {
-    if (rows[i][colMap["id_usuario"]].toString().trim() === idUsuario.toString().trim() && rows[i][colMap["rol"]] === "admin") {
+    var userRol = (colMap["rol"] !== undefined && rows[i][colMap["rol"]] !== undefined) ? rows[i][colMap["rol"]].toString().trim().toLowerCase() : "admin";
+    if (rows[i][colMap["id_usuario"]].toString().trim() === idUsuario.toString().trim() && (userRol === "admin" || userRol === "jefas" || userRol === "programadores")) {
       var rowNum = i + 1;
       if (data.nombre !== undefined) {
         sheet.getRange(rowNum, colMap["nombre"] + 1).setValue(data.nombre);
       }
       if (data.identificacion !== undefined) {
         sheet.getRange(rowNum, colMap["identificacion"] + 1).setValue(data.identificacion);
+      }
+      if (data.rol !== undefined && colMap["rol"] !== undefined) {
+        sheet.getRange(rowNum, colMap["rol"] + 1).setValue(data.rol);
       }
       if (data.contrasena !== undefined && data.contrasena.trim() !== "") {
         sheet.getRange(rowNum, colMap["contrasena"] + 1).setValue(data.contrasena.trim());
@@ -1421,7 +1448,8 @@ function deleteAdmin(doc, data) {
   var idUsuario = data.id_usuario;
 
   for (var i = 1; i < rows.length; i++) {
-    if (rows[i][colMap["id_usuario"]].toString().trim() === idUsuario.toString().trim() && rows[i][colMap["rol"]] === "admin") {
+    var userRol = (colMap["rol"] !== undefined && rows[i][colMap["rol"]] !== undefined) ? rows[i][colMap["rol"]].toString().trim().toLowerCase() : "admin";
+    if (rows[i][colMap["id_usuario"]].toString().trim() === idUsuario.toString().trim() && (userRol === "admin" || userRol === "jefas" || userRol === "programadores")) {
       sheet.deleteRow(i + 1);
       SpreadsheetApp.flush();
       return { success: true, message: "Perfil de personal eliminado de la base de datos." };

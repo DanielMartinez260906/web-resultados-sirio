@@ -21,9 +21,9 @@
         <img src="logo.png" alt="Laboratorio Sirio">
         <div class="header-divider">
           <h2 id="admin-name">Cargando...</h2>
-          <p>
-            <i class="fa-solid fa-user-shield"></i>
-            Personal del Laboratorio
+          <p id="admin-role-display" style="display: flex; align-items: center; gap: 6px; margin: 2px 0 0 0; font-size: 0.78rem; font-weight: 500;">
+            <i class="fa-solid fa-user-shield" id="admin-role-icon"></i>
+            <span id="admin-role-text">Personal del Laboratorio</span>
           </p>
         </div>
       </div>
@@ -76,6 +76,10 @@
         <button class="nav-tab" data-tab="tab-portafolio-admin">
           <i class="fa-solid fa-book-medical"></i>
           <span>Portafolio</span>
+        </button>
+        <button class="nav-tab" data-tab="tab-stats" id="nav-tab-stats" style="display: none;">
+          <i class="fa-solid fa-chart-line"></i>
+          <span>Estadísticas</span>
         </button>
         <button class="nav-tab" data-tab="tab-danger">
           <i class="fa-solid fa-triangle-exclamation"></i>
@@ -517,6 +521,10 @@
                 </div>
                 <p style="margin: 0;"><i class="fa-solid fa-passport"></i> Identificación: <span id="dir-staff-id-val" style="font-weight: 600;">...</span></p>
               </div>
+              <div style="display: flex; gap: 8px;">
+                <button id="dir-toggle-staff-role-btn" class="btn" style="gap: 6px; padding: 6px 14px; font-size: 0.75rem; height: auto; font-weight: 600; border-radius: 6px; transition: all 0.2s;"></button>
+                <button id="dir-toggle-programmer-role-btn" class="btn" style="gap: 6px; padding: 6px 14px; font-size: 0.75rem; height: auto; font-weight: 600; border-radius: 6px; transition: all 0.2s;"></button>
+              </div>
             </div>
             
             <div class="profile-details-grid" style="display: grid; grid-template-columns: 1fr; gap: 1rem; margin-bottom: 1.5rem;">
@@ -622,6 +630,24 @@
             </p>
           </div>
 
+          <div class="form-group" style="margin-top: 1.5rem; border-top: 1px solid var(--border-light); padding-top: 1.5rem;">
+            <div style="display: flex; align-items: center; justify-content: space-between; background: rgba(255,255,255,0.02); padding: 12px 16px; border-radius: 8px; border: 1px solid var(--border-light);">
+              <div style="display: flex; flex-direction: column; gap: 4px; flex: 1; padding-right: 15px;">
+                <span style="font-weight: 600; color: var(--text-main); font-size: 0.88rem; display: flex; align-items: center; gap: 8px;">
+                  <i class="fa-solid fa-book-medical" style="color: var(--color-accent);"></i>
+                  Habilitar Portafolio a Clientes
+                </span>
+                <span style="font-size: 0.72rem; color: var(--text-muted); line-height: 1.4;">
+                  Si se desactiva, los clientes verán un aviso de mantenimiento cuando intenten acceder al portafolio de servicios.
+                </span>
+              </div>
+              <label class="switch-container" style="position: relative; display: inline-block; width: 34px; height: 20px; vertical-align: middle; flex-shrink: 0;">
+                <input type="checkbox" id="config-portafolio-visibility-toggle" style="opacity: 0; width: 0; height: 0;" checked>
+                <span class="switch-slider" style="position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: rgba(255,255,255,0.15); transition: .3s; border-radius: 20px;"></span>
+              </label>
+            </div>
+          </div>
+
           <button type="submit" class="btn btn-accent" style="width: 100%; margin-top: 1rem; gap: 8px; justify-content: center;">
             <i class="fa-solid fa-floppy-disk"></i> Guardar Configuración
           </button>
@@ -654,6 +680,96 @@
             <span style="font-size: 1.8rem; line-height: 1;">💖</span>
             <span style="font-size: 0.8rem; font-weight: 600; margin-top: 4px;">San Valentín</span>
           </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Pestaña: Estadísticas del Sistema (Uso Exclusivo Jefas/Programadores) -->
+    <div id="tab-stats" class="tab-content" style="display: none;">
+      <div class="panel-card" style="margin-bottom: 1.5rem; border-color: rgba(14, 165, 233, 0.25); padding: 1.5rem;">
+        <h3 class="panel-card-title" style="color: var(--color-accent); display: flex; align-items: center; gap: 10px;">
+          <i class="fa-solid fa-chart-line"></i> Métricas e Informes del Sistema
+        </h3>
+        <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 1.5rem;">
+          Sección exclusiva para Jefes de Laboratorio y Programadores. Consulta las estadísticas del flujo de trabajo, colaboradores y clientes estrella del laboratorio.
+        </p>
+
+        <!-- Grid de Resumenes Rápidos -->
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1rem; margin-bottom: 2rem;">
+          <div style="background: rgba(255, 255, 255, 0.02); padding: 16px; border-radius: 10px; border: 1.5px solid var(--border-light); display: flex; align-items: center; gap: 12px;">
+            <div style="width: 45px; height: 45px; border-radius: 50%; background: rgba(56, 189, 248, 0.12); display: flex; align-items: center; justify-content: center; color: #38bdf8; font-size: 1.25rem;">
+              <i class="fa-solid fa-server"></i>
+            </div>
+            <div>
+              <span style="font-size: 0.72rem; color: var(--text-muted); display: block; text-transform: uppercase; font-weight: 600;">Total Exámenes</span>
+              <span id="stats-total-results" style="font-size: 1.35rem; font-weight: 700; color: var(--text-main);">0</span>
+            </div>
+          </div>
+
+          <div style="background: rgba(255, 255, 255, 0.02); padding: 16px; border-radius: 10px; border: 1.5px solid var(--border-light); display: flex; align-items: center; gap: 12px;">
+            <div style="width: 45px; height: 45px; border-radius: 50%; background: rgba(236, 72, 153, 0.12); display: flex; align-items: center; justify-content: center; color: #f472b6; font-size: 1.25rem;">
+              <i class="fa-solid fa-trophy"></i>
+            </div>
+            <div>
+              <span style="font-size: 0.72rem; color: var(--text-muted); display: block; text-transform: uppercase; font-weight: 600;">Cliente Estrella</span>
+              <span id="stats-top-client" style="font-size: 0.82rem; font-weight: 700; color: var(--text-main); display: block; margin-top: 2px; text-overflow: ellipsis; overflow: hidden; white-space: nowrap; max-width: 160px;" title="Cargando...">Cargando...</span>
+            </div>
+          </div>
+
+          <div style="background: rgba(255, 255, 255, 0.02); padding: 16px; border-radius: 10px; border: 1.5px solid var(--border-light); display: flex; align-items: center; gap: 12px;">
+            <div style="width: 45px; height: 45px; border-radius: 50%; background: rgba(168, 85, 247, 0.12); display: flex; align-items: center; justify-content: center; color: #c084fc; font-size: 1.25rem;">
+              <i class="fa-solid fa-user-tie"></i>
+            </div>
+            <div>
+              <span style="font-size: 0.72rem; color: var(--text-muted); display: block; text-transform: uppercase; font-weight: 600;">Colaborador Activo</span>
+              <span id="stats-top-uploader" style="font-size: 0.82rem; font-weight: 700; color: var(--text-main); display: block; margin-top: 2px; text-overflow: ellipsis; overflow: hidden; white-space: nowrap; max-width: 160px;" title="Cargando...">Cargando...</span>
+            </div>
+          </div>
+
+          <div style="background: rgba(255, 255, 255, 0.02); padding: 16px; border-radius: 10px; border: 1.5px solid var(--border-light); display: flex; align-items: center; gap: 12px;">
+            <div style="width: 45px; height: 45px; border-radius: 50%; background: rgba(245, 158, 11, 0.12); display: flex; align-items: center; justify-content: center; color: #f59e0b; font-size: 1.25rem;">
+              <i class="fa-solid fa-microscope"></i>
+            </div>
+            <div>
+              <span style="font-size: 0.72rem; color: var(--text-muted); display: block; text-transform: uppercase; font-weight: 600;">Examen Más Solicitado</span>
+              <span id="stats-top-exam" style="font-size: 0.82rem; font-weight: 700; color: var(--text-main); display: block; margin-top: 2px; text-overflow: ellipsis; overflow: hidden; white-space: nowrap; max-width: 160px;" title="Cargando...">Cargando...</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Grid de Gráficos -->
+        <div style="display: grid; grid-template-columns: 1fr; gap: 1.5rem; margin-bottom: 2rem;">
+          <!-- Gráfico 1: Tendencia Mensual -->
+          <div style="background: rgba(255, 255, 255, 0.015); border: 1px solid var(--border-light); border-radius: 12px; padding: 20px;">
+            <h4 style="margin: 0 0 15px 0; font-size: 0.9rem; font-weight: 600; color: var(--color-accent); display: flex; align-items: center; gap: 8px;">
+              <i class="fa-solid fa-chart-area"></i> Flujo Histórico de Exámenes Enviados
+            </h4>
+            <div style="position: relative; height: 260px; width: 100%;">
+              <canvas id="chart-monthly-trend"></canvas>
+            </div>
+          </div>
+        </div>
+
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 1.5rem;">
+          <!-- Gráfico 2: Colaboradores -->
+          <div style="background: rgba(255, 255, 255, 0.015); border: 1px solid var(--border-light); border-radius: 12px; padding: 20px;">
+            <h4 style="margin: 0 0 15px 0; font-size: 0.9rem; font-weight: 600; color: var(--color-accent); display: flex; align-items: center; gap: 8px;">
+              <i class="fa-solid fa-chart-pie"></i> Participación del Personal (Exámenes Subidos)
+            </h4>
+            <div style="position: relative; height: 240px; width: 100%; display: flex; justify-content: center;">
+              <canvas id="chart-staff-distribution"></canvas>
+            </div>
+          </div>
+
+          <!-- Gráfico 3: Clientes Top -->
+          <div style="background: rgba(255, 255, 255, 0.015); border: 1px solid var(--border-light); border-radius: 12px; padding: 20px;">
+            <h4 style="margin: 0 0 15px 0; font-size: 0.9rem; font-weight: 600; color: var(--color-accent); display: flex; align-items: center; gap: 8px;">
+              <i class="fa-solid fa-ranking-star"></i> Top 5 Clientes con Mayor Demanda
+            </h4>
+            <div style="position: relative; height: 240px; width: 100%;">
+              <canvas id="chart-top-clients"></canvas>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -1046,6 +1162,7 @@
     </div>
   </footer>
 
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script src="js/auth.js"></script>
   <script src="js/admin.js"></script>
   <script src="js/themes.js"></script>
