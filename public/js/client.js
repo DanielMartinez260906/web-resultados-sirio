@@ -7,6 +7,25 @@ document.addEventListener('DOMContentLoaded', () => {
   let currentUser = SirioAuth.checkSession('cliente');
   if (!currentUser) return;
 
+  // Presencia Activa (Heartbeat) para indicar usuario activo a los administradores
+  function startPresenceHeartbeat(userId) {
+    if (!userId) return;
+    const sendHeartbeat = async () => {
+      try {
+        await fetch(`${SirioAuth.API_BASE}/api/heartbeat`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ id_usuario: userId, rol: 'cliente' })
+        });
+      } catch (err) {
+        console.error('Error enviando presencia:', err);
+      }
+    };
+    sendHeartbeat();
+    setInterval(sendHeartbeat, 15000); // Cada 15 segundos
+  }
+  startPresenceHeartbeat(currentUser.id_usuario);
+
   // Mostrar nombre del cliente en la cabecera
   document.getElementById('client-name').innerText = currentUser.nombre;
   const clientIdText = document.getElementById('client-id-text');

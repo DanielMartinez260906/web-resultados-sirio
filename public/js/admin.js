@@ -58,7 +58,81 @@ document.addEventListener('DOMContentLoaded', () => {
   let isJefasUnlocked = false; // Estado de autorización para pestañas restringidas
   let allStaff = [];
   let selectedStaff = null;
+  let selectedDirClient = null;
   let activeDirectory = 'clients'; // 'clients' o 'staff'
+  let activeUserIds = [];
+
+  // Heartbeat para registrar nuestra propia presencia como administrador
+  function startPresenceHeartbeat(userId, role) {
+    if (!userId) return;
+    const sendHeartbeat = async () => {
+      try {
+        await fetch(`${SirioAuth.API_BASE}/api/heartbeat`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ id_usuario: userId, rol: role || 'admin' })
+        });
+      } catch (err) {
+        console.error('Error enviando presencia admin:', err);
+      }
+    };
+    sendHeartbeat();
+    setInterval(sendHeartbeat, 15000); // Cada 15 segundos
+  }
+  startPresenceHeartbeat(currentUser.id_usuario, currentUser.rol);
+
+  // Polling para traer sesiones activas de la API del servidor
+  async function fetchActiveSessions() {
+    try {
+      const response = await fetch(`${SirioAuth.API_BASE}/api/admin/active-sessions`);
+      const data = await response.json();
+      if (data.success && data.activeUsers) {
+        activeUserIds = data.activeUsers.map(u => u.id_usuario);
+        updateActiveIndicators();
+      }
+    } catch (err) {
+      console.error('Error al obtener sesiones activas:', err);
+    }
+  }
+
+  function updateActiveIndicators() {
+    // 1. Tarjetas de clientes y personal en el directorio
+    document.querySelectorAll('.client-item').forEach(el => {
+      const id = el.getAttribute('data-id');
+      const badge = el.querySelector('.active-status-badge');
+      if (badge && id) {
+        if (activeUserIds.includes(id)) {
+          badge.style.display = 'inline-block';
+        } else {
+          badge.style.display = 'none';
+        }
+      }
+    });
+
+    // 2. Detalle del cliente seleccionado
+    const selectedClientBadge = document.getElementById('dir-client-active-badge');
+    if (selectedClientBadge) {
+      if (selectedDirClient && activeUserIds.includes(selectedDirClient.id_usuario)) {
+        selectedClientBadge.style.display = 'inline-block';
+      } else {
+        selectedClientBadge.style.display = 'none';
+      }
+    }
+
+    // 3. Detalle del personal seleccionado
+    const selectedStaffBadge = document.getElementById('dir-staff-active-badge');
+    if (selectedStaffBadge) {
+      if (selectedStaff && activeUserIds.includes(selectedStaff.id_usuario)) {
+        selectedStaffBadge.style.display = 'inline-block';
+      } else {
+        selectedStaffBadge.style.display = 'none';
+      }
+    }
+  }
+
+  // Iniciar polling
+  fetchActiveSessions();
+  setInterval(fetchActiveSessions, 8000); // Cada 8 segundos
 
   // Elementos del DOM
   const clientsContainer = document.getElementById('clients-container');
@@ -1247,7 +1321,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const dirEditClientForm = document.getElementById('dir-edit-client-form');
   const cancelEditDirBtn = document.getElementById('cancel-edit-dir-btn');
 
-  let selectedDirClient = null;
+  selectedDirClient = null;
 
   // Renderizar la lista de clientes en el directorio
   function renderDirClients(clientsList) {
@@ -1262,15 +1336,19 @@ document.addEventListener('DOMContentLoaded', () => {
     clientsList.forEach(client => {
       const item = document.createElement('div');
       item.className = 'client-item';
+      item.setAttribute('data-id', client.id_usuario);
       if (selectedDirClient && selectedDirClient.id_usuario === client.id_usuario) {
         item.classList.add('active');
       }
       
+      const isActive = activeUserIds.includes(client.id_usuario);
+      
       item.innerHTML = `
         <div class="client-item-info">
-          <div style="display: flex; align-items: center; gap: 8px;">
+          <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
             <h4 style="margin: 0;">${client.nombre}</h4>
             ${client.moroso ? '<span style="background: rgba(239, 68, 68, 0.15); color: #f87171; font-size: 0.6rem; padding: 1px 5px; border-radius: 3px; font-weight: 700; border: 1px solid rgba(239, 68, 68, 0.2); text-transform: uppercase;">MOROSO</span>' : ''}
+            <span class="active-status-badge" style="display: ${isActive ? 'inline-block' : 'none'}; background: rgba(16, 185, 129, 0.15); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.3); font-size: 0.6rem; padding: 1px 5px; border-radius: 3px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.3px; animation: pulse 2s infinite;">Activo</span>
           </div>
           <p style="margin-top: 4px;"><i class="fa-solid fa-passport"></i> DNI: ${client.identificacion}</p>
         </div>
@@ -1632,6 +1710,7 @@ document.addEventListener('DOMContentLoaded', () => {
     sortedList.forEach(member => {
       const item = document.createElement('div');
       item.className = 'client-item';
+      item.setAttribute('data-id', member.id_usuario);
       if (selectedStaff && selectedStaff.id_usuario === member.id_usuario) {
         item.classList.add('active');
       }
@@ -1642,11 +1721,13 @@ document.addEventListener('DOMContentLoaded', () => {
         'admin': 'Admin Normal 👤'
       };
       const roleText = roleNames[member.rol] || 'Admin Normal 👤';
+      const isActive = activeUserIds.includes(member.id_usuario);
       
       item.innerHTML = `
         <div class="client-item-info">
-          <div style="display: flex; align-items: center; gap: 8px;">
+          <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
             <h4 style="margin: 0;">${member.nombre}</h4>
+            <span class="active-status-badge" style="display: ${isActive ? 'inline-block' : 'none'}; background: rgba(16, 185, 129, 0.15); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.3); font-size: 0.6rem; padding: 1px 5px; border-radius: 3px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.3px; animation: pulse 2s infinite;">Activo</span>
           </div>
           <p style="margin-top: 4px; display: flex; align-items: center; gap: 6px;">
             <i class="fa-solid fa-user-tag" style="color: var(--color-accent); font-size: 0.72rem;"></i>

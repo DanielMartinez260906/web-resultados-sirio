@@ -60,6 +60,13 @@ Desde la pestaña **Clientes y Perfiles** > **Personal**:
   * **Hacer Programador / Quitar Rol Programador**: Para promover o quitar permisos de desarrollo.
   * **Seguridad**: Al presionar cualquiera de estos botones para otorgar permisos elevados, el sistema te solicitará ingresar la contraseña **`SirioJefas2026*`**. Si no es correcta, el rol no se modificará.
 
+### 🟢 Indicador de Presencia (Usuarios Activos en Tiempo Real)
+* **¿Qué es?**: Ahora las jefas y administradores pueden saber de inmediato qué clientes y compañeros están navegando en la plataforma en ese mismo instante.
+* **¿Cómo verlos?**:
+  * En la pestaña **Clientes y Perfiles** (tanto en el listado de Clientes como de Personal), aparecerá una etiqueta parpadeante en verde brillante que dice **`ACTIVO`** junto al nombre de cualquier usuario que tenga la página abierta.
+  * Al seleccionar a un cliente o miembro del personal para ver sus detalles en el panel lateral, también verás un indicador visual destacado de **`ACTIVO AHORA`** en la cabecera de su ficha de detalles.
+  * **Actualización Automática**: El sistema rastrea la presencia en segundo plano de forma transparente y actualiza las etiquetas cada pocos segundos de manera dinámica sin necesidad de recargar la página.
+
 ### 🛠️ Activar o Desactivar el Portafolio de Clientes
 * **¿Para qué sirve?**: Si vas a subir nuevos precios o actualizar el catálogo y no quieres que los veterinarios vean información incompleta, puedes apagar temporalmente el portafolio.
 * **¿Cómo se hace?**:

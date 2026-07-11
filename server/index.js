@@ -102,6 +102,41 @@ app.use('/uploads', express.static(UPLOADS_DIR, {
   }
 }));
 
+// Almacén de sesiones activas (rastreo de presencia en tiempo real)
+const activeSessions = {};
+
+// API: Recibir heartbeat de presencia activa de un usuario
+app.post('/api/heartbeat', (req, res) => {
+  const { id_usuario, rol } = req.body;
+  if (id_usuario) {
+    activeSessions[id_usuario] = {
+      lastSeen: Date.now(),
+      rol: rol || 'client'
+    };
+  }
+  res.json({ success: true });
+});
+
+// API: Obtener lista de usuarios activos para administradores
+app.get('/api/admin/active-sessions', (req, res) => {
+  const now = Date.now();
+  const activeList = [];
+  
+  for (const id in activeSessions) {
+    // Si el usuario tuvo actividad en los últimos 30 segundos
+    if (now - activeSessions[id].lastSeen < 30000) {
+      activeList.push({
+        id_usuario: id,
+        rol: activeSessions[id].rol
+      });
+    } else {
+      // Limpiar registros antiguos para evitar consumo de memoria
+      delete activeSessions[id];
+    }
+  }
+  res.json({ success: true, activeUsers: activeList });
+});
+
 // Almacén de conexiones SSE activas por usuario
 const sseClients = new Map();
 
