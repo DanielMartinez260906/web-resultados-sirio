@@ -16,7 +16,9 @@
       "usuario": "sanfrancisco",
       "contrasena": "vet123",
       "rol": "cliente",
-      "fecha_registro": "2026-06-19"
+      "fecha_registro": "2026-06-19",
+      "plan": "Básico",
+      "sirio_credits": 0
     }
   ],
   "Resultados": [

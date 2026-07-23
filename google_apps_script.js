@@ -59,30 +59,30 @@ function doPost(e) {
     }
 
     var action = requestData.action;
-    var data   = requestData.data;
-    var doc    = SpreadsheetApp.getActiveSpreadsheet();
+    var data = requestData.data;
+    var doc = SpreadsheetApp.getActiveSpreadsheet();
 
     // Asegurar estructura correcta en cada request
     checkAndInitSheets(doc);
     migrateSheets(doc);
 
-    if      (action === "login")            { response = handleLogin(doc, data); }
-    else if (action === "getClients")       { response = getClients(doc); }
-    else if (action === "addClient")        { response = addClient(doc, data); }
-    else if (action === "addAdmin")         { response = addAdmin(doc, data); }
-    else if (action === "updateClient")     { response = updateClient(doc, data); }
-    else if (action === "deleteClient")     { response = deleteClient(doc, data); }
-    else if (action === "addResult")        { response = addResult(doc, data); }
+    if (action === "login") { response = handleLogin(doc, data); }
+    else if (action === "getClients") { response = getClients(doc); }
+    else if (action === "addClient") { response = addClient(doc, data); }
+    else if (action === "addAdmin") { response = addAdmin(doc, data); }
+    else if (action === "updateClient") { response = updateClient(doc, data); }
+    else if (action === "deleteClient") { response = deleteClient(doc, data); }
+    else if (action === "addResult") { response = addResult(doc, data); }
     else if (action === "getClientResults") { response = getClientResults(doc, data); }
-    else if (action === "deleteResult")     { response = deleteResult(doc, data); }
+    else if (action === "deleteResult") { response = deleteResult(doc, data); }
     else if (action === "deleteResultsBulk") { response = deleteResultsBulk(doc, data); }
     else if (action === "deleteResultsRange") { response = deleteResultsRange(doc, data); }
-    else if (action === "deleteAllResults")  { response = deleteAllResults(doc); }
-    else if (action === "getAllResults")     { response = getAllResults(doc); }
-    else if (action === "logAccess")        { response = logAccess(doc, data); }
-    else if (action === "getConfig")        { response = getConfig(doc); }
-    else if (action === "saveConfig")       { response = saveConfig(doc, data); }
-    else if (action === "getPortafolio")    { response = getPortafolio(doc); }
+    else if (action === "deleteAllResults") { response = deleteAllResults(doc); }
+    else if (action === "getAllResults") { response = getAllResults(doc); }
+    else if (action === "logAccess") { response = logAccess(doc, data); }
+    else if (action === "getConfig") { response = getConfig(doc); }
+    else if (action === "saveConfig") { response = saveConfig(doc, data); }
+    else if (action === "getPortafolio") { response = getPortafolio(doc); }
     else if (action === "savePortafolioPrecios") { response = savePortafolioPrecios(doc, data); }
     else if (action === "addPortafolioExamen") { response = addPortafolioExamen(doc, data); }
     else if (action === "deletePortafolioExamen") { response = deletePortafolioExamen(doc, data); }
@@ -118,7 +118,7 @@ function migrateSheets(doc) {
     var lastCol = sheet.getLastColumn();
     if (lastCol > 0) {
       var headers = sheet.getRange(1, 1, 1, lastCol).getValues()[0];
-      var colMap  = {};
+      var colMap = {};
       for (var i = 0; i < headers.length; i++) {
         colMap[headers[i].toString().trim().toLowerCase()] = i;
       }
@@ -126,7 +126,7 @@ function migrateSheets(doc) {
       // Agregar columna admin_nombre si no existe
       if (!("admin_nombre" in colMap)) {
         var newCol = lastCol + 1;
-        var cell   = sheet.getRange(1, newCol);
+        var cell = sheet.getRange(1, newCol);
         cell.setValue("admin_nombre");
         cell.setFontWeight("bold");
         cell.setBackground("#0a192f");
@@ -137,7 +137,7 @@ function migrateSheets(doc) {
       // Agregar columna admin_id si no existe
       if (!("admin_id" in colMap)) {
         var newColId = sheet.getLastColumn() + 1;
-        var cellId   = sheet.getRange(1, newColId);
+        var cellId = sheet.getRange(1, newColId);
         cellId.setValue("admin_id");
         cellId.setFontWeight("bold");
         cellId.setBackground("#0a192f");
@@ -148,7 +148,7 @@ function migrateSheets(doc) {
       // Agregar columna retenido si no existe
       if (!("retenido" in colMap)) {
         var newCol2 = sheet.getLastColumn() + 1;
-        var cell2   = sheet.getRange(1, newCol2);
+        var cell2 = sheet.getRange(1, newCol2);
         cell2.setValue("retenido");
         cell2.setFontWeight("bold");
         cell2.setBackground("#0a192f");
@@ -169,7 +169,7 @@ function migrateSheets(doc) {
         uColMap[uHeaders[i].toString().trim().toLowerCase()] = i;
       }
 
-      var colsToAdd = ["rol", "direccion", "correo", "telefono", "moroso"];
+      var colsToAdd = ["rol", "direccion", "correo", "telefono", "moroso", "plan", "sirio_credits"];
       for (var j = 0; j < colsToAdd.length; j++) {
         var colName = colsToAdd[j];
         if (!(colName in uColMap)) {
@@ -212,9 +212,9 @@ function migrateSheets(doc) {
 // ============================================================
 function checkAndInitSheets(doc) {
   var sheetsConfig = {
-    "Usuarios":  ["id_usuario","nombre","identificacion","usuario","contrasena","rol","fecha_registro","direccion","correo","telefono","moroso"],
-    "Resultados":["id_resultado","id_usuario","nombre_examen","nombre_archivo","fecha_subida","admin_id","admin_nombre","retenido"],
-    "Accesos":   ["id_log","usuario","rol","fecha_hora","estado"],
+    "Usuarios": ["id_usuario", "nombre", "identificacion", "usuario", "contrasena", "rol", "fecha_registro", "direccion", "correo", "telefono", "moroso", "plan", "sirio_credits"],
+    "Resultados": ["id_resultado", "id_usuario", "nombre_examen", "nombre_archivo", "fecha_subida", "admin_id", "admin_nombre", "retenido"],
+    "Accesos": ["id_log", "usuario", "rol", "fecha_hora", "estado"],
     "Configuracion": ["clave", "valor"],
     "Estado_Portafolio": ["clave", "valor"],
     "Portafolio": ["id_examen", "seccion", "examen", "precio", "tiempo_reporte", "muestra", "recipiente"],
@@ -233,8 +233,8 @@ function checkAndInitSheets(doc) {
       rng.setFontColor("#ffffff");
 
       if (name === "Usuarios") {
-        sheet.appendRow(["U000","Administrador Laboratorio","00000000","admin","admin123","admin",
-                         new Date().toISOString().split('T')[0], "", "", ""]);
+        sheet.appendRow(["U000", "Administrador Laboratorio", "00000000", "admin", "admin123", "admin",
+          new Date().toISOString().split('T')[0], "", "", "", "false", "Básico", 0]);
       }
       if (name === "Configuracion") {
         sheet.appendRow(["gemini_api_key", "CONFIGURAR_DESDE_PANEL_ADMIN"]);
@@ -450,7 +450,7 @@ function checkAndInitSheets(doc) {
           ["E203", "PERFILES", "Perfil Tiroideo 5 (T4L + T4T no específica + TSH no específica + Colesterol + Triglicéridos)", 84000, "1-2 días", "500 ul Sangre total", "Tubo tapa roja o amarilla"],
           ["E204", "PERFILES", "Perfil Tiroideo 6 (T4L + T4T específica + TSH específica canina)", 124000, "1-2 días", "1.5 ml Sangre total", "Tubo tapa roja o amarilla"],
           ["E205", "PERFILES", "Perfil Tiroideo 7 (T4L + T4T específica + TSH específica + Colesterol + Triglicéridos)", 130000, "1-2 días", "1.5 ml Sangre total", "Tubo tapa roja o amarilla"]
-];
+        ];
         for (var i = 0; i < defaultPortafolio.length; i++) {
           sheet.appendRow(defaultPortafolio[i]);
         }
@@ -486,11 +486,11 @@ function cellToISOString(val) {
 // ============================================================
 function handleLogin(doc, data) {
   var sheet = doc.getSheetByName("Usuarios");
-  var rows  = sheet.getDataRange().getValues();
+  var rows = sheet.getDataRange().getValues();
   var headers = rows[0];
   var colMap = buildColMap(headers);
   var uname = data.username.trim().toLowerCase();
-  var pass  = data.password;
+  var pass = data.password;
 
   for (var i = 1; i < rows.length; i++) {
     var r = rows[i];
@@ -507,7 +507,9 @@ function handleLogin(doc, data) {
           direccion: colMap["direccion"] !== undefined ? r[colMap["direccion"]] : "",
           correo: colMap["correo"] !== undefined ? r[colMap["correo"]] : "",
           telefono: colMap["telefono"] !== undefined ? r[colMap["telefono"]] : "",
-          moroso: colMap["moroso"] !== undefined ? (r[colMap["moroso"]].toString().trim() === "true") : false
+          moroso: colMap["moroso"] !== undefined ? (r[colMap["moroso"]].toString().trim() === "true") : false,
+          plan: colMap["plan"] !== undefined ? r[colMap["plan"]] : "Básico",
+          sirio_credits: colMap["sirio_credits"] !== undefined ? Number(r[colMap["sirio_credits"]] || 0) : 0
         }
       };
     }
@@ -520,10 +522,10 @@ function handleLogin(doc, data) {
 // ============================================================
 function getClients(doc) {
   var sheet = doc.getSheetByName("Usuarios");
-  var rows  = sheet.getDataRange().getValues();
+  var rows = sheet.getDataRange().getValues();
   var headers = rows[0];
   var colMap = buildColMap(headers);
-  var list  = [];
+  var list = [];
   for (var i = 1; i < rows.length; i++) {
     if (rows[i][colMap["rol"]] === "cliente") {
       list.push({
@@ -536,7 +538,9 @@ function getClients(doc) {
         correo: colMap["correo"] !== undefined ? rows[i][colMap["correo"]] : "",
         telefono: colMap["telefono"] !== undefined ? rows[i][colMap["telefono"]] : "",
         fecha_registro: rows[i][colMap["fecha_registro"]],
-        moroso: colMap["moroso"] !== undefined ? (rows[i][colMap["moroso"]].toString().trim() === "true") : false
+        moroso: colMap["moroso"] !== undefined ? (rows[i][colMap["moroso"]].toString().trim() === "true") : false,
+        plan: colMap["plan"] !== undefined ? rows[i][colMap["plan"]] : "Básico",
+        sirio_credits: colMap["sirio_credits"] !== undefined ? Number(rows[i][colMap["sirio_credits"]] || 0) : 0
       });
     }
   }
@@ -548,7 +552,7 @@ function getClients(doc) {
 // ============================================================
 function addClient(doc, data) {
   var sheet = doc.getSheetByName("Usuarios");
-  var rows  = sheet.getDataRange().getValues();
+  var rows = sheet.getDataRange().getValues();
   var headers = rows[0];
   var colMap = buildColMap(headers);
   var uname = data.usuario.trim().toLowerCase();
@@ -583,6 +587,9 @@ function addClient(doc, data) {
   if (colMap["direccion"] !== undefined) rowData[colMap["direccion"]] = data.direccion || "";
   if (colMap["correo"] !== undefined) rowData[colMap["correo"]] = data.correo || "";
   if (colMap["telefono"] !== undefined) rowData[colMap["telefono"]] = data.telefono || "";
+  if (colMap["moroso"] !== undefined) rowData[colMap["moroso"]] = "false";
+  if (colMap["plan"] !== undefined) rowData[colMap["plan"]] = data.plan || "Básico";
+  if (colMap["sirio_credits"] !== undefined) rowData[colMap["sirio_credits"]] = Number(data.sirio_credits || 0);
 
   sheet.appendRow(rowData);
   return { success: true, message: "Cliente registrado.", client: { id_usuario: nextId, nombre: data.nombre } };
@@ -593,7 +600,7 @@ function addClient(doc, data) {
 // ============================================================
 function addAdmin(doc, data) {
   var sheet = doc.getSheetByName("Usuarios");
-  var rows  = sheet.getDataRange().getValues();
+  var rows = sheet.getDataRange().getValues();
   var headers = rows[0];
   var colMap = buildColMap(headers);
   var uname = data.usuario.trim().toLowerCase();
@@ -631,10 +638,10 @@ function addAdmin(doc, data) {
 // PUBLICAR RESULTADOS (con admin_nombre)
 // ============================================================
 function addResult(doc, data) {
-  var sheet   = doc.getSheetByName("Resultados");
-  var rows    = sheet.getDataRange().getValues();
+  var sheet = doc.getSheetByName("Resultados");
+  var rows = sheet.getDataRange().getValues();
   var headers = rows[0];
-  var colMap  = buildColMap(headers);
+  var colMap = buildColMap(headers);
 
   var items = Array.isArray(data) ? data : [data];
 
@@ -649,25 +656,25 @@ function addResult(doc, data) {
   }
 
   var timezone = Session.getScriptTimeZone();
-  var today    = Utilities.formatDate(new Date(), timezone, "yyyy-MM-dd'T'HH:mm:ssXXX");
-  var ids      = [];
+  var today = Utilities.formatDate(new Date(), timezone, "yyyy-MM-dd'T'HH:mm:ssXXX");
+  var ids = [];
 
   for (var k = 0; k < items.length; k++) {
-    var item   = items[k];
+    var item = items[k];
     lastNum++;
     var nextId = "R" + String(lastNum).padStart(3, '0');
 
     // Fila vacía del tamaño exacto de cabeceras
     var newRow = new Array(headers.length).fill("");
 
-    if ("id_resultado"  in colMap) newRow[colMap["id_resultado"]]  = nextId;
-    if ("id_usuario"    in colMap) newRow[colMap["id_usuario"]]    = item.id_usuario    || "";
+    if ("id_resultado" in colMap) newRow[colMap["id_resultado"]] = nextId;
+    if ("id_usuario" in colMap) newRow[colMap["id_usuario"]] = item.id_usuario || "";
     if ("nombre_examen" in colMap) newRow[colMap["nombre_examen"]] = item.nombre_examen || "";
-    if ("nombre_archivo"in colMap) newRow[colMap["nombre_archivo"]]= item.nombre_archivo|| "";
-    if ("fecha_subida"  in colMap) newRow[colMap["fecha_subida"]]  = today;
-    if ("admin_id"      in colMap) newRow[colMap["admin_id"]]      = item.admin_id      || "";
-    if ("admin_nombre"  in colMap) newRow[colMap["admin_nombre"]]  = item.admin_nombre  || "";
-    if ("retenido"     in colMap) newRow[colMap["retenido"]]     = item.retenido ? "true" : "false";
+    if ("nombre_archivo" in colMap) newRow[colMap["nombre_archivo"]] = item.nombre_archivo || "";
+    if ("fecha_subida" in colMap) newRow[colMap["fecha_subida"]] = today;
+    if ("admin_id" in colMap) newRow[colMap["admin_id"]] = item.admin_id || "";
+    if ("admin_nombre" in colMap) newRow[colMap["admin_nombre"]] = item.admin_nombre || "";
+    if ("retenido" in colMap) newRow[colMap["retenido"]] = item.retenido ? "true" : "false";
 
     sheet.appendRow(newRow);
     ids.push(nextId);
@@ -684,46 +691,46 @@ function addResult(doc, data) {
 // OBTENER RESULTADOS DE UN CLIENTE
 // ============================================================
 function getClientResults(doc, data) {
-  var sheet   = doc.getSheetByName("Resultados");
-  var rows    = sheet.getDataRange().getValues();
+  var sheet = doc.getSheetByName("Resultados");
+  var rows = sheet.getDataRange().getValues();
   var headers = rows[0];
-  var colMap  = buildColMap(headers);
+  var colMap = buildColMap(headers);
 
-  var idCliente   = data.id_usuario;
-  var idxIdRes    = colMap["id_resultado"];
-  var idxIdUser   = colMap["id_usuario"];
-  var idxExamen   = colMap["nombre_examen"];
-  var idxArchivo  = colMap["nombre_archivo"];
-  var idxFecha    = colMap["fecha_subida"];
+  var idCliente = data.id_usuario;
+  var idxIdRes = colMap["id_resultado"];
+  var idxIdUser = colMap["id_usuario"];
+  var idxExamen = colMap["nombre_examen"];
+  var idxArchivo = colMap["nombre_archivo"];
+  var idxFecha = colMap["fecha_subida"];
   var idxRetenido = colMap["retenido"];
-  var results     = [];
+  var results = [];
   var hasRetained = false;
 
   for (var i = 1; i < rows.length; i++) {
     var row = rows[i];
     if (idxIdUser === undefined) continue;
     if (row[idxIdUser].toString().trim() !== idCliente.toString().trim()) continue;
-    
+
     if (idxRetenido !== undefined && row[idxRetenido] && row[idxRetenido].toString().trim() === "true") {
       hasRetained = true;
       continue;
     }
 
-    var nombreExamen  = idxExamen  !== undefined && row[idxExamen]  ? row[idxExamen].toString().trim()  : "";
+    var nombreExamen = idxExamen !== undefined && row[idxExamen] ? row[idxExamen].toString().trim() : "";
     var nombreArchivo = idxArchivo !== undefined && row[idxArchivo] ? row[idxArchivo].toString().trim() : "";
-    var fechaSubida   = idxFecha   !== undefined                    ? cellToISOString(row[idxFecha])    : "";
+    var fechaSubida = idxFecha !== undefined ? cellToISOString(row[idxFecha]) : "";
 
     if (!nombreExamen && nombreArchivo) nombreExamen = nombreArchivo;
 
     results.push({
-      id_resultado:  idxIdRes !== undefined ? row[idxIdRes] : "",
+      id_resultado: idxIdRes !== undefined ? row[idxIdRes] : "",
       nombre_examen: nombreExamen,
-      nombre_archivo:nombreArchivo,
-      fecha_subida:  fechaSubida
+      nombre_archivo: nombreArchivo,
+      fecha_subida: fechaSubida
     });
   }
 
-  results.sort(function(a, b) { return new Date(b.fecha_subida) - new Date(a.fecha_subida); });
+  results.sort(function (a, b) { return new Date(b.fecha_subida) - new Date(a.fecha_subida); });
   return { success: true, results: results, has_retained: hasRetained };
 }
 
@@ -731,13 +738,13 @@ function getClientResults(doc, data) {
 // LIBERAR RESULTADOS RETENIDOS DE UN CLIENTE
 // ============================================================
 function releaseRetainedResults(doc, data) {
-  var sheet   = doc.getSheetByName("Resultados");
-  var rows    = sheet.getDataRange().getValues();
+  var sheet = doc.getSheetByName("Resultados");
+  var rows = sheet.getDataRange().getValues();
   var headers = rows[0];
-  var colMap  = buildColMap(headers);
+  var colMap = buildColMap(headers);
 
-  var idCliente   = data.id_usuario;
-  var idxIdUser   = colMap["id_usuario"];
+  var idCliente = data.id_usuario;
+  var idxIdUser = colMap["id_usuario"];
   var idxRetenido = colMap["retenido"];
   var count = 0;
 
@@ -748,7 +755,7 @@ function releaseRetainedResults(doc, data) {
   for (var i = 1; i < rows.length; i++) {
     var row = rows[i];
     if (row[idxIdUser].toString().trim() === idCliente.toString().trim() &&
-        row[idxRetenido] && row[idxRetenido].toString().trim() === "true") {
+      row[idxRetenido] && row[idxRetenido].toString().trim() === "true") {
       sheet.getRange(i + 1, idxRetenido + 1).setValue("false");
       count++;
     }
@@ -765,51 +772,51 @@ function releaseRetainedResults(doc, data) {
 // OBTENER TODOS LOS RESULTADOS (historial general del admin)
 // ============================================================
 function getAllResults(doc) {
-  var sheet    = doc.getSheetByName("Resultados");
-  var rows     = sheet.getDataRange().getValues();
-  var headers  = rows[0];
-  var colMap   = buildColMap(headers);
+  var sheet = doc.getSheetByName("Resultados");
+  var rows = sheet.getDataRange().getValues();
+  var headers = rows[0];
+  var colMap = buildColMap(headers);
 
   // Mapa id_usuario -> nombre de cliente
   var userMap = {};
-  var uSheet  = doc.getSheetByName("Usuarios");
-  var uRows   = uSheet.getDataRange().getValues();
+  var uSheet = doc.getSheetByName("Usuarios");
+  var uRows = uSheet.getDataRange().getValues();
   for (var j = 1; j < uRows.length; j++) {
     userMap[uRows[j][0].toString().trim()] = uRows[j][1].toString().trim();
   }
 
-  var idxIdRes      = colMap["id_resultado"];
-  var idxIdUser     = colMap["id_usuario"];
-  var idxExamen     = colMap["nombre_examen"];
-  var idxArchivo    = colMap["nombre_archivo"];
-  var idxFecha      = colMap["fecha_subida"];
-  var idxAdminNombre= colMap["admin_nombre"];  // puede ser undefined en filas viejas
+  var idxIdRes = colMap["id_resultado"];
+  var idxIdUser = colMap["id_usuario"];
+  var idxExamen = colMap["nombre_examen"];
+  var idxArchivo = colMap["nombre_archivo"];
+  var idxFecha = colMap["fecha_subida"];
+  var idxAdminNombre = colMap["admin_nombre"];  // puede ser undefined en filas viejas
 
   var results = [];
 
   for (var i = 1; i < rows.length; i++) {
-    var row    = rows[i];
+    var row = rows[i];
     var idUser = idxIdUser !== undefined && row[idxIdUser] ? row[idxIdUser].toString().trim() : "";
 
-    var nombreExamen   = idxExamen      !== undefined && row[idxExamen]      ? row[idxExamen].toString().trim()      : "";
-    var nombreArchivo  = idxArchivo     !== undefined && row[idxArchivo]     ? row[idxArchivo].toString().trim()     : "";
-    var fechaSubida    = idxFecha       !== undefined                        ? cellToISOString(row[idxFecha])        : "";
-    var adminNombre    = idxAdminNombre !== undefined && row[idxAdminNombre] ? row[idxAdminNombre].toString().trim() : "";
+    var nombreExamen = idxExamen !== undefined && row[idxExamen] ? row[idxExamen].toString().trim() : "";
+    var nombreArchivo = idxArchivo !== undefined && row[idxArchivo] ? row[idxArchivo].toString().trim() : "";
+    var fechaSubida = idxFecha !== undefined ? cellToISOString(row[idxFecha]) : "";
+    var adminNombre = idxAdminNombre !== undefined && row[idxAdminNombre] ? row[idxAdminNombre].toString().trim() : "";
 
     if (!nombreExamen && nombreArchivo) nombreExamen = nombreArchivo;
 
     results.push({
-      id_resultado:  idxIdRes !== undefined ? row[idxIdRes].toString() : "",
-      id_usuario:    idUser,
-      nombre_cliente:userMap[idUser] || idUser || "Cliente Desconocido",
+      id_resultado: idxIdRes !== undefined ? row[idxIdRes].toString() : "",
+      id_usuario: idUser,
+      nombre_cliente: userMap[idUser] || idUser || "Cliente Desconocido",
       nombre_examen: nombreExamen,
-      nombre_archivo:nombreArchivo,
-      fecha_subida:  fechaSubida,
-      admin_nombre:  adminNombre
+      nombre_archivo: nombreArchivo,
+      fecha_subida: fechaSubida,
+      admin_nombre: adminNombre
     });
   }
 
-  results.sort(function(a, b) { return new Date(b.fecha_subida) - new Date(a.fecha_subida); });
+  results.sort(function (a, b) { return new Date(b.fecha_subida) - new Date(a.fecha_subida); });
   return { success: true, results: results };
 }
 
@@ -817,14 +824,14 @@ function getAllResults(doc) {
 // ELIMINAR RESULTADO
 // ============================================================
 function deleteResult(doc, data) {
-  var sheet   = doc.getSheetByName("Resultados");
-  var rows    = sheet.getDataRange().getValues();
+  var sheet = doc.getSheetByName("Resultados");
+  var rows = sheet.getDataRange().getValues();
   var headers = rows[0];
-  var colMap  = buildColMap(headers);
+  var colMap = buildColMap(headers);
 
   var idResultado = data.id_resultado.trim();
-  var idxIdRes    = colMap["id_resultado"];
-  var idxArchivo  = colMap["nombre_archivo"];
+  var idxIdRes = colMap["id_resultado"];
+  var idxArchivo = colMap["nombre_archivo"];
 
   for (var i = 1; i < rows.length; i++) {
     var row = rows[i];
@@ -845,16 +852,16 @@ function deleteAllResults(doc) {
   if (!sheet) {
     return { success: false, message: "No se encontro la hoja Resultados." };
   }
-  
+
   var lastRow = sheet.getLastRow();
   var deletedFiles = [];
-  
+
   if (lastRow > 1) {
     var rows = sheet.getDataRange().getValues();
     var headers = rows[0];
     var colMap = buildColMap(headers);
     var idxArchivo = colMap["nombre_archivo"];
-    
+
     // Obtener todos los archivos PDF a eliminar fisicamente
     for (var i = 1; i < rows.length; i++) {
       var row = rows[i];
@@ -863,11 +870,11 @@ function deleteAllResults(doc) {
         deletedFiles.push(fileName);
       }
     }
-    
+
     // Eliminar las filas de datos, conservando la cabecera (fila 1)
     sheet.deleteRows(2, lastRow - 1);
   }
-  
+
   return {
     success: true,
     message: "Todos los examenes fueron eliminados del Google Sheet.",
@@ -879,18 +886,18 @@ function deleteAllResults(doc) {
 // ELIMINAR EXÁMENES SELECCIONADOS (MASIVO)
 // ============================================================
 function deleteResultsBulk(doc, data) {
-  var sheet   = doc.getSheetByName("Resultados");
-  var rows    = sheet.getDataRange().getValues();
+  var sheet = doc.getSheetByName("Resultados");
+  var rows = sheet.getDataRange().getValues();
   var headers = rows[0];
-  var colMap  = buildColMap(headers);
+  var colMap = buildColMap(headers);
 
   var idsToDelete = data.ids; // Array de id_resultado
   if (!idsToDelete || !Array.isArray(idsToDelete) || idsToDelete.length === 0) {
     return { success: false, message: "No se proporcionaron IDs de resultados para eliminar." };
   }
 
-  var idxIdRes    = colMap["id_resultado"];
-  var idxArchivo  = colMap["nombre_archivo"];
+  var idxIdRes = colMap["id_resultado"];
+  var idxArchivo = colMap["nombre_archivo"];
 
   var deletedFiles = [];
   var rowsDeleted = 0;
@@ -909,10 +916,10 @@ function deleteResultsBulk(doc, data) {
     }
   }
 
-  return { 
-    success: true, 
-    message: rowsDeleted + " exámenes eliminados.", 
-    archivos_eliminados: deletedFiles 
+  return {
+    success: true,
+    message: rowsDeleted + " exámenes eliminados.",
+    archivos_eliminados: deletedFiles
   };
 }
 
@@ -920,21 +927,21 @@ function deleteResultsBulk(doc, data) {
 // ELIMINAR EXÁMENES POR RANGO DE FECHAS
 // ============================================================
 function deleteResultsRange(doc, data) {
-  var sheet   = doc.getSheetByName("Resultados");
-  var rows    = sheet.getDataRange().getValues();
+  var sheet = doc.getSheetByName("Resultados");
+  var rows = sheet.getDataRange().getValues();
   var headers = rows[0];
-  var colMap  = buildColMap(headers);
+  var colMap = buildColMap(headers);
 
   var fechaInicio = data.fecha_inicio; // YYYY-MM-DD
-  var fechaFin    = data.fecha_fin;    // YYYY-MM-DD
+  var fechaFin = data.fecha_fin;    // YYYY-MM-DD
 
   if (!fechaInicio || !fechaFin) {
     return { success: false, message: "Las fechas de inicio y fin son requeridas." };
   }
 
-  var idxIdRes      = colMap["id_resultado"];
-  var idxArchivo    = colMap["nombre_archivo"];
-  var idxFechaSub   = colMap["fecha_subida"];
+  var idxIdRes = colMap["id_resultado"];
+  var idxArchivo = colMap["nombre_archivo"];
+  var idxFechaSub = colMap["fecha_subida"];
 
   var deletedFiles = [];
   var rowsDeleted = 0;
@@ -956,10 +963,10 @@ function deleteResultsRange(doc, data) {
     }
   }
 
-  return { 
-    success: true, 
-    message: rowsDeleted + " exámenes eliminados en el rango especificado.", 
-    archivos_eliminados: deletedFiles 
+  return {
+    success: true,
+    message: rowsDeleted + " exámenes eliminados en el rango especificado.",
+    archivos_eliminados: deletedFiles
   };
 }
 
@@ -973,7 +980,7 @@ function deleteClient(doc, data) {
   }
 
   var uSheet = doc.getSheetByName("Usuarios");
-  var uRows  = uSheet.getDataRange().getValues();
+  var uRows = uSheet.getDataRange().getValues();
   var clientFound = false;
 
   // 1. Eliminar cliente de Usuarios
@@ -992,7 +999,7 @@ function deleteClient(doc, data) {
   // 2. Eliminar resultados asociados del cliente en la hoja Resultados
   var rSheet = doc.getSheetByName("Resultados");
   var deletedFiles = [];
-  
+
   if (rSheet) {
     var rRows = rSheet.getDataRange().getValues();
     var headers = rRows[0];
@@ -1024,8 +1031,8 @@ function deleteClient(doc, data) {
 // REGISTRO DE ACCESO
 // ============================================================
 function logAccess(doc, data) {
-  var sheet   = doc.getSheetByName("Accesos");
-  var rows    = sheet.getDataRange().getValues();
+  var sheet = doc.getSheetByName("Accesos");
+  var rows = sheet.getDataRange().getValues();
   var lastNum = 0;
   for (var i = 1; i < rows.length; i++) {
     var id = rows[i][0].toString();
@@ -1035,8 +1042,8 @@ function logAccess(doc, data) {
     }
   }
   var nextId = "L" + String(lastNum + 1).padStart(5, '0');
-  var tz     = Session.getScriptTimeZone();
-  var now    = Utilities.formatDate(new Date(), tz, "yyyy-MM-dd HH:mm:ss");
+  var tz = Session.getScriptTimeZone();
+  var now = Utilities.formatDate(new Date(), tz, "yyyy-MM-dd HH:mm:ss");
   sheet.appendRow([nextId, data.usuario, data.rol, now, data.estado]);
   return { success: true };
 }
@@ -1046,7 +1053,7 @@ function logAccess(doc, data) {
 // ============================================================
 function updateClient(doc, data) {
   var sheet = doc.getSheetByName("Usuarios");
-  var rows  = sheet.getDataRange().getValues();
+  var rows = sheet.getDataRange().getValues();
   var headers = rows[0];
   var colMap = buildColMap(headers);
   var idUsuario = data.id_usuario;
@@ -1071,6 +1078,12 @@ function updateClient(doc, data) {
       if (colMap["moroso"] !== undefined && data.moroso !== undefined) {
         sheet.getRange(i + 1, colMap["moroso"] + 1).setValue(data.moroso === true || data.moroso === "true" ? "true" : "false");
       }
+      if (colMap["plan"] !== undefined && data.plan !== undefined) {
+        sheet.getRange(i + 1, colMap["plan"] + 1).setValue(data.plan);
+      }
+      if (colMap["sirio_credits"] !== undefined && data.sirio_credits !== undefined) {
+        sheet.getRange(i + 1, colMap["sirio_credits"] + 1).setValue(Number(data.sirio_credits));
+      }
 
       var updatedUser = {
         id_usuario: idUsuario,
@@ -1081,7 +1094,9 @@ function updateClient(doc, data) {
         direccion: data.direccion !== undefined ? data.direccion : (colMap["direccion"] !== undefined ? rows[i][colMap["direccion"]] : ""),
         correo: data.correo !== undefined ? data.correo : (colMap["correo"] !== undefined ? rows[i][colMap["correo"]] : ""),
         telefono: data.telefono !== undefined ? data.telefono : (colMap["telefono"] !== undefined ? rows[i][colMap["telefono"]] : ""),
-        moroso: data.moroso !== undefined ? (data.moroso === true || data.moroso === "true") : (colMap["moroso"] !== undefined ? (rows[i][colMap["moroso"]].toString().trim() === "true") : false)
+        moroso: data.moroso !== undefined ? (data.moroso === true || data.moroso === "true") : (colMap["moroso"] !== undefined ? (rows[i][colMap["moroso"]].toString().trim() === "true") : false),
+        plan: data.plan !== undefined ? data.plan : (colMap["plan"] !== undefined ? rows[i][colMap["plan"]] : "Básico"),
+        sirio_credits: data.sirio_credits !== undefined ? Number(data.sirio_credits) : (colMap["sirio_credits"] !== undefined ? Number(rows[i][colMap["sirio_credits"]] || 0) : 0)
       };
 
       return { success: true, message: "Perfil actualizado correctamente.", user: updatedUser };
@@ -1095,7 +1110,7 @@ function updateClient(doc, data) {
 // ============================================================
 function getConfig(doc) {
   var config = {};
-  
+
   // 1. Leer Configuracion
   var sheet = doc.getSheetByName("Configuracion");
   if (sheet) {
@@ -1108,7 +1123,7 @@ function getConfig(doc) {
       }
     }
   }
-  
+
   // 2. Leer Estado_Portafolio
   var sheetEP = doc.getSheetByName("Estado_Portafolio");
   if (sheetEP) {
@@ -1121,7 +1136,7 @@ function getConfig(doc) {
       }
     }
   }
-  
+
   return { success: true, config: config };
 }
 
@@ -1131,15 +1146,15 @@ function getConfig(doc) {
 function saveConfig(doc, data) {
   var sheetConfig = doc.getSheetByName("Configuracion");
   var sheetEP = doc.getSheetByName("Estado_Portafolio");
-  
+
   for (var key in data) {
     var targetSheet = sheetConfig;
     if (key === "portafolio_visible" || key === "categorias_adicionales") {
       targetSheet = sheetEP;
     }
-    
+
     if (!targetSheet) continue;
-    
+
     var rows = targetSheet.getDataRange().getValues();
     var found = false;
     for (var i = 1; i < rows.length; i++) {
@@ -1162,12 +1177,12 @@ function saveConfig(doc, data) {
 function getPortafolio(doc) {
   var sheet = doc.getSheetByName("Portafolio");
   if (!sheet) return { success: false, message: "La hoja de Portafolio no existe." };
-  
+
   var rows = sheet.getDataRange().getValues();
   var headers = rows[0];
   var colMap = buildColMap(headers);
   var list = [];
-  
+
   for (var i = 1; i < rows.length; i++) {
     list.push({
       id_examen: rows[i][colMap["id_examen"]].toString().trim(),
@@ -1188,14 +1203,14 @@ function getPortafolio(doc) {
 function savePortafolioPrecios(doc, data) {
   var sheet = doc.getSheetByName("Portafolio");
   if (!sheet) return { success: false, message: "La hoja de Portafolio no existe." };
-  
+
   var rows = sheet.getDataRange().getValues();
   var headers = rows[0];
   var colMap = buildColMap(headers);
   var precioColIdx = colMap["precio"] + 1;
-  
+
   var preciosMap = data.precios || {}; // Objeto { E001: 59000, E002: 69000 }
-  
+
   for (var i = 1; i < rows.length; i++) {
     var idExamen = rows[i][colMap["id_examen"]].toString().trim();
     if (preciosMap[idExamen] !== undefined) {
@@ -1211,11 +1226,11 @@ function savePortafolioPrecios(doc, data) {
 function addPortafolioExamen(doc, data) {
   var sheet = doc.getSheetByName("Portafolio");
   if (!sheet) return { success: false, message: "La hoja de Portafolio no existe." };
-  
+
   var rows = sheet.getDataRange().getValues();
   var headers = rows[0];
   var colMap = buildColMap(headers);
-  
+
   var maxId = 0;
   for (var i = 1; i < rows.length; i++) {
     var idVal = rows[i][colMap["id_examen"]].toString();
@@ -1223,7 +1238,7 @@ function addPortafolioExamen(doc, data) {
     if (num > maxId) maxId = num;
   }
   var nextId = "E" + String(maxId + 1).padStart(3, '0');
-  
+
   var newRow = [];
   for (var j = 0; j < headers.length; j++) {
     var header = headers[j];
@@ -1236,7 +1251,7 @@ function addPortafolioExamen(doc, data) {
     else if (header === "recipiente") newRow.push(data.recipiente.trim());
     else newRow.push("");
   }
-  
+
   sheet.appendRow(newRow);
   return { success: true, message: "Examen añadido correctamente.", id_examen: nextId };
 }
@@ -1247,11 +1262,11 @@ function addPortafolioExamen(doc, data) {
 function deletePortafolioExamen(doc, data) {
   var sheet = doc.getSheetByName("Portafolio");
   if (!sheet) return { success: false, message: "La hoja de Portafolio no existe." };
-  
+
   var rows = sheet.getDataRange().getValues();
   var headers = rows[0];
   var colMap = buildColMap(headers);
-  
+
   var idExamen = data.id_examen.toString().trim();
   for (var i = 1; i < rows.length; i++) {
     if (rows[i][colMap["id_examen"]].toString().trim() === idExamen) {
@@ -1268,27 +1283,27 @@ function deletePortafolioExamen(doc, data) {
 function saveSubscription(doc, data) {
   var sheet = doc.getSheetByName("Push_Subscriptions");
   if (!sheet) return { success: false, message: "La hoja Push_Subscriptions no existe." };
-  
+
   var rows = sheet.getDataRange().getValues();
   var headers = rows[0];
   var colMap = buildColMap(headers);
-  
+
   var idUser = data.id_usuario;
   var sub = data.subscription;
   var endpoint = sub.endpoint;
   var p256dh = sub.keys.p256dh;
   var auth = sub.keys.auth;
-  
+
   // Buscar si ya existe la suscripción de este usuario para este endpoint
   var foundIndex = -1;
   for (var i = 1; i < rows.length; i++) {
     if (rows[i][colMap["id_usuario"]].toString().trim() === idUser.toString().trim() &&
-        rows[i][colMap["endpoint"]].toString().trim() === endpoint.trim()) {
+      rows[i][colMap["endpoint"]].toString().trim() === endpoint.trim()) {
       foundIndex = i;
       break;
     }
   }
-  
+
   if (foundIndex !== -1) {
     // Actualizar claves si cambiaron
     sheet.getRange(foundIndex + 1, colMap["p256dh"] + 1).setValue(p256dh);
@@ -1302,7 +1317,7 @@ function saveSubscription(doc, data) {
     newRow[colMap["auth"]] = auth;
     sheet.appendRow(newRow);
   }
-  
+
   return { success: true, message: "Suscripción registrada correctamente." };
 }
 
@@ -1312,23 +1327,23 @@ function saveSubscription(doc, data) {
 function deleteSubscription(doc, data) {
   var sheet = doc.getSheetByName("Push_Subscriptions");
   if (!sheet) return { success: false, message: "La hoja Push_Subscriptions no existe." };
-  
+
   var rows = sheet.getDataRange().getValues();
   var headers = rows[0];
   var colMap = buildColMap(headers);
-  
+
   var idUser = data.id_usuario;
   var endpoint = data.endpoint;
-  
+
   var count = 0;
   for (var i = rows.length - 1; i >= 1; i--) {
     if (rows[i][colMap["id_usuario"]].toString().trim() === idUser.toString().trim() &&
-        rows[i][colMap["endpoint"]].toString().trim() === endpoint.trim()) {
+      rows[i][colMap["endpoint"]].toString().trim() === endpoint.trim()) {
       sheet.deleteRow(i + 1);
       count++;
     }
   }
-  
+
   return { success: true, message: "Se eliminaron " + count + " suscripción(es)." };
 }
 
@@ -1338,14 +1353,14 @@ function deleteSubscription(doc, data) {
 function getSubscriptions(doc, data) {
   var sheet = doc.getSheetByName("Push_Subscriptions");
   if (!sheet) return { success: true, subscriptions: [] }; // Si no existe la hoja aún, retornar vacío sin fallar
-  
+
   var rows = sheet.getDataRange().getValues();
   var headers = rows[0];
   var colMap = buildColMap(headers);
-  
+
   var idUser = data.id_usuario;
   var list = [];
-  
+
   for (var i = 1; i < rows.length; i++) {
     if (rows[i][colMap["id_usuario"]].toString().trim() === idUser.toString().trim()) {
       list.push({
@@ -1357,7 +1372,7 @@ function getSubscriptions(doc, data) {
       });
     }
   }
-  
+
   return { success: true, subscriptions: list };
 }
 
@@ -1366,7 +1381,7 @@ function getSubscriptions(doc, data) {
 // ============================================================
 function getAdmins(doc) {
   var userSheet = doc.getSheetByName("Usuarios");
-  var userRows  = userSheet.getDataRange().getValues();
+  var userRows = userSheet.getDataRange().getValues();
   var userHeaders = userRows[0];
   var userColMap = buildColMap(userHeaders);
 
@@ -1409,7 +1424,7 @@ function getAdmins(doc) {
 // ============================================================
 function updateAdmin(doc, data) {
   var sheet = doc.getSheetByName("Usuarios");
-  var rows  = sheet.getDataRange().getValues();
+  var rows = sheet.getDataRange().getValues();
   var headers = rows[0];
   var colMap = buildColMap(headers);
   var idUsuario = data.id_usuario;
@@ -1442,7 +1457,7 @@ function updateAdmin(doc, data) {
 // ============================================================
 function deleteAdmin(doc, data) {
   var sheet = doc.getSheetByName("Usuarios");
-  var rows  = sheet.getDataRange().getValues();
+  var rows = sheet.getDataRange().getValues();
   var headers = rows[0];
   var colMap = buildColMap(headers);
   var idUsuario = data.id_usuario;

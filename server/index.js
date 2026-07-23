@@ -297,7 +297,7 @@ app.post('/api/admin/clients', async (req, res) => {
 
 // API: Actualizar perfil de cliente (Solo permitido si lo solicita el Administrador)
 app.post('/api/client/update-profile', async (req, res) => {
-  const { id_usuario, nombre, direccion, correo, telefono, contrasena, moroso, requested_by_admin } = req.body;
+  const { id_usuario, nombre, direccion, correo, telefono, contrasena, moroso, plan, sirio_credits, requested_by_admin } = req.body;
   
   if (!id_usuario) {
     return res.status(400).json({ success: false, message: "El ID de usuario es requerido." });
@@ -312,7 +312,7 @@ app.post('/api/client/update-profile', async (req, res) => {
   }
   
   try {
-    const result = await db.updateClient({ id_usuario, nombre, direccion, correo, telefono, contrasena, moroso });
+    const result = await db.updateClient({ id_usuario, nombre, direccion, correo, telefono, contrasena, moroso, plan, sirio_credits });
     if (result.success) {
       // Si se desmarca como moroso, liberar resultados retenidos automáticamente
       if (moroso === false || moroso === 'false') {

@@ -74,7 +74,9 @@ function createDefaultMockDB() {
         direccion: "Calle 10 # 5-20, Envigado",
         correo: "contacto@vetsanfrancisco.com",
         telefono: "+57 300 123 4567",
-        fecha_registro: new Date().toISOString().split('T')[0]
+        fecha_registro: new Date().toISOString().split('T')[0],
+        plan: "Básico",
+        sirio_credits: 0
       }
     ],
     Resultados: [
@@ -207,14 +209,24 @@ function handleMockAction(action, data) {
       const user = db.Usuarios.find(u => u.usuario.toLowerCase() === username && u.contrasena === password);
       
       if (user) {
-        return { success: true, user };
+        const userClone = { ...user };
+        if (userClone.rol === 'cliente') {
+          userClone.plan = userClone.plan || 'Básico';
+          userClone.sirio_credits = userClone.sirio_credits !== undefined ? Number(userClone.sirio_credits) : 0;
+        }
+        return { success: true, user: userClone };
       }
       return { success: false, message: "Usuario o contraseña incorrectos (Modo Demo)." };
     }
     
     case 'getClients': {
       const clients = db.Usuarios
-        .filter(u => u.rol === 'cliente');
+        .filter(u => u.rol === 'cliente')
+        .map(u => ({
+          ...u,
+          plan: u.plan || 'Básico',
+          sirio_credits: u.sirio_credits !== undefined ? Number(u.sirio_credits) : 0
+        }));
       return { success: true, clients };
     }
     
@@ -246,7 +258,9 @@ function handleMockAction(action, data) {
         direccion: data.direccion || "",
         correo: data.correo || "",
         telefono: data.telefono || "",
-        fecha_registro: new Date().toISOString().split('T')[0]
+        fecha_registro: new Date().toISOString().split('T')[0],
+        plan: data.plan || "Básico",
+        sirio_credits: data.sirio_credits !== undefined ? Number(data.sirio_credits) : 0
       };
       
       db.Usuarios.push(newClient);
@@ -267,6 +281,8 @@ function handleMockAction(action, data) {
       if (data.correo !== undefined) client.correo = data.correo;
       if (data.telefono !== undefined) client.telefono = data.telefono;
       if (data.moroso !== undefined) client.moroso = (data.moroso === true || data.moroso === 'true');
+      if (data.plan !== undefined) client.plan = data.plan;
+      if (data.sirio_credits !== undefined) client.sirio_credits = Number(data.sirio_credits);
       if (data.contrasena !== undefined && data.contrasena.trim() !== "") {
         client.contrasena = data.contrasena;
       }

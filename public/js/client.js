@@ -189,6 +189,18 @@ document.addEventListener('DOMContentLoaded', () => {
     if (nameVal) nameVal.innerText = currentUser.nombre;
     if (usernameVal) usernameVal.innerText = currentUser.usuario;
 
+    const planVal = document.getElementById('profile-plan-val');
+    const creditsVal = document.getElementById('profile-credits-val');
+    if (planVal) planVal.innerText = currentUser.plan || 'Básico';
+    if (creditsVal) creditsVal.innerHTML = `<i class="fa-solid fa-coins"></i> ${currentUser.sirio_credits !== undefined ? currentUser.sirio_credits : 0}`;
+
+    const headerCreditsVal = document.getElementById('header-credits-val');
+    const headerCreditsBadge = document.getElementById('header-credits-badge');
+    if (headerCreditsVal && headerCreditsBadge) {
+      headerCreditsVal.innerText = currentUser.sirio_credits !== undefined ? currentUser.sirio_credits : 0;
+      headerCreditsBadge.style.display = 'flex';
+    }
+
     const pwdVal = document.getElementById('profile-password-val');
     if (pwdVal) {
       pwdVal.setAttribute('data-password', currentUser.contrasena || '');

@@ -1382,6 +1382,11 @@ document.addEventListener('DOMContentLoaded', () => {
     if (dirClientEmailVal) dirClientEmailVal.innerText = client.correo || 'No registrado';
     if (dirClientPhoneVal) dirClientPhoneVal.innerText = client.telefono || 'No registrado';
     
+    const planVal = document.getElementById('dir-client-plan-val');
+    const creditsVal = document.getElementById('dir-client-credits-val');
+    if (planVal) planVal.innerText = client.plan || 'Básico';
+    if (creditsVal) creditsVal.innerHTML = `<i class="fa-solid fa-coins"></i> ${client.sirio_credits !== undefined ? client.sirio_credits : 0}`;
+    
     // Configure badge and toggle button
     const debtBadge = document.getElementById('dir-client-debt-badge');
     const toggleDebtBtn = document.getElementById('dir-toggle-debt-btn');
@@ -1418,6 +1423,8 @@ document.addEventListener('DOMContentLoaded', () => {
     if (document.getElementById('edit-dir-address')) document.getElementById('edit-dir-address').value = client.direccion || '';
     if (document.getElementById('edit-dir-email')) document.getElementById('edit-dir-email').value = client.correo || '';
     if (document.getElementById('edit-dir-phone')) document.getElementById('edit-dir-phone').value = client.telefono || '';
+    if (document.getElementById('edit-dir-plan')) document.getElementById('edit-dir-plan').value = client.plan || 'Básico';
+    if (document.getElementById('edit-dir-credits')) document.getElementById('edit-dir-credits').value = client.sirio_credits !== undefined ? client.sirio_credits : 0;
     if (document.getElementById('edit-dir-password')) document.getElementById('edit-dir-password').value = '';
   }
 
@@ -1539,6 +1546,8 @@ document.addEventListener('DOMContentLoaded', () => {
       const direccion = document.getElementById('edit-dir-address').value;
       const correo = document.getElementById('edit-dir-email').value;
       const telefono = document.getElementById('edit-dir-phone').value;
+      const plan = document.getElementById('edit-dir-plan').value;
+      const sirio_credits = parseInt(document.getElementById('edit-dir-credits').value) || 0;
       const contrasena = document.getElementById('edit-dir-password').value;
       
       SirioAuth.showLoading('Guardando cambios del cliente...');
@@ -1556,6 +1565,8 @@ document.addEventListener('DOMContentLoaded', () => {
             correo,
             telefono,
             contrasena,
+            plan,
+            sirio_credits,
             requested_by_admin: true
           })
         });
