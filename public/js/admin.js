@@ -7,6 +7,12 @@ document.addEventListener('DOMContentLoaded', () => {
   const currentUser = SirioAuth.checkSession('admin');
   if (!currentUser) return;
 
+  // Helper to format credits with thousands separator dots
+  function formatCredits(val) {
+    const num = val !== undefined && val !== null ? val : 0;
+    return String(num).replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+  }
+
   // Mostrar nombre del administrador en la cabecera
   document.getElementById('admin-name').innerText = currentUser.nombre;
   
@@ -1385,7 +1391,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const planVal = document.getElementById('dir-client-plan-val');
     const creditsVal = document.getElementById('dir-client-credits-val');
     if (planVal) planVal.innerText = client.plan || 'Básico';
-    if (creditsVal) creditsVal.innerHTML = `<i class="fa-solid fa-coins"></i> ${client.sirio_credits !== undefined ? client.sirio_credits : 0}`;
+    if (creditsVal) creditsVal.innerHTML = `<i class="fa-solid fa-coins"></i> ${formatCredits(client.sirio_credits)}`;
     
     // Configure badge and toggle button
     const debtBadge = document.getElementById('dir-client-debt-badge');

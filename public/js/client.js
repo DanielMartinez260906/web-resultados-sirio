@@ -180,6 +180,12 @@ document.addEventListener('DOMContentLoaded', () => {
   if (viewGridBtn) viewGridBtn.addEventListener('click', () => setViewMode('grid'));
   if (viewListBtn) viewListBtn.addEventListener('click', () => setViewMode('list'));
 
+  // Helper to format credits with thousands separator dots
+  function formatCredits(val) {
+    const num = val !== undefined && val !== null ? val : 0;
+    return String(num).replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+  }
+
   // Inicializar datos de perfil
   function initProfile() {
     // Lectura
@@ -192,12 +198,12 @@ document.addEventListener('DOMContentLoaded', () => {
     const planVal = document.getElementById('profile-plan-val');
     const creditsVal = document.getElementById('profile-credits-val');
     if (planVal) planVal.innerText = currentUser.plan || 'Básico';
-    if (creditsVal) creditsVal.innerHTML = `<i class="fa-solid fa-coins"></i> ${currentUser.sirio_credits !== undefined ? currentUser.sirio_credits : 0}`;
+    if (creditsVal) creditsVal.innerHTML = `<i class="fa-solid fa-coins"></i> ${formatCredits(currentUser.sirio_credits)}`;
 
     const headerCreditsVal = document.getElementById('header-credits-val');
     const headerCreditsBadge = document.getElementById('header-credits-badge');
     if (headerCreditsVal && headerCreditsBadge) {
-      headerCreditsVal.innerText = currentUser.sirio_credits !== undefined ? currentUser.sirio_credits : 0;
+      headerCreditsVal.innerText = formatCredits(currentUser.sirio_credits);
       headerCreditsBadge.style.display = 'flex';
     }
 
