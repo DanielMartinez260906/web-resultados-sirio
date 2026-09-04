@@ -1393,6 +1393,40 @@ document.addEventListener('DOMContentLoaded', () => {
     if (planVal) planVal.innerText = client.plan || 'Básico';
     if (creditsVal) creditsVal.innerHTML = `<i class="fa-solid fa-coins"></i> ${formatCredits(client.sirio_credits)}`;
     
+    // IA Trial status rendering
+    const dirClientIaStatusVal = document.getElementById('dir-client-ia-status-val');
+    const dirEnableIaTrialBtn = document.getElementById('dir-enable-ia-trial-btn');
+    const dirDisableIaTrialBtn = document.getElementById('dir-disable-ia-trial-btn');
+    
+    if (dirClientIaStatusVal) {
+      const plan = client.plan || 'Básico';
+      const isBasic = plan.toLowerCase() === 'básico' || plan.toLowerCase() === 'basico';
+      const todayStr = new Date().toISOString().split('T')[0];
+
+      if (isBasic) {
+        if (dirEnableIaTrialBtn) dirEnableIaTrialBtn.style.display = 'inline-flex';
+        if (client.ia_trial_expiry) {
+          if (client.ia_trial_expiry >= todayStr) {
+            dirClientIaStatusVal.innerHTML = `<span style="color: #10b981; font-weight: 700;"><i class="fa-solid fa-circle-check"></i> Activa (Vence el ${client.ia_trial_expiry})</span>`;
+            if (dirEnableIaTrialBtn) dirEnableIaTrialBtn.innerHTML = '<i class="fa-solid fa-clock-rotate-left"></i> Renovar Prueba 15 Días';
+            if (dirDisableIaTrialBtn) dirDisableIaTrialBtn.style.display = 'inline-flex';
+          } else {
+            dirClientIaStatusVal.innerHTML = `<span style="color: #ef4444; font-weight: 700;"><i class="fa-solid fa-circle-xmark"></i> Expirada (Venció el ${client.ia_trial_expiry})</span>`;
+            if (dirEnableIaTrialBtn) dirEnableIaTrialBtn.innerHTML = '<i class="fa-solid fa-wand-magic-sparkles"></i> Habilitar Prueba 15 Días';
+            if (dirDisableIaTrialBtn) dirDisableIaTrialBtn.style.display = 'none';
+          }
+        } else {
+          dirClientIaStatusVal.innerHTML = `<span style="color: var(--text-muted);"><i class="fa-solid fa-circle-minus"></i> Sin prueba activa</span>`;
+          if (dirEnableIaTrialBtn) dirEnableIaTrialBtn.innerHTML = '<i class="fa-solid fa-wand-magic-sparkles"></i> Habilitar Prueba 15 Días';
+          if (dirDisableIaTrialBtn) dirDisableIaTrialBtn.style.display = 'none';
+        }
+      } else {
+        dirClientIaStatusVal.innerHTML = `<span style="color: #10b981; font-weight: 700;"><i class="fa-solid fa-circle-check"></i> Habilitado por Plan (${plan})</span>`;
+        if (dirEnableIaTrialBtn) dirEnableIaTrialBtn.style.display = 'none';
+        if (dirDisableIaTrialBtn) dirDisableIaTrialBtn.style.display = 'none';
+      }
+    }
+    
     // Configure badge and toggle button
     const debtBadge = document.getElementById('dir-client-debt-badge');
     const toggleDebtBtn = document.getElementById('dir-toggle-debt-btn');
@@ -1512,6 +1546,102 @@ document.addEventListener('DOMContentLoaded', () => {
         SirioAuth.hideLoading();
         console.error('Error al cambiar estado de morosidad:', err);
         showGlobalAlert('Error de red al intentar cambiar el estado del cliente.', 'error');
+      }
+    });
+  }
+
+  const dirEnableIaTrialBtn = document.getElementById('dir-enable-ia-trial-btn');
+  if (dirEnableIaTrialBtn) {
+    dirEnableIaTrialBtn.addEventListener('click', async () => {
+      console.log('[SirIA Trial] Botón HABILITAR clickeado. selectedDirClient:', selectedDirClient);
+      if (!selectedDirClient) {
+        console.warn('[SirIA Trial] No hay cliente seleccionado, abortando.');
+        return;
+      }
+
+      const expiryDate = new Date();
+      expiryDate.setDate(expiryDate.getDate() + 15);
+      const expiryDateStr = expiryDate.toISOString().split('T')[0];
+
+      if (!confirm(`¿Está seguro de que desea habilitar una prueba de 15 días para el uso de la interpretación con IA a "${selectedDirClient.nombre}"?\n\nLa prueba vencerá el: ${expiryDateStr}`)) return;
+
+      SirioAuth.showLoading('Habilitando prueba de IA...');
+
+      try {
+        console.log('[SirIA Trial] Enviando petición al servidor...', { id_usuario: selectedDirClient.id_usuario, ia_trial_expiry: expiryDateStr });
+        const response = await fetch(`${SirioAuth.API_BASE}/api/client/update-profile`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            id_usuario: selectedDirClient.id_usuario,
+            ia_trial_expiry: expiryDateStr,
+            requested_by_admin: true
+          })
+        });
+        const result = await response.json();
+        console.log('[SirIA Trial] Respuesta del servidor:', result);
+        SirioAuth.hideLoading();
+
+        if (result.success) {
+          showGlobalAlert(`Prueba de 15 días habilitada con éxito para "${selectedDirClient.nombre}". Vence el ${expiryDateStr}.`, 'success');
+          
+          await loadClients();
+
+          const updated = allClients.find(c => c.id_usuario === selectedDirClient.id_usuario);
+          if (updated) {
+            selectDirClient(updated);
+          }
+        } else {
+          showGlobalAlert(result.message || 'Error al habilitar la prueba de IA.', 'error');
+        }
+      } catch (err) {
+        SirioAuth.hideLoading();
+        console.error('[SirIA Trial] Error al habilitar prueba de IA:', err);
+        showGlobalAlert('Error de red al intentar habilitar la prueba de IA: ' + err.message, 'error');
+      }
+    });
+  } else {
+    console.error('[SirIA Trial] ¡¡BOTÓN dir-enable-ia-trial-btn NO ENCONTRADO en el DOM!!');
+  }
+
+  const dirDisableIaTrialBtn = document.getElementById('dir-disable-ia-trial-btn');
+  if (dirDisableIaTrialBtn) {
+    dirDisableIaTrialBtn.addEventListener('click', async () => {
+      if (!selectedDirClient) return;
+
+      if (!confirm(`¿Está seguro de que desea cancelar la prueba de interpretación con IA para "${selectedDirClient.nombre}"?`)) return;
+
+      SirioAuth.showLoading('Removiendo prueba de IA...');
+
+      try {
+        const response = await fetch(`${SirioAuth.API_BASE}/api/client/update-profile`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            id_usuario: selectedDirClient.id_usuario,
+            ia_trial_expiry: '', // Limpiar la fecha
+            requested_by_admin: true
+          })
+        });
+        const result = await response.json();
+        SirioAuth.hideLoading();
+
+        if (result.success) {
+          showGlobalAlert(`Prueba de IA removida con éxito para "${selectedDirClient.nombre}".`, 'success');
+          
+          await loadClients();
+
+          const updated = allClients.find(c => c.id_usuario === selectedDirClient.id_usuario);
+          if (updated) {
+            selectDirClient(updated);
+          }
+        } else {
+          showGlobalAlert(result.message || 'Error al remover la prueba de IA.', 'error');
+        }
+      } catch (err) {
+        SirioAuth.hideLoading();
+        console.error('Error al remover prueba de IA:', err);
+        showGlobalAlert('Error de red al intentar remover la prueba de IA.', 'error');
       }
     });
   }

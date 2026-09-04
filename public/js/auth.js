@@ -85,6 +85,11 @@ const SirioAuth = {
     }
   },
 
+  // Actualizar datos de la sesión actual
+  updateSessionData(userData) {
+    this.setCookie(this.STORAGE_KEY, JSON.stringify(userData), 7);
+  },
+
   // Cerrar sesión
   logout() {
     this.eraseCookie(this.STORAGE_KEY);

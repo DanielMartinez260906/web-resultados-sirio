@@ -212,7 +212,7 @@ function migrateSheets(doc) {
 // ============================================================
 function checkAndInitSheets(doc) {
   var sheetsConfig = {
-    "Usuarios": ["id_usuario", "nombre", "identificacion", "usuario", "contrasena", "rol", "fecha_registro", "direccion", "correo", "telefono", "moroso", "plan", "sirio_credits"],
+    "Usuarios": ["id_usuario", "nombre", "identificacion", "usuario", "contrasena", "rol", "fecha_registro", "direccion", "correo", "telefono", "moroso", "plan", "sirio_credits", "ia_trial_expiry"],
     "Resultados": ["id_resultado", "id_usuario", "nombre_examen", "nombre_archivo", "fecha_subida", "admin_id", "admin_nombre", "retenido"],
     "Accesos": ["id_log", "usuario", "rol", "fecha_hora", "estado"],
     "Configuracion": ["clave", "valor"],
@@ -540,7 +540,8 @@ function getClients(doc) {
         fecha_registro: rows[i][colMap["fecha_registro"]],
         moroso: colMap["moroso"] !== undefined ? (rows[i][colMap["moroso"]].toString().trim() === "true") : false,
         plan: colMap["plan"] !== undefined ? rows[i][colMap["plan"]] : "Básico",
-        sirio_credits: colMap["sirio_credits"] !== undefined ? Number(rows[i][colMap["sirio_credits"]] || 0) : 0
+        sirio_credits: colMap["sirio_credits"] !== undefined ? Number(rows[i][colMap["sirio_credits"]] || 0) : 0,
+        ia_trial_expiry: colMap["ia_trial_expiry"] !== undefined ? rows[i][colMap["ia_trial_expiry"]] : ""
       });
     }
   }
@@ -590,6 +591,7 @@ function addClient(doc, data) {
   if (colMap["moroso"] !== undefined) rowData[colMap["moroso"]] = "false";
   if (colMap["plan"] !== undefined) rowData[colMap["plan"]] = data.plan || "Básico";
   if (colMap["sirio_credits"] !== undefined) rowData[colMap["sirio_credits"]] = Number(data.sirio_credits || 0);
+  if (colMap["ia_trial_expiry"] !== undefined) rowData[colMap["ia_trial_expiry"]] = data.ia_trial_expiry || "";
 
   sheet.appendRow(rowData);
   return { success: true, message: "Cliente registrado.", client: { id_usuario: nextId, nombre: data.nombre } };
@@ -1084,6 +1086,9 @@ function updateClient(doc, data) {
       if (colMap["sirio_credits"] !== undefined && data.sirio_credits !== undefined) {
         sheet.getRange(i + 1, colMap["sirio_credits"] + 1).setValue(Number(data.sirio_credits));
       }
+      if (colMap["ia_trial_expiry"] !== undefined && data.ia_trial_expiry !== undefined) {
+        sheet.getRange(i + 1, colMap["ia_trial_expiry"] + 1).setValue(data.ia_trial_expiry);
+      }
 
       var updatedUser = {
         id_usuario: idUsuario,
@@ -1096,7 +1101,8 @@ function updateClient(doc, data) {
         telefono: data.telefono !== undefined ? data.telefono : (colMap["telefono"] !== undefined ? rows[i][colMap["telefono"]] : ""),
         moroso: data.moroso !== undefined ? (data.moroso === true || data.moroso === "true") : (colMap["moroso"] !== undefined ? (rows[i][colMap["moroso"]].toString().trim() === "true") : false),
         plan: data.plan !== undefined ? data.plan : (colMap["plan"] !== undefined ? rows[i][colMap["plan"]] : "Básico"),
-        sirio_credits: data.sirio_credits !== undefined ? Number(data.sirio_credits) : (colMap["sirio_credits"] !== undefined ? Number(rows[i][colMap["sirio_credits"]] || 0) : 0)
+        sirio_credits: data.sirio_credits !== undefined ? Number(data.sirio_credits) : (colMap["sirio_credits"] !== undefined ? Number(rows[i][colMap["sirio_credits"]] || 0) : 0),
+        ia_trial_expiry: data.ia_trial_expiry !== undefined ? data.ia_trial_expiry : (colMap["ia_trial_expiry"] !== undefined ? rows[i][colMap["ia_trial_expiry"]] : "")
       };
 
       return { success: true, message: "Perfil actualizado correctamente.", user: updatedUser };

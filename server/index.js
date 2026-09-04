@@ -297,7 +297,7 @@ app.post('/api/admin/clients', async (req, res) => {
 
 // API: Actualizar perfil de cliente (Solo permitido si lo solicita el Administrador)
 app.post('/api/client/update-profile', async (req, res) => {
-  const { id_usuario, nombre, direccion, correo, telefono, contrasena, moroso, plan, sirio_credits, requested_by_admin } = req.body;
+  const { id_usuario, nombre, direccion, correo, telefono, contrasena, moroso, plan, sirio_credits, ia_trial_expiry, requested_by_admin } = req.body;
   
   if (!id_usuario) {
     return res.status(400).json({ success: false, message: "El ID de usuario es requerido." });
@@ -312,7 +312,7 @@ app.post('/api/client/update-profile', async (req, res) => {
   }
   
   try {
-    const result = await db.updateClient({ id_usuario, nombre, direccion, correo, telefono, contrasena, moroso, plan, sirio_credits });
+    const result = await db.updateClient({ id_usuario, nombre, direccion, correo, telefono, contrasena, moroso, plan, sirio_credits, ia_trial_expiry });
     if (result.success) {
       // Si se desmarca como moroso, liberar resultados retenidos automáticamente
       if (moroso === false || moroso === 'false') {
@@ -552,6 +552,25 @@ app.post('/api/push/test', async (req, res) => {
     res.json({ success: true, message: 'Notificación de prueba enviada.' });
   } catch (error) {
     console.error('Error al enviar notificación de prueba:', error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
+// API: Obtener perfil de un cliente (Para verificar el plan/créditos más recientes)
+app.get('/api/client/profile', async (req, res) => {
+  const { id_usuario } = req.query;
+  if (!id_usuario) {
+    return res.status(400).json({ success: false, message: 'El ID de usuario es requerido.' });
+  }
+
+  try {
+    const clientsRes = await db.getClients();
+    const user = clientsRes.success ? clientsRes.clients.find(c => c.id_usuario === id_usuario) : null;
+    if (!user) {
+      return res.status(404).json({ success: false, message: 'Usuario no encontrado.' });
+    }
+    res.json({ success: true, user });
+  } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
 });
@@ -1039,10 +1058,38 @@ app.post('/api/admin/portafolio/category', async (req, res) => {
 
 // API: Interpretar examen con IA de Gemini (Para Clientes)
 app.post('/api/client/interpret-exam', async (req, res) => {
-  const { id_resultado, nombre_archivo } = req.body;
+  const { id_resultado, nombre_archivo, id_usuario } = req.body;
 
   if (!id_resultado || !nombre_archivo) {
     return res.status(400).json({ success: false, message: 'El ID del resultado y el archivo son requeridos.' });
+  }
+
+  if (!id_usuario) {
+    return res.status(400).json({ success: false, message: 'El ID de usuario es requerido para verificar su plan de acceso.' });
+  }
+
+  // Verificar el plan del cliente y si tiene la prueba activa
+  try {
+    const clientsRes = await db.getClients();
+    const user = clientsRes.success ? clientsRes.clients.find(c => c.id_usuario === id_usuario) : null;
+    if (!user) {
+      return res.status(404).json({ success: false, message: 'Usuario no encontrado.' });
+    }
+
+    const plan = user.plan || 'Básico';
+    const isBasic = plan.toLowerCase() === 'básico' || plan.toLowerCase() === 'basico';
+    const todayStr = new Date().toISOString().split('T')[0];
+    const hasActiveTrial = user.ia_trial_expiry && user.ia_trial_expiry >= todayStr;
+
+    if (isBasic && !hasActiveTrial) {
+      return res.status(403).json({
+        success: false,
+        message: 'La interpretación con IA no está disponible en el Plan Básico. Para usar este servicio, actualice su plan (Plus, Premium o Elite) o solicite al administrador una prueba gratuita de 15 días.'
+      });
+    }
+  } catch (err) {
+    console.error('Error al validar permisos de IA del usuario:', err);
+    return res.status(500).json({ success: false, message: `Error al validar permisos: ${err.message}` });
   }
 
   try {

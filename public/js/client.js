@@ -217,9 +217,48 @@ document.addEventListener('DOMContentLoaded', () => {
         if (icon) icon.className = 'fa-solid fa-eye';
       }
     }
+
+    // IA Trial details rendering
+    const iaTrialItem = document.getElementById('profile-ia-trial-item');
+    const iaStatusVal = document.getElementById('profile-ia-status-val');
+    if (iaTrialItem && iaStatusVal) {
+      const plan = currentUser.plan || 'Básico';
+      const isBasic = plan.toLowerCase() === 'básico' || plan.toLowerCase() === 'basico';
+      iaTrialItem.style.display = 'block';
+      if (isBasic) {
+        const todayStr = new Date().toISOString().split('T')[0];
+        if (currentUser.ia_trial_expiry) {
+          if (currentUser.ia_trial_expiry >= todayStr) {
+            iaStatusVal.innerHTML = `<span style="color: #10b981; font-weight: 700;"><i class="fa-solid fa-circle-check"></i> Prueba Activa (Vence el ${currentUser.ia_trial_expiry})</span>`;
+          } else {
+            iaStatusVal.innerHTML = `<span style="color: #ef4444; font-weight: 700;"><i class="fa-solid fa-circle-xmark"></i> Prueba Expirada (Venció el ${currentUser.ia_trial_expiry})</span>`;
+          }
+        } else {
+          iaStatusVal.innerHTML = `<span style="color: var(--text-muted);"><i class="fa-solid fa-circle-minus"></i> Sin prueba activa</span>`;
+        }
+      } else {
+        iaStatusVal.innerHTML = `<span style="color: #10b981; font-weight: 700;"><i class="fa-solid fa-circle-check"></i> Habilitado por Plan (${plan})</span>`;
+      }
+    }
+  }
+
+  // Refrescar perfil del usuario desde el servidor
+  async function refreshProfile() {
+    try {
+      const response = await fetch(`${SirioAuth.API_BASE}/api/client/profile?id_usuario=${currentUser.id_usuario}`);
+      const data = await response.json();
+      if (data.success && data.user) {
+        currentUser = { ...currentUser, ...data.user };
+        SirioAuth.updateSessionData(currentUser);
+        initProfile();
+      }
+    } catch (err) {
+      console.error('Error al refrescar el perfil de cliente:', err);
+    }
   }
 
   initProfile();
+  refreshProfile();
 
   // Botón para alternar visibilidad de contraseña
   const toggleProfilePwdBtn = document.getElementById('toggle-profile-pwd-btn');
@@ -643,7 +682,8 @@ document.addEventListener('DOMContentLoaded', () => {
         },
         body: JSON.stringify({
           id_resultado: idResultado,
-          nombre_archivo: nombreArchivo
+          nombre_archivo: nombreArchivo,
+          id_usuario: currentUser.id_usuario
         })
       });
 
@@ -705,6 +745,18 @@ document.addEventListener('DOMContentLoaded', () => {
 
       const idResultado = btn.dataset.id;
       const nombreArchivo = btn.dataset.archivo;
+
+      // Verificar permisos de IA en el cliente antes de llamar a la API
+      const plan = currentUser.plan || 'Básico';
+      const isBasic = plan.toLowerCase() === 'básico' || plan.toLowerCase() === 'basico';
+      const todayStr = new Date().toISOString().split('T')[0];
+      const hasActiveTrial = currentUser.ia_trial_expiry && currentUser.ia_trial_expiry >= todayStr;
+
+      if (isBasic && !hasActiveTrial) {
+        showGlobalAlert('La interpretación con IA no está disponible en el Plan Básico. Solicite al administrador activar una prueba gratuita de 15 días o actualizar su plan.', 'error');
+        return;
+      }
+
       performInterpretation(idResultado, nombreArchivo);
     });
   }

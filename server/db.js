@@ -213,6 +213,7 @@ function handleMockAction(action, data) {
         if (userClone.rol === 'cliente') {
           userClone.plan = userClone.plan || 'Básico';
           userClone.sirio_credits = userClone.sirio_credits !== undefined ? Number(userClone.sirio_credits) : 0;
+          userClone.ia_trial_expiry = userClone.ia_trial_expiry || '';
         }
         return { success: true, user: userClone };
       }
@@ -225,7 +226,8 @@ function handleMockAction(action, data) {
         .map(u => ({
           ...u,
           plan: u.plan || 'Básico',
-          sirio_credits: u.sirio_credits !== undefined ? Number(u.sirio_credits) : 0
+          sirio_credits: u.sirio_credits !== undefined ? Number(u.sirio_credits) : 0,
+          ia_trial_expiry: u.ia_trial_expiry || ''
         }));
       return { success: true, clients };
     }
@@ -260,7 +262,8 @@ function handleMockAction(action, data) {
         telefono: data.telefono || "",
         fecha_registro: new Date().toISOString().split('T')[0],
         plan: data.plan || "Básico",
-        sirio_credits: data.sirio_credits !== undefined ? Number(data.sirio_credits) : 0
+        sirio_credits: data.sirio_credits !== undefined ? Number(data.sirio_credits) : 0,
+        ia_trial_expiry: data.ia_trial_expiry || ""
       };
       
       db.Usuarios.push(newClient);
@@ -283,6 +286,7 @@ function handleMockAction(action, data) {
       if (data.moroso !== undefined) client.moroso = (data.moroso === true || data.moroso === 'true');
       if (data.plan !== undefined) client.plan = data.plan;
       if (data.sirio_credits !== undefined) client.sirio_credits = Number(data.sirio_credits);
+      if (data.ia_trial_expiry !== undefined) client.ia_trial_expiry = data.ia_trial_expiry;
       if (data.contrasena !== undefined && data.contrasena.trim() !== "") {
         client.contrasena = data.contrasena;
       }
@@ -724,15 +728,86 @@ function handleMockAction(action, data) {
   }
 }
 
+// IA Trials local storage helpers (hybrid persistence)
+const IA_TRIALS_PATH = path.join(__dirname, 'ia_trials.json');
+
+function readIaTrials() {
+  try {
+    if (fs.existsSync(IA_TRIALS_PATH)) {
+      return JSON.parse(fs.readFileSync(IA_TRIALS_PATH, 'utf8'));
+    }
+  } catch (err) {
+    console.error('Error al leer ia_trials.json:', err);
+  }
+  return {};
+}
+
+function writeIaTrials(data) {
+  try {
+    fs.writeFileSync(IA_TRIALS_PATH, JSON.stringify(data, null, 2), 'utf8');
+  } catch (err) {
+    console.error('Error al escribir ia_trials.json:', err);
+  }
+}
+
 // Funciones exportadas
 module.exports = {
   isDemoMode: () => isDemoMode,
   resetDemoDB: () => createDefaultMockDB(),
-  login: (username, password) => callSheetsAPI('login', { username, password }),
-  getClients: () => callSheetsAPI('getClients'),
+  login: async (username, password) => {
+    const result = await callSheetsAPI('login', { username, password });
+    if (result.success && result.user && result.user.rol === 'cliente') {
+      const trials = readIaTrials();
+      const expiry = trials[result.user.id_usuario];
+      if (expiry !== undefined) {
+        result.user.ia_trial_expiry = expiry;
+      }
+    }
+    return result;
+  },
+  getClients: async () => {
+    const result = await callSheetsAPI('getClients');
+    if (result.success && result.clients) {
+      const trials = readIaTrials();
+      result.clients = result.clients.map(c => {
+        const expiry = trials[c.id_usuario];
+        if (expiry !== undefined) {
+          c.ia_trial_expiry = expiry;
+        }
+        return c;
+      });
+    }
+    return result;
+  },
   addClient: (clientData) => callSheetsAPI('addClient', clientData),
   addAdmin: (adminData) => callSheetsAPI('addAdmin', adminData),
-  updateClient: (clientData) => callSheetsAPI('updateClient', clientData),
+  updateClient: async (clientData) => {
+    // Interceptar y guardar ia_trial_expiry localmente si está definido
+    if (clientData.ia_trial_expiry !== undefined) {
+      const trials = readIaTrials();
+      if (clientData.ia_trial_expiry === "") {
+        delete trials[clientData.id_usuario];
+      } else {
+        trials[clientData.id_usuario] = clientData.ia_trial_expiry;
+      }
+      writeIaTrials(trials);
+    }
+    
+    // Continuar con la llamada normal a Sheets o Mock DB
+    const result = await callSheetsAPI('updateClient', clientData);
+    
+    // Asegurar que devolvemos el ia_trial_expiry actualizado en el objeto user retornado
+    if (result.success && result.user) {
+      const trials = readIaTrials();
+      const expiry = trials[result.user.id_usuario];
+      if (expiry !== undefined) {
+        result.user.ia_trial_expiry = expiry;
+      } else {
+        result.user.ia_trial_expiry = "";
+      }
+    }
+    return result;
+  },
   addResult: (resultData) => callSheetsAPI('addResult', resultData),
   getClientResults: (id_usuario) => callSheetsAPI('getClientResults', { id_usuario }),
   releaseRetainedResults: (id_usuario) => callSheetsAPI('releaseRetainedResults', { id_usuario }),
