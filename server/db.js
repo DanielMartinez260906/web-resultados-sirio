@@ -93,11 +93,13 @@ function createDefaultMockDB() {
     Accesos: [],
     Configuracion: {
       gemini_api_key: "CONFIGURAR_DESDE_PANEL_ADMIN",
-      portafolio_visible: "true"
+      portafolio_visible: "true",
+      ingreso_pacientes_visible: "true"
     },
     Portafolio: defaultPortafolio,
     Pacientes: [],
-    Suscripciones: []
+    Suscripciones: [],
+    Soporte: []
   };
   fs.writeFileSync(MOCK_DB_PATH, JSON.stringify(defaultData, null, 2));
 }
@@ -108,7 +110,7 @@ function readMockDB() {
     const data = fs.readFileSync(MOCK_DB_PATH, 'utf8');
     return JSON.parse(data);
   } catch (err) {
-    return { Usuarios: [], Resultados: [], Accesos: [], Pacientes: [] };
+    return { Usuarios: [], Resultados: [], Accesos: [], Pacientes: [], Soporte: [] };
   }
 }
 
@@ -723,6 +725,43 @@ function handleMockAction(action, data) {
       return { success: true, subscriptions: list };
     }
 
+    case 'createSupportTicket': {
+      db.Soporte = db.Soporte || [];
+      const ticketId = "TK-" + Date.now().toString(36).toUpperCase() + "-" + Math.floor(100 + Math.random() * 900);
+      const now = new Date();
+      const nowFormatted = now.toLocaleString('es-CO', {
+        timeZone: 'America/Bogota',
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit',
+        hour12: false
+      });
+      const newTicket = {
+        id_ticket: ticketId,
+        id_usuario: data.id_usuario || "",
+        nombre_cliente: data.nombre_cliente || "",
+        usuario: data.usuario || "",
+        tipo: data.tipo || "General",
+        asunto: data.asunto || "",
+        mensaje: data.mensaje || "",
+        correo: data.correo || "",
+        telefono: data.telefono || "",
+        fecha_hora: nowFormatted,
+        estado: "Pendiente"
+      };
+      db.Soporte.push(newTicket);
+      writeMockDB(db);
+      return { success: true, message: "Reporte de soporte guardado correctamente en modo Demo.", id_ticket: ticketId, fecha_hora: nowFormatted };
+    }
+
+    case 'getSupportTickets': {
+      db.Soporte = db.Soporte || [];
+      return { success: true, tickets: db.Soporte };
+    }
+
     default:
       return { success: false, message: `Acción desconocida en MockDB: ${action}` };
   }
@@ -823,12 +862,23 @@ module.exports = {
   getPortafolio: () => callSheetsAPI('getPortafolio'),
   savePortafolioPrecios: (preciosData) => callSheetsAPI('savePortafolioPrecios', preciosData),
   addPortafolioExamen: (examenData) => callSheetsAPI('addPortafolioExamen', examenData),
-  deletePortafolioExamen: (id_examen) => callSheetsAPI('deletePortafolioExamen', { id_examen }),
-  ingresarPaciente: (pacienteData) => callPacientesAPI('ingresarPaciente', pacienteData),
+  ingresarPaciente: async (pacienteData) => {
+    const configRes = await callSheetsAPI('getConfig');
+    const config = configRes.config || {};
+    if (config.ingreso_pacientes_visible === 'false' || config.ingreso_pacientes_visible === false) {
+      return {
+        success: false,
+        message: "El ingreso de pacientes se encuentra inhabilitado por el momento. Por favor comuníquese directamente con el laboratorio."
+      };
+    }
+    return callPacientesAPI('ingresarPaciente', pacienteData);
+  },
   saveSubscription: (id_usuario, subscription) => callSheetsAPI('saveSubscription', { id_usuario, subscription }),
   deleteSubscription: (id_usuario, endpoint) => callSheetsAPI('deleteSubscription', { id_usuario, endpoint }),
   getSubscriptions: (id_usuario) => callSheetsAPI('getSubscriptions', { id_usuario }),
   getAdmins: () => callSheetsAPI('getAdmins'),
   updateAdmin: (adminData) => callSheetsAPI('updateAdmin', adminData),
-  deleteAdmin: (id_usuario) => callSheetsAPI('deleteAdmin', { id_usuario })
+  deleteAdmin: (id_usuario) => callSheetsAPI('deleteAdmin', { id_usuario }),
+  createSupportTicket: (ticketData) => callSheetsAPI('createSupportTicket', ticketData),
+  getSupportTickets: () => callSheetsAPI('getSupportTickets')
 };

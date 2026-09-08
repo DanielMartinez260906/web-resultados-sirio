@@ -64,7 +64,8 @@
   ],
   "Configuracion": {
     "gemini_api_key": "CONFIGURAR_DESDE_PANEL_ADMIN",
-    "portafolio_visible": "true"
+    "portafolio_visible": "true",
+    "ingreso_pacientes_visible": "true"
   },
   "Portafolio": [
     {
@@ -1934,6 +1935,21 @@
       "quien_diligencia": "A",
       "datos_especiales_tipo": "No",
       "datos_especiales_detalle": ""
+    }
+  ],
+  "Soporte": [
+    {
+      "id_ticket": "TK-MTRVJLA6-582",
+      "id_usuario": "U001",
+      "nombre_cliente": "Clínica Veterinaria San Francisco",
+      "usuario": "sanfrancisco",
+      "tipo": "Reporte de Error o Fallo Técnico",
+      "asunto": "Error al visualizar PDF en dispositivo móvil",
+      "mensaje": "Al intentar abrir el examen R001 en Safari móvil, no se descarga automáticamente.",
+      "correo": "contacto@vetsanfrancisco.com",
+      "telefono": "+57 300 123 4567",
+      "fecha_hora": "07/09/2026, 18:31:06",
+      "estado": "Pendiente"
     }
   ]
 }

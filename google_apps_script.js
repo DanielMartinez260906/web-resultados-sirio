@@ -93,6 +93,8 @@ function doPost(e) {
     else if (action === "getAdmins") { response = getAdmins(doc); }
     else if (action === "updateAdmin") { response = updateAdmin(doc, data); }
     else if (action === "deleteAdmin") { response = deleteAdmin(doc, data); }
+    else if (action === "createSupportTicket") { response = createSupportTicket(doc, data); }
+    else if (action === "getSupportTickets") { response = getSupportTickets(doc); }
     else { response.message = "Accion no reconocida: " + action; }
 
   } catch (error) {
@@ -186,7 +188,7 @@ function migrateSheets(doc) {
     }
   }
 
-  // 3. Migración de Estado_Portafolio
+  // 3. Migración de Estado_Portafolio y Configuración
   var epSheet = doc.getSheetByName("Estado_Portafolio");
   if (epSheet) {
     var epRows = epSheet.getDataRange().getValues();
@@ -205,6 +207,34 @@ function migrateSheets(doc) {
       SpreadsheetApp.flush();
     }
   }
+
+  var cfgSheet = doc.getSheetByName("Configuracion");
+  if (cfgSheet) {
+    var cfgRows = cfgSheet.getDataRange().getValues();
+    var cfgKeysMap = {};
+    for (var m = 1; m < cfgRows.length; m++) {
+      if (cfgRows[m][0]) {
+        cfgKeysMap[cfgRows[m][0].toString().trim()] = m;
+      }
+    }
+    if (!("ingreso_pacientes_visible" in cfgKeysMap)) {
+      cfgSheet.appendRow(["ingreso_pacientes_visible", "true"]);
+      SpreadsheetApp.flush();
+    }
+  }
+
+  // 4. Migración de Soporte
+  var soporteSheet = doc.getSheetByName("Soporte");
+  if (!soporteSheet) {
+    soporteSheet = doc.insertSheet("Soporte");
+    var soporteHdr = ["id_ticket", "id_usuario", "nombre_cliente", "usuario", "tipo", "asunto", "mensaje", "correo", "telefono", "fecha_hora", "estado"];
+    soporteSheet.appendRow(soporteHdr);
+    var soporteRng = soporteSheet.getRange(1, 1, 1, soporteHdr.length);
+    soporteRng.setFontWeight("bold");
+    soporteRng.setBackground("#0a192f");
+    soporteRng.setFontColor("#ffffff");
+    SpreadsheetApp.flush();
+  }
 }
 
 // ============================================================
@@ -218,7 +248,8 @@ function checkAndInitSheets(doc) {
     "Configuracion": ["clave", "valor"],
     "Estado_Portafolio": ["clave", "valor"],
     "Portafolio": ["id_examen", "seccion", "examen", "precio", "tiempo_reporte", "muestra", "recipiente"],
-    "Push_Subscriptions": ["id_usuario", "endpoint", "p256dh", "auth"]
+    "Push_Subscriptions": ["id_usuario", "endpoint", "p256dh", "auth"],
+    "Soporte": ["id_ticket", "id_usuario", "nombre_cliente", "usuario", "tipo", "asunto", "mensaje", "correo", "telefono", "fecha_hora", "estado"]
   };
 
   for (var name in sheetsConfig) {
@@ -238,6 +269,7 @@ function checkAndInitSheets(doc) {
       }
       if (name === "Configuracion") {
         sheet.appendRow(["gemini_api_key", "CONFIGURAR_DESDE_PANEL_ADMIN"]);
+        sheet.appendRow(["ingreso_pacientes_visible", "true"]);
       }
       if (name === "Estado_Portafolio") {
         sheet.appendRow(["portafolio_visible", "true"]);
@@ -1478,5 +1510,86 @@ function deleteAdmin(doc, data) {
   }
   return { success: false, message: "El miembro del personal especificado no existe." };
 }
+
+// ============================================================
+// CREAR TICKET DE SOPORTE (CLIENTES)
+// ============================================================
+function createSupportTicket(doc, data) {
+  var sheet = doc.getSheetByName("Soporte");
+  if (!sheet) {
+    return { success: false, message: "La hoja de Soporte no existe." };
+  }
+
+  var headers = sheet.getDataRange().getValues()[0];
+  var colMap = buildColMap(headers);
+
+  var timezone = Session.getScriptTimeZone();
+  var nowFormatted = Utilities.formatDate(new Date(), timezone, "yyyy-MM-dd HH:mm:ss");
+  var ticketId = "TK-" + Date.now().toString(36).toUpperCase() + "-" + Math.floor(100 + Math.random() * 900);
+
+  var newRow = new Array(headers.length).fill("");
+  if ("id_ticket" in colMap)      newRow[colMap["id_ticket"]] = ticketId;
+  if ("id_usuario" in colMap)     newRow[colMap["id_usuario"]] = data.id_usuario || "";
+  if ("nombre_cliente" in colMap) newRow[colMap["nombre_cliente"]] = data.nombre_cliente || "";
+  if ("usuario" in colMap)        newRow[colMap["usuario"]] = data.usuario || "";
+  if ("tipo" in colMap)           newRow[colMap["tipo"]] = data.tipo || "General";
+  if ("asunto" in colMap)         newRow[colMap["asunto"]] = data.asunto || "";
+  if ("mensaje" in colMap)        newRow[colMap["mensaje"]] = data.mensaje || "";
+  if ("correo" in colMap)         newRow[colMap["correo"]] = data.correo || "";
+  if ("telefono" in colMap)       newRow[colMap["telefono"]] = data.telefono || "";
+  if ("fecha_hora" in colMap)     newRow[colMap["fecha_hora"]] = nowFormatted;
+  if ("estado" in colMap)         newRow[colMap["estado"]] = "Pendiente";
+
+  sheet.appendRow(newRow);
+  SpreadsheetApp.flush();
+
+  return {
+    success: true,
+    message: "Reporte de soporte registrado correctamente.",
+    id_ticket: ticketId,
+    fecha_hora: nowFormatted
+  };
+}
+
+// ============================================================
+// OBTENER TICKETS DE SOPORTE (ADMIN)
+// ============================================================
+function getSupportTickets(doc) {
+  var sheet = doc.getSheetByName("Soporte");
+  if (!sheet) {
+    return { success: true, tickets: [] };
+  }
+
+  var rows = sheet.getDataRange().getValues();
+  if (rows.length <= 1) {
+    return { success: true, tickets: [] };
+  }
+
+  var headers = rows[0];
+  var colMap = buildColMap(headers);
+  var tickets = [];
+
+  for (var i = 1; i < rows.length; i++) {
+    var row = rows[i];
+    if (row[colMap["id_ticket"]]) {
+      tickets.push({
+        id_ticket: row[colMap["id_ticket"]] ? row[colMap["id_ticket"]].toString() : "",
+        id_usuario: colMap["id_usuario"] !== undefined ? row[colMap["id_usuario"]].toString() : "",
+        nombre_cliente: colMap["nombre_cliente"] !== undefined ? row[colMap["nombre_cliente"]].toString() : "",
+        usuario: colMap["usuario"] !== undefined ? row[colMap["usuario"]].toString() : "",
+        tipo: colMap["tipo"] !== undefined ? row[colMap["tipo"]].toString() : "",
+        asunto: colMap["asunto"] !== undefined ? row[colMap["asunto"]].toString() : "",
+        mensaje: colMap["mensaje"] !== undefined ? row[colMap["mensaje"]].toString() : "",
+        correo: colMap["correo"] !== undefined ? row[colMap["correo"]].toString() : "",
+        telefono: colMap["telefono"] !== undefined ? row[colMap["telefono"]].toString() : "",
+        fecha_hora: colMap["fecha_hora"] !== undefined ? row[colMap["fecha_hora"]].toString() : "",
+        estado: colMap["estado"] !== undefined ? row[colMap["estado"]].toString() : "Pendiente"
+      });
+    }
+  }
+
+  return { success: true, tickets: tickets };
+}
+
 
 

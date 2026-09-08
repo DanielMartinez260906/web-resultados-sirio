@@ -29,6 +29,10 @@
       </div>
       <div class="header-actions">
         <div class="header-utilities">
+          <button class="pwa-install-btn" id="pwa-install-btn" title="Instalar Aplicación en tu PC o Celular" style="display: none;">
+            <i class="fa-solid fa-download"></i>
+            <span class="pwa-btn-text">Instalar App</span>
+          </button>
           <button class="btn btn-secondary btn-icon" id="reload-btn" title="Recargar página">
             <i class="fa-solid fa-rotate-right"></i>
           </button>
@@ -126,9 +130,7 @@
               <table class="results-table">
                 <thead>
                   <tr>
-                    <th style="width: 40px; text-align: center; padding: 12px 16px;">
-                      <input type="checkbox" id="select-all-results-chk" style="cursor: pointer; width: 16px; height: 16px;">
-                    </th>
+                    <th style="width: 40px; text-align: center; padding: 12px 16px;"></th>
                     <th>Cliente</th>
                     <th>Examen / PDF</th>
                     <th>Fecha y Hora</th>
@@ -480,14 +482,14 @@
                 <span id="dir-client-credits-val" style="font-weight: 700; color: var(--color-accent);"><i class="fa-solid fa-coins"></i> ...</span>
               </div>
               <div class="profile-detail-item" style="background: rgba(255, 255, 255, 0.02); padding: 12px; border-radius: 8px; border: 1px solid var(--border-light);">
-                <span style="font-size: 0.78rem; color: var(--text-muted); display: block; margin-bottom: 4px;">Prueba SirIA (Interpretación con IA)</span>
-                <span id="dir-client-ia-status-val" style="font-weight: 600; color: var(--text-main);">...</span>
+                <span style="font-size: 0.78rem; color: var(--text-muted); display: block; margin-bottom: 4px;">Acceso a SirIA (Interpretación con IA)</span>
+                <span id="dir-client-ia-status-val" style="font-weight: 700; color: #10b981;"><i class="fa-solid fa-circle-check"></i> Gratuito y Habilitado</span>
               </div>
             </div>
 
-            <!-- Controles de Prueba de IA -->
-            <div id="dir-client-ia-actions" style="margin-bottom: 1rem; display: flex; gap: 8px; flex-wrap: wrap;">
-              <button id="dir-enable-ia-trial-btn" class="btn" style="flex: 1; min-width: 150px; gap: 6px; justify-content: center; background: rgba(139, 92, 246, 0.15); color: #c084fc; border: 1px solid rgba(139, 92, 246, 0.3);">
+            <!-- Controles de Prueba de IA (Ocultos ya que ahora es gratuito para todos) -->
+            <div id="dir-client-ia-actions" style="display: none; margin-bottom: 1rem; gap: 8px; flex-wrap: wrap;">
+              <button id="dir-enable-ia-trial-btn" class="btn" style="flex: 1; min-width: 150px; gap: 6px; justify-content: center; background: rgba(139, 92, 246, 0.15); color: #c084fc; border: 1px solid rgba(139, 92, 246, 0.3); display: none;">
                 <i class="fa-solid fa-wand-magic-sparkles"></i> Habilitar Prueba 15 Días
               </button>
               <button id="dir-disable-ia-trial-btn" class="btn" style="flex: 1; min-width: 150px; gap: 6px; justify-content: center; background: rgba(239, 68, 68, 0.15); color: #fca5a5; border: 1px solid rgba(239, 68, 68, 0.3); display: none;">
@@ -667,7 +669,7 @@
             </p>
           </div>
 
-          <div class="form-group" style="margin-top: 1.5rem; border-top: 1px solid var(--border-light); padding-top: 1.5rem;">
+          <div class="form-group" style="margin-top: 1.5rem; border-top: 1px solid var(--border-light); padding-top: 1.5rem; display: flex; flex-direction: column; gap: 12px;">
             <div style="display: flex; align-items: center; justify-content: space-between; background: rgba(255,255,255,0.02); padding: 12px 16px; border-radius: 8px; border: 1px solid var(--border-light);">
               <div style="display: flex; flex-direction: column; gap: 4px; flex: 1; padding-right: 15px;">
                 <span style="font-weight: 600; color: var(--text-main); font-size: 0.88rem; display: flex; align-items: center; gap: 8px;">
@@ -680,6 +682,22 @@
               </div>
               <label class="switch-container" style="position: relative; display: inline-block; width: 34px; height: 20px; vertical-align: middle; flex-shrink: 0;">
                 <input type="checkbox" id="config-portafolio-visibility-toggle" style="opacity: 0; width: 0; height: 0;" checked>
+                <span class="switch-slider" style="position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: rgba(255,255,255,0.15); transition: .3s; border-radius: 20px;"></span>
+              </label>
+            </div>
+
+            <div style="display: flex; align-items: center; justify-content: space-between; background: rgba(255,255,255,0.02); padding: 12px 16px; border-radius: 8px; border: 1px solid var(--border-light);">
+              <div style="display: flex; flex-direction: column; gap: 4px; flex: 1; padding-right: 15px;">
+                <span style="font-weight: 600; color: var(--text-main); font-size: 0.88rem; display: flex; align-items: center; gap: 8px;">
+                  <i class="fa-solid fa-file-signature" style="color: var(--color-accent);"></i>
+                  Habilitar Ingreso de Pacientes a Clientes
+                </span>
+                <span style="font-size: 0.72rem; color: var(--text-muted); line-height: 1.4;">
+                  Si se desactiva, los clientes verán un aviso indicando que la sección de ingreso de pacientes se encuentra inhabilitada por el momento.
+                </span>
+              </div>
+              <label class="switch-container" style="position: relative; display: inline-block; width: 34px; height: 20px; vertical-align: middle; flex-shrink: 0;">
+                <input type="checkbox" id="config-ingreso-pacientes-visibility-toggle" style="opacity: 0; width: 0; height: 0;" checked>
                 <span class="switch-slider" style="position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: rgba(255,255,255,0.15); transition: .3s; border-radius: 20px;"></span>
               </label>
             </div>
@@ -763,15 +781,7 @@
             </div>
           </div>
 
-          <div style="background: rgba(255, 255, 255, 0.02); padding: 16px; border-radius: 10px; border: 1.5px solid var(--border-light); display: flex; align-items: center; gap: 12px;">
-            <div style="width: 45px; height: 45px; border-radius: 50%; background: rgba(245, 158, 11, 0.12); display: flex; align-items: center; justify-content: center; color: #f59e0b; font-size: 1.25rem;">
-              <i class="fa-solid fa-microscope"></i>
-            </div>
-            <div>
-              <span style="font-size: 0.72rem; color: var(--text-muted); display: block; text-transform: uppercase; font-weight: 600;">Examen Más Solicitado</span>
-              <span id="stats-top-exam" style="font-size: 0.82rem; font-weight: 700; color: var(--text-main); display: block; margin-top: 2px; text-overflow: ellipsis; overflow: hidden; white-space: nowrap; max-width: 160px;" title="Cargando...">Cargando...</span>
-            </div>
-          </div>
+
         </div>
 
         <!-- Grid de Gráficos -->
@@ -1202,6 +1212,7 @@
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script src="js/auth.js"></script>
   <script src="js/admin.js"></script>
+  <script src="js/pwa-install.js"></script>
   <script src="js/themes.js"></script>
   <script src="js/network-bg.js"></script>
 </body>

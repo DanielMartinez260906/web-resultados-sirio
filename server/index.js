@@ -605,6 +605,15 @@ app.post('/api/client/ingresar-paciente', async (req, res) => {
   }
 
   try {
+    const configRes = await db.getConfig();
+    const config = configRes.config || {};
+    if (config.ingreso_pacientes_visible === 'false' || config.ingreso_pacientes_visible === false) {
+      return res.status(403).json({
+        success: false,
+        message: "El ingreso de pacientes se encuentra inhabilitado por el momento. Por favor comuníquese directamente con el laboratorio."
+      });
+    }
+
     const result = await db.ingresarPaciente({
       id_usuario, veterinaria, medico, propietario, paciente_nombre, especie, raza, edad, sexo,
       tipo_muestra, examenes_solicitados, otros_examenes, observaciones,
@@ -961,6 +970,62 @@ app.post('/api/admin/config', async (req, res) => {
   }
 });
 
+// API: Obtener estado de configuración pública (Para Clientes)
+app.get('/api/client/config', async (req, res) => {
+  try {
+    const configRes = await db.getConfig();
+    const config = configRes.config || {};
+    res.json({
+      success: true,
+      portafolio_visible: config.portafolio_visible !== 'false',
+      ingreso_pacientes_visible: config.ingreso_pacientes_visible !== 'false',
+      seasonal_theme: config.seasonal_theme || 'default'
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
+// API: Enviar Ticket de Soporte Técnico (Para Clientes)
+app.post('/api/client/soporte', async (req, res) => {
+  const { id_usuario, nombre_cliente, usuario, tipo, asunto, mensaje, correo, telefono } = req.body;
+
+  if (!asunto || !asunto.trim() || !mensaje || !mensaje.trim()) {
+    return res.status(400).json({ success: false, message: "El asunto y el detalle de la consulta o error son requeridos." });
+  }
+
+  try {
+    const result = await db.createSupportTicket({
+      id_usuario: id_usuario || "",
+      nombre_cliente: nombre_cliente || "",
+      usuario: usuario || "",
+      tipo: tipo || "General",
+      asunto: asunto.trim(),
+      mensaje: mensaje.trim(),
+      correo: correo ? correo.trim() : "",
+      telefono: telefono ? telefono.trim() : ""
+    });
+
+    if (result.success) {
+      res.json(result);
+    } else {
+      res.status(400).json(result);
+    }
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
+// API: Obtener Tickets de Soporte (Solo Admins)
+app.get('/api/admin/soporte', async (req, res) => {
+  try {
+    const result = await db.getSupportTickets();
+    res.json(result);
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
 // API: Obtener el portafolio de servicios (Para Admins y Clientes)
 app.get('/api/client/portafolio', async (req, res) => {
   try {
@@ -1064,34 +1129,6 @@ app.post('/api/client/interpret-exam', async (req, res) => {
     return res.status(400).json({ success: false, message: 'El ID del resultado y el archivo son requeridos.' });
   }
 
-  if (!id_usuario) {
-    return res.status(400).json({ success: false, message: 'El ID de usuario es requerido para verificar su plan de acceso.' });
-  }
-
-  // Verificar el plan del cliente y si tiene la prueba activa
-  try {
-    const clientsRes = await db.getClients();
-    const user = clientsRes.success ? clientsRes.clients.find(c => c.id_usuario === id_usuario) : null;
-    if (!user) {
-      return res.status(404).json({ success: false, message: 'Usuario no encontrado.' });
-    }
-
-    const plan = user.plan || 'Básico';
-    const isBasic = plan.toLowerCase() === 'básico' || plan.toLowerCase() === 'basico';
-    const todayStr = new Date().toISOString().split('T')[0];
-    const hasActiveTrial = user.ia_trial_expiry && user.ia_trial_expiry >= todayStr;
-
-    if (isBasic && !hasActiveTrial) {
-      return res.status(403).json({
-        success: false,
-        message: 'La interpretación con IA no está disponible en el Plan Básico. Para usar este servicio, actualice su plan (Plus, Premium o Elite) o solicite al administrador una prueba gratuita de 15 días.'
-      });
-    }
-  } catch (err) {
-    console.error('Error al validar permisos de IA del usuario:', err);
-    return res.status(500).json({ success: false, message: `Error al validar permisos: ${err.message}` });
-  }
-
   try {
     // 1. Obtener la clave API de Gemini desde la base de datos
     const configResult = await db.getConfig();
@@ -1122,9 +1159,7 @@ app.post('/api/client/interpret-exam', async (req, res) => {
     // 3. Convertir el buffer a Base64
     const base64Pdf = pdfBuffer.toString('base64');
 
-    // 4. Preparar la llamada a Gemini API usando axios
-    const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${geminiApiKey}`;
-
+    // 4. Preparar el prompt y payload para Gemini API
     const promptText = "Eres SirIA, un asistente virtual de apoyo clínico del Laboratorio Clínico SIRIO. Tu función es analizar los resultados de este examen de laboratorio y redactar un informe interpretativo formal, riguroso y agradable dirigido ÚNICA Y EXCLUSIVAMENTE al Médico Veterinario tratante. Ten en cuenta que el Laboratorio SIRIO no cuenta con médicos veterinarios en su personal, por lo que este análisis es una herramienta de soporte tecnológico interpretativo automatizado de apoyo al diagnóstico. No te dirijas bajo ninguna circunstancia al propietario o cliente final. Usa un tono colegial, cordial y altamente profesional (utilizando términos como 'Doctor/a' o 'Médico Veterinario Tratante'). Organiza la interpretación en: 1. **Resumen Clínico**: síntesis formal de los parámetros evaluados. 2. **Hallazgos de Relevancia Diagnóstica**: explicación veterinaria profunda de los valores alterados (fuera de rango de referencia) y posibles diagnósticos diferenciales. 3. **Consideraciones Clínicas**: sugerencias de pruebas complementarias o monitorización de apoyo para el veterinario tratante. Finaliza con esta advertencia obligatoria en negrita: **Este reporte es un apoyo tecnológico automatizado generado por SirIA para el médico veterinario tratante. Laboratorio SIRIO no presta asesoría veterinaria directa y la responsabilidad final del diagnóstico y plan terapéutico recae únicamente en el profesional de la salud veterinaria a cargo del paciente.**";
 
     const payload = {
@@ -1132,8 +1167,8 @@ app.post('/api/client/interpret-exam', async (req, res) => {
         {
           parts: [
             {
-              inlineData: {
-                mimeType: "application/pdf",
+              inline_data: {
+                mime_type: 'application/pdf',
                 data: base64Pdf
               }
             },
@@ -1143,27 +1178,57 @@ app.post('/api/client/interpret-exam', async (req, res) => {
           ]
         }
       ],
-      systemInstruction: {
-        parts: [
-          {
-            text: "Eres un asistente virtual de IA integrado en el Laboratorio SIRIO. Interpretas exámenes clínicos clínicos de laboratorio en español para pacientes y veterinarios/médicos. Tu tono es comprensivo, empático, formal y profesional. Estructuras siempre tu explicación con Markdown y terminas con un descargo de responsabilidad claro."
-          }
-        ]
+      generationConfig: {
+        temperature: 0.2,
+        maxOutputTokens: 2048
       }
     };
 
-    const response = await axios.post(geminiUrl, payload, {
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      timeout: 30000 // 30 segundos de timeout
-    });
+    // 5. Lista de modelos a intentar en orden de velocidad y disponibilidad
+    const modelsToTry = [
+      'gemini-1.5-flash',
+      'gemini-2.0-flash',
+      'gemini-1.5-pro'
+    ];
 
-    const candidate = response.data?.candidates?.[0];
-    const interpretationText = candidate?.content?.parts?.[0]?.text;
+    let interpretationText = null;
+    let lastError = null;
+
+    for (const modelName of modelsToTry) {
+      try {
+        const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${geminiApiKey}`;
+        const response = await axios.post(geminiUrl, payload, {
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          timeout: 25000 // 25 segundos por intento
+        });
+
+        const candidate = response.data?.candidates?.[0];
+        const text = candidate?.content?.parts?.[0]?.text;
+        if (text && text.trim().length > 0) {
+          interpretationText = text;
+          break; // Éxito con el modelo
+        }
+      } catch (err) {
+        lastError = err;
+        const errDetail = err.response?.data?.error?.message || err.message;
+        console.warn(`⚠️ Modelo ${modelName} no pudo completar la solicitud (${errDetail}). Probando alternativa...`);
+      }
+    }
 
     if (!interpretationText) {
-      return res.status(500).json({ success: false, message: 'El servicio de IA no retornó resultados legibles. Intenta de nuevo.' });
+      console.error('Error al interpretar el examen con Gemini tras probar modelos disponibles:', lastError?.message || lastError);
+      
+      let customMsg = 'Hubo un inconveniente temporal con el servicio de Inteligencia Artificial debido a una alta demanda. Estamos trabajando en resolverlo, por favor inténtalo de nuevo en unos minutos.';
+      if (lastError && (lastError.code === 'ECONNABORTED' || lastError.message?.includes('timeout'))) {
+        customMsg = 'El análisis del examen tomó más tiempo del esperado debido a la congestión del servicio. Por favor inténtalo de nuevo en unos momentos.';
+      }
+
+      return res.status(503).json({
+        success: false,
+        message: customMsg
+      });
     }
 
     res.json({
@@ -1172,12 +1237,11 @@ app.post('/api/client/interpret-exam', async (req, res) => {
     });
 
   } catch (error) {
-    console.error('Error al interpretar el examen con Gemini:', error);
-    let errorMsg = error.message;
-    if (error.response && error.response.data && error.response.data.error) {
-      errorMsg = error.response.data.error.message || errorMsg;
-    }
-    res.status(500).json({ success: false, message: `Error en el servicio de interpretación por IA: ${errorMsg}` });
+    console.error('Error general al interpretar el examen:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Hubo un error al procesar la interpretación del examen. Estamos trabajando en resolverlo, por favor inténtalo de nuevo más tarde.'
+    });
   }
 });
 

@@ -32,11 +32,15 @@
           <i class="fa-solid fa-coins"></i> <span id="header-credits-val">0</span> Sirio Credits
         </div>
         <div class="header-utilities">
-          <button class="btn btn-secondary btn-icon" id="pwa-install-btn" title="Instalar Aplicación" style="display: none;">
-            <i class="fa-solid fa-mobile-screen-button"></i>
+          <button class="pwa-install-btn" id="pwa-install-btn" title="Instalar Aplicación en tu PC o Celular" style="display: none;">
+            <i class="fa-solid fa-download"></i>
+            <span class="pwa-btn-text">Instalar App</span>
           </button>
           <button class="btn btn-secondary btn-icon" id="header-push-btn" title="Configurar Notificaciones">
             <i class="fa-solid fa-bell-slash"></i>
+          </button>
+          <button class="btn btn-secondary btn-icon" id="header-support-btn" title="Centro de Soporte y Ayuda" style="color: var(--color-accent);">
+            <i class="fa-solid fa-headset"></i>
           </button>
           <button class="btn btn-secondary btn-icon" id="theme-toggle" title="Cambiar tema">
             <i class="fa-solid fa-sun"></i>
@@ -223,18 +227,33 @@
 
     <!-- Pestaña 4: Ingresar Paciente -->
     <div id="tab-client-ingresar" class="tab-content" style="display: none;">
-      <!-- Banner con el Logo de SIRIO -->
-      <div class="panel-card" style="margin-bottom: 1.5rem; display: flex; align-items: center; gap: 1.5rem; padding: 1.25rem 2rem; background: linear-gradient(135deg, rgba(14, 165, 233, 0.08) 0%, rgba(14, 165, 233, 0.02) 100%); border-left: 5px solid var(--color-accent);">
-        <img src="img/logo.png" alt="SIRIO Logo" style="height: 52px; object-fit: contain;">
-        <div>
-          <h2 style="font-size: 1.35rem; font-weight: 700; color: var(--color-accent); margin: 0; display: flex; align-items: center; gap: 8px;">
-            <i class="fa-solid fa-file-signature"></i> Ingresar Paciente y Programar Recolección
-          </h2>
-          <p style="font-size: 0.8rem; color: var(--text-muted); margin: 4px 0 0 0;">
-            Registre a sus pacientes y solicite la recogida de muestras en el área metropolitana de forma rápida y sencilla.
-          </p>
+      <!-- Mensaje de inhabilitación / mantenimiento -->
+      <div id="ingreso-pacientes-maintenance-view" style="display: none; padding: 5rem 2rem; text-align: center; animation: floatIn 0.3s ease;">
+        <div style="width: 80px; height: 80px; border-radius: 50%; background: rgba(245, 158, 11, 0.08); border: 2.5px solid rgba(245, 158, 11, 0.2); display: flex; align-items: center; justify-content: center; margin: 0 auto 1.5rem auto; color: #fbbf24;">
+          <i class="fa-solid fa-ban" style="font-size: 2.2rem;"></i>
         </div>
+        <h3 style="font-size: 1.35rem; font-weight: 700; color: #fbbf24; margin: 0 0 0.5rem 0;">SECCIÓN INHABILITADA TEMPORALMENTE</h3>
+        <p style="color: var(--text-muted); max-width: 500px; margin: 0 auto; line-height: 1.55; font-size: 0.9rem;">
+          Estimado Médico Veterinario, la recepción de solicitudes e ingreso de pacientes por medio de la plataforma se encuentra inhabilitada por el momento.
+        </p>
+        <p style="color: var(--text-dark); max-width: 500px; margin: 0.6rem auto 0 auto; font-size: 0.82rem; line-height: 1.4;">
+          Para solicitudes urgentes, toma de muestras o mayor información, por favor comuníquese directamente con las líneas de atención del Laboratorio Clínico SIRIO.
+        </p>
       </div>
+
+      <div id="ingreso-pacientes-main-content" style="display: block;">
+        <!-- Banner con el Logo de SIRIO -->
+        <div class="panel-card" style="margin-bottom: 1.5rem; display: flex; align-items: center; gap: 1.5rem; padding: 1.25rem 2rem; background: linear-gradient(135deg, rgba(14, 165, 233, 0.08) 0%, rgba(14, 165, 233, 0.02) 100%); border-left: 5px solid var(--color-accent);">
+          <img src="img/logo.png" alt="SIRIO Logo" style="height: 52px; object-fit: contain;">
+          <div>
+            <h2 style="font-size: 1.35rem; font-weight: 700; color: var(--color-accent); margin: 0; display: flex; align-items: center; gap: 8px;">
+              <i class="fa-solid fa-file-signature"></i> Ingresar Paciente y Programar Recolección
+            </h2>
+            <p style="font-size: 0.8rem; color: var(--text-muted); margin: 4px 0 0 0;">
+              Registre a sus pacientes y solicite la recogida de muestras en el área metropolitana de forma rápida y sencilla.
+            </p>
+          </div>
+        </div>
 
       <!-- Indicador de Pasos -->
       <div class="panel-card" style="margin-bottom: 1.5rem; padding: 1.25rem;">
@@ -666,6 +685,7 @@
         </div>
 
       </form>
+      </div>
     </div>
 
     <!-- Pestaña 2: Mi Perfil -->
@@ -919,6 +939,77 @@
       <button class="btn btn-accent" id="close-welcome-btn" style="width: 100%; padding: 12px; font-size: 1.1rem; border-radius: 8px; justify-content: center;">
         Continuar <i class="fa-solid fa-arrow-right" style="margin-left: 8px;"></i>
       </button>
+    </div>
+  </div>
+
+  <!-- ── Botón de Soporte Flotante ────────────────────────────────────────── -->
+  <button id="support-float-btn"
+          class="support-float"
+          type="button"
+          title="Centro de Ayuda y Soporte Técnico"
+          aria-label="Abrir centro de soporte">
+    <i class="fa-solid fa-headset"></i>
+    <span class="support-float-label">Soporte</span>
+  </button>
+
+  <!-- Modal de Soporte y Ayuda -->
+  <div class="modal-overlay" id="support-modal" style="display: none; align-items: center; justify-content: center; z-index: 10000; padding: 1rem;">
+    <div class="modal-content" style="max-width: 540px; width: 100%; max-height: 90vh; overflow-y: auto; padding: 2rem; border-radius: 14px; border: 1.5px solid var(--border-light); background: var(--bg-card); backdrop-filter: blur(16px); box-shadow: 0 20px 40px rgba(0,0,0,0.5);">
+      <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1.25rem;">
+        <div style="display: flex; align-items: center; gap: 12px;">
+          <div style="width: 44px; height: 44px; border-radius: 50%; background: rgba(14, 165, 233, 0.12); border: 1.5px solid rgba(14, 165, 233, 0.25); display: flex; align-items: center; justify-content: center; color: var(--color-accent); font-size: 1.25rem;">
+            <i class="fa-solid fa-headset"></i>
+          </div>
+          <div>
+            <h3 style="margin: 0; font-size: 1.2rem; font-weight: 700; color: var(--text-main);">Centro de Soporte</h3>
+            <p style="margin: 2px 0 0 0; font-size: 0.78rem; color: var(--text-muted);">¿Tienes un error, duda o problema? Te ayudamos.</p>
+          </div>
+        </div>
+        <button type="button" id="close-support-modal-btn" style="background: transparent; border: none; color: var(--text-muted); cursor: pointer; font-size: 1.2rem; padding: 4px 8px; transition: color 0.2s;">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <form id="support-form" onsubmit="return false;">
+        <div class="form-group" style="margin-bottom: 1rem;">
+          <label style="font-weight: 600; font-size: 0.85rem; display: block; margin-bottom: 6px;">Tipo de Solicitud *</label>
+          <select id="support-tipo" class="form-control" required style="height: 44px;">
+            <option value="Reporte de Error o Fallo Técnico">🚨 Reporte de Error o Fallo Técnico</option>
+            <option value="Duda o Consulta General">❓ Duda o Consulta General</option>
+            <option value="Problema con un Examen o Paciente">🧪 Problema con un Examen o Paciente</option>
+            <option value="Sugerencia o Mejora">💡 Sugerencia o Propuesta de Mejora</option>
+            <option value="Otro Asunto">📝 Otro Asunto</option>
+          </select>
+        </div>
+
+        <div class="form-group" style="margin-bottom: 1rem;">
+          <label style="font-weight: 600; font-size: 0.85rem; display: block; margin-bottom: 6px;">Asunto o Título Breve *</label>
+          <input type="text" id="support-asunto" class="form-control" placeholder="Ej: No se visualiza el PDF de un examen" required style="height: 44px;">
+        </div>
+
+        <div class="form-group" style="margin-bottom: 1rem;">
+          <label style="font-weight: 600; font-size: 0.85rem; display: block; margin-bottom: 6px;">Descripción Detallada *</label>
+          <textarea id="support-mensaje" class="form-control" rows="4" placeholder="Explique con el mayor detalle posible lo que ocurrió, las dudas que tiene o el problema presentado..." required style="resize: vertical; font-family: inherit;"></textarea>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 1.5rem;">
+          <div class="form-group" style="margin-bottom: 0;">
+            <label style="font-weight: 600; font-size: 0.78rem; display: block; margin-bottom: 4px; color: var(--text-muted);">Correo de Contacto</label>
+            <input type="email" id="support-correo" class="form-control" placeholder="contacto@veterinaria.com" style="height: 40px; font-size: 0.85rem;">
+          </div>
+          <div class="form-group" style="margin-bottom: 0;">
+            <label style="font-weight: 600; font-size: 0.78rem; display: block; margin-bottom: 4px; color: var(--text-muted);">Teléfono / WhatsApp</label>
+            <input type="text" id="support-telefono" class="form-control" placeholder="+57 300 123 4567" style="height: 40px; font-size: 0.85rem;">
+          </div>
+        </div>
+
+        <div style="display: flex; gap: 10px; justify-content: flex-end;">
+          <button type="button" class="btn btn-secondary" id="cancel-support-btn" style="flex: 1;">Cancelar</button>
+          <button type="submit" class="btn btn-accent" id="submit-support-btn" style="flex: 2; gap: 8px; justify-content: center;">
+            <i class="fa-solid fa-paper-plane"></i> Enviar Mensaje
+          </button>
+        </div>
+      </form>
     </div>
   </div>
 

@@ -107,6 +107,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
       // Guardar pestaña activa
       sessionStorage.setItem('sirio_active_tab_client', targetTab);
+
+      if (targetTab === 'tab-client-ingresar') {
+        checkIngresoPacientesStatus();
+      }
     });
   });
 
@@ -218,27 +222,12 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     }
 
-    // IA Trial details rendering
+    // IA Status details rendering
     const iaTrialItem = document.getElementById('profile-ia-trial-item');
     const iaStatusVal = document.getElementById('profile-ia-status-val');
     if (iaTrialItem && iaStatusVal) {
-      const plan = currentUser.plan || 'Básico';
-      const isBasic = plan.toLowerCase() === 'básico' || plan.toLowerCase() === 'basico';
       iaTrialItem.style.display = 'block';
-      if (isBasic) {
-        const todayStr = new Date().toISOString().split('T')[0];
-        if (currentUser.ia_trial_expiry) {
-          if (currentUser.ia_trial_expiry >= todayStr) {
-            iaStatusVal.innerHTML = `<span style="color: #10b981; font-weight: 700;"><i class="fa-solid fa-circle-check"></i> Prueba Activa (Vence el ${currentUser.ia_trial_expiry})</span>`;
-          } else {
-            iaStatusVal.innerHTML = `<span style="color: #ef4444; font-weight: 700;"><i class="fa-solid fa-circle-xmark"></i> Prueba Expirada (Venció el ${currentUser.ia_trial_expiry})</span>`;
-          }
-        } else {
-          iaStatusVal.innerHTML = `<span style="color: var(--text-muted);"><i class="fa-solid fa-circle-minus"></i> Sin prueba activa</span>`;
-        }
-      } else {
-        iaStatusVal.innerHTML = `<span style="color: #10b981; font-weight: 700;"><i class="fa-solid fa-circle-check"></i> Habilitado por Plan (${plan})</span>`;
-      }
+      iaStatusVal.innerHTML = `<span style="color: #10b981; font-weight: 700;"><i class="fa-solid fa-circle-check"></i> Gratuito y Habilitado para Todos los Planes</span>`;
     }
   }
 
@@ -720,7 +709,13 @@ document.addEventListener('DOMContentLoaded', () => {
         if (interpretError) {
           interpretError.style.display = 'flex';
           if (interpretErrorMsg) {
-            interpretErrorMsg.innerText = data.message || 'Error en el servicio de interpretación por IA.';
+            let msg = data.message || 'Hubo un error al procesar la interpretación. Estamos trabajando en resolverlo, por favor intenta de nuevo más tarde.';
+            if (msg.includes('high demand') || msg.includes('Spikes in demand') || msg.includes('quota') || msg.includes('ResourceExhausted')) {
+              msg = 'Hubo un inconveniente temporal con el servicio de Inteligencia Artificial debido a una alta demanda. Estamos trabajando en resolverlo, por favor inténtalo de nuevo en unos minutos.';
+            } else if (msg.includes('timeout') || msg.includes('exceeded')) {
+              msg = 'El análisis del examen tomó más tiempo del esperado debido al tamaño del documento o congestión de la red. Por favor inténtalo de nuevo.';
+            }
+            interpretErrorMsg.innerText = msg;
           }
         }
       }
@@ -730,7 +725,7 @@ document.addEventListener('DOMContentLoaded', () => {
       if (interpretError) {
         interpretError.style.display = 'flex';
         if (interpretErrorMsg) {
-          interpretErrorMsg.innerText = error.message || 'Error de conexión con el servidor (generativelanguage.googleapis.com).';
+          interpretErrorMsg.innerText = 'Hubo un problema de conexión al procesar la interpretación. Estamos trabajando en resolverlo, por favor inténtalo de nuevo en unos instantes.';
         }
       }
       console.error('Error al solicitar interpretación por IA:', error);
@@ -745,17 +740,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
       const idResultado = btn.dataset.id;
       const nombreArchivo = btn.dataset.archivo;
-
-      // Verificar permisos de IA en el cliente antes de llamar a la API
-      const plan = currentUser.plan || 'Básico';
-      const isBasic = plan.toLowerCase() === 'básico' || plan.toLowerCase() === 'basico';
-      const todayStr = new Date().toISOString().split('T')[0];
-      const hasActiveTrial = currentUser.ia_trial_expiry && currentUser.ia_trial_expiry >= todayStr;
-
-      if (isBasic && !hasActiveTrial) {
-        showGlobalAlert('La interpretación con IA no está disponible en el Plan Básico. Solicite al administrador activar una prueba gratuita de 15 días o actualizar su plan.', 'error');
-        return;
-      }
 
       performInterpretation(idResultado, nombreArchivo);
     });
@@ -1770,5 +1754,124 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Restaurar borrador al cargar
   restoreFormDraft();
+
+  // ==========================================================================
+  // ESTADO DE INHABILITACIÓN DE INGRESO DE PACIENTES
+  // ==========================================================================
+  async function checkIngresoPacientesStatus() {
+    try {
+      const response = await fetch(`${SirioAuth.API_BASE}/api/client/config`);
+      if (!response.ok) return;
+      const data = await response.json();
+      if (data.success) {
+        const maintenanceView = document.getElementById('ingreso-pacientes-maintenance-view');
+        const mainContent = document.getElementById('ingreso-pacientes-main-content');
+        
+        if (data.ingreso_pacientes_visible === false) {
+          if (maintenanceView) maintenanceView.style.display = 'block';
+          if (mainContent) mainContent.style.display = 'none';
+        } else {
+          if (maintenanceView) maintenanceView.style.display = 'none';
+          if (mainContent) mainContent.style.display = 'block';
+        }
+      }
+    } catch (err) {
+      console.error('Error al verificar estado de ingreso de pacientes:', err);
+    }
+  }
+
+  // Verificar estado de ingreso de pacientes al cargar
+  checkIngresoPacientesStatus();
+
+  // ==========================================================================
+  // MÓDULO DE SOPORTE TÉCNICO Y AYUDA
+  // ==========================================================================
+  const supportModal = document.getElementById('support-modal');
+  const headerSupportBtn = document.getElementById('header-support-btn');
+  const supportFloatBtn = document.getElementById('support-float-btn');
+  const closeSupportModalBtn = document.getElementById('close-support-modal-btn');
+  const cancelSupportBtn = document.getElementById('cancel-support-btn');
+  const supportForm = document.getElementById('support-form');
+  const supportCorreoInput = document.getElementById('support-correo');
+  const supportTelefonoInput = document.getElementById('support-telefono');
+
+  function openSupportModal() {
+    if (!supportModal) return;
+    if (supportCorreoInput && !supportCorreoInput.value) {
+      supportCorreoInput.value = currentUser.correo || '';
+    }
+    if (supportTelefonoInput && !supportTelefonoInput.value) {
+      supportTelefonoInput.value = currentUser.telefono || '';
+    }
+    supportModal.style.display = 'flex';
+  }
+
+  function closeSupportModal() {
+    if (!supportModal) return;
+    supportModal.style.display = 'none';
+  }
+
+  if (headerSupportBtn) headerSupportBtn.addEventListener('click', openSupportModal);
+  if (supportFloatBtn) supportFloatBtn.addEventListener('click', openSupportModal);
+  if (closeSupportModalBtn) closeSupportModalBtn.addEventListener('click', closeSupportModal);
+  if (cancelSupportBtn) cancelSupportBtn.addEventListener('click', closeSupportModal);
+
+  // Cerrar al hacer clic fuera del contenido del modal
+  if (supportModal) {
+    supportModal.addEventListener('click', (e) => {
+      if (e.target === supportModal) closeSupportModal();
+    });
+  }
+
+  if (supportForm) {
+    supportForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      const tipo = document.getElementById('support-tipo').value;
+      const asunto = document.getElementById('support-asunto').value.trim();
+      const mensaje = document.getElementById('support-mensaje').value.trim();
+      const correo = document.getElementById('support-correo').value.trim();
+      const telefono = document.getElementById('support-telefono').value.trim();
+
+      if (!asunto || !mensaje) {
+        showGlobalAlert('Por favor complete el asunto y la descripción de su solicitud.', 'error');
+        return;
+      }
+
+      SirioAuth.showLoading('Enviando mensaje de soporte...');
+
+      try {
+        const response = await fetch(`${SirioAuth.API_BASE}/api/client/soporte`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            id_usuario: currentUser.id_usuario,
+            nombre_cliente: currentUser.nombre,
+            usuario: currentUser.usuario,
+            tipo,
+            asunto,
+            mensaje,
+            correo: correo || currentUser.correo || '',
+            telefono: telefono || currentUser.telefono || ''
+          })
+        });
+
+        const data = await response.json();
+        SirioAuth.hideLoading();
+
+        if (data.success) {
+          closeSupportModal();
+          supportForm.reset();
+          showGlobalAlert('¡Tu solicitud de soporte ha sido enviada con éxito! El equipo del laboratorio la revisará a la brevedad.', 'success');
+        } else {
+          showGlobalAlert(data.message || 'Error al enviar la solicitud de soporte.', 'error');
+        }
+      } catch (err) {
+        SirioAuth.hideLoading();
+        console.error('Error enviando soporte:', err);
+        showGlobalAlert('Error de conexión al enviar el reporte de soporte.', 'error');
+      }
+    });
+  }
 
 }); 

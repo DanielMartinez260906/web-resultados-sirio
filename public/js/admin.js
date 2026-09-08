@@ -1399,32 +1399,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const dirDisableIaTrialBtn = document.getElementById('dir-disable-ia-trial-btn');
     
     if (dirClientIaStatusVal) {
-      const plan = client.plan || 'Básico';
-      const isBasic = plan.toLowerCase() === 'básico' || plan.toLowerCase() === 'basico';
-      const todayStr = new Date().toISOString().split('T')[0];
-
-      if (isBasic) {
-        if (dirEnableIaTrialBtn) dirEnableIaTrialBtn.style.display = 'inline-flex';
-        if (client.ia_trial_expiry) {
-          if (client.ia_trial_expiry >= todayStr) {
-            dirClientIaStatusVal.innerHTML = `<span style="color: #10b981; font-weight: 700;"><i class="fa-solid fa-circle-check"></i> Activa (Vence el ${client.ia_trial_expiry})</span>`;
-            if (dirEnableIaTrialBtn) dirEnableIaTrialBtn.innerHTML = '<i class="fa-solid fa-clock-rotate-left"></i> Renovar Prueba 15 Días';
-            if (dirDisableIaTrialBtn) dirDisableIaTrialBtn.style.display = 'inline-flex';
-          } else {
-            dirClientIaStatusVal.innerHTML = `<span style="color: #ef4444; font-weight: 700;"><i class="fa-solid fa-circle-xmark"></i> Expirada (Venció el ${client.ia_trial_expiry})</span>`;
-            if (dirEnableIaTrialBtn) dirEnableIaTrialBtn.innerHTML = '<i class="fa-solid fa-wand-magic-sparkles"></i> Habilitar Prueba 15 Días';
-            if (dirDisableIaTrialBtn) dirDisableIaTrialBtn.style.display = 'none';
-          }
-        } else {
-          dirClientIaStatusVal.innerHTML = `<span style="color: var(--text-muted);"><i class="fa-solid fa-circle-minus"></i> Sin prueba activa</span>`;
-          if (dirEnableIaTrialBtn) dirEnableIaTrialBtn.innerHTML = '<i class="fa-solid fa-wand-magic-sparkles"></i> Habilitar Prueba 15 Días';
-          if (dirDisableIaTrialBtn) dirDisableIaTrialBtn.style.display = 'none';
-        }
-      } else {
-        dirClientIaStatusVal.innerHTML = `<span style="color: #10b981; font-weight: 700;"><i class="fa-solid fa-circle-check"></i> Habilitado por Plan (${plan})</span>`;
-        if (dirEnableIaTrialBtn) dirEnableIaTrialBtn.style.display = 'none';
-        if (dirDisableIaTrialBtn) dirDisableIaTrialBtn.style.display = 'none';
-      }
+      dirClientIaStatusVal.innerHTML = `<span style="color: #10b981; font-weight: 700;"><i class="fa-solid fa-circle-check"></i> Gratuito y Habilitado</span>`;
+      if (dirEnableIaTrialBtn) dirEnableIaTrialBtn.style.display = 'none';
+      if (dirDisableIaTrialBtn) dirDisableIaTrialBtn.style.display = 'none';
     }
     
     // Configure badge and toggle button
@@ -2415,6 +2392,11 @@ document.addEventListener('DOMContentLoaded', () => {
         if (configVisibilityToggle) {
           configVisibilityToggle.checked = data.config.portafolio_visible !== 'false';
         }
+
+        const configIngresoToggle = document.getElementById('config-ingreso-pacientes-visibility-toggle');
+        if (configIngresoToggle) {
+          configIngresoToggle.checked = data.config.ingreso_pacientes_visible !== 'false';
+        }
         
         // Cargar el tema estacional activo
         const activeTheme = data.config.seasonal_theme || 'default';
@@ -2478,6 +2460,9 @@ document.addEventListener('DOMContentLoaded', () => {
       const gemini_api_key = configGeminiKeyInput.value.trim();
       const configVisibilityToggle = document.getElementById('config-portafolio-visibility-toggle');
       const portafolio_visible = configVisibilityToggle ? (configVisibilityToggle.checked ? 'true' : 'false') : 'true';
+
+      const configIngresoToggle = document.getElementById('config-ingreso-pacientes-visibility-toggle');
+      const ingreso_pacientes_visible = configIngresoToggle ? (configIngresoToggle.checked ? 'true' : 'false') : 'true';
       
       SirioAuth.showLoading('Guardando configuración...');
       
@@ -2487,7 +2472,7 @@ document.addEventListener('DOMContentLoaded', () => {
           headers: {
             'Content-Type': 'application/json'
           },
-          body: JSON.stringify({ gemini_api_key, portafolio_visible })
+          body: JSON.stringify({ gemini_api_key, portafolio_visible, ingreso_pacientes_visible })
         });
         
         const result = await response.json();
@@ -3086,10 +3071,11 @@ document.addEventListener('DOMContentLoaded', () => {
       return;
     }
 
-    // Configurar defaults visuales de Chart.js para estética oscura premium
+    // Configurar defaults visuales de Chart.js según el tema activo (claro u oscuro)
+    const isLightMode = document.body.classList.contains('light-theme');
     Chart.defaults.font.family = "'Outfit', 'Inter', sans-serif";
-    Chart.defaults.color = 'rgba(255, 255, 255, 0.65)';
-    Chart.defaults.scale.grid.color = 'rgba(255, 255, 255, 0.05)';
+    Chart.defaults.color = isLightMode ? 'rgba(30, 41, 59, 0.75)' : 'rgba(255, 255, 255, 0.65)';
+    Chart.defaults.scale.grid.color = isLightMode ? 'rgba(30, 41, 59, 0.08)' : 'rgba(255, 255, 255, 0.05)';
 
     // Destruir gráficos previos si existen
     if (chartMonthlyTrend) chartMonthlyTrend.destroy();
@@ -3148,28 +3134,6 @@ document.addEventListener('DOMContentLoaded', () => {
       statsTopUploaderEl.title = topUploaderName;
     }
 
-    // 4. Examen Más Solicitado
-    const examCounts = {};
-    allResults.forEach(res => {
-      const name = (res.nombre_examen || '').trim();
-      if (name) {
-        examCounts[name] = (examCounts[name] || 0) + 1;
-      }
-    });
-
-    let topExamName = 'Ninguno';
-    let topExamCount = 0;
-    for (const name in examCounts) {
-      if (examCounts[name] > topExamCount) {
-        topExamCount = examCounts[name];
-        topExamName = `${name} (${topExamCount} env.)`;
-      }
-    }
-    const statsTopExamEl = document.getElementById('stats-top-exam');
-    if (statsTopExamEl) {
-      statsTopExamEl.innerText = topExamName;
-      statsTopExamEl.title = topExamName;
-    }
 
     // === GRÁFICO 1: TENDENCIA MENSUAL ===
     const monthlyData = {};

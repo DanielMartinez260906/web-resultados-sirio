@@ -87,6 +87,26 @@ body.light-theme .client-item {
   background: rgba(255, 255, 255, 0.5);
 }
 
+/* ── Estadísticas: corrección modo claro ──────────────────────────────── */
+/* Las tarjetas KPI y los contenedores de gráficos usan rgba(255,255,255,0.02)
+   que es invisible sobre fondo blanco. Se reemplaza con un fondo sutil. */
+body.light-theme #tab-stats .panel-card {
+  background: rgba(255, 255, 255, 0.92);
+}
+
+/* Tarjetas KPI (resúmenes rápidos) */
+body.light-theme #tab-stats [style*="rgba(255, 255, 255, 0.02)"] {
+  background: rgba(15, 23, 42, 0.04) !important;
+  border-color: rgba(15, 23, 42, 0.1) !important;
+}
+
+/* Contenedores de gráficos */
+body.light-theme #tab-stats [style*="rgba(255, 255, 255, 0.015)"] {
+  background: rgba(15, 23, 42, 0.03) !important;
+  border-color: rgba(15, 23, 42, 0.1) !important;
+}
+
+
 /* ── Reset ──────────────────────────────────────────────────────────────── */
 *,
 *::before,
@@ -1581,6 +1601,58 @@ footer {
 }
 
 /* ==========================================================================
+   SUPPORT FLOAT BUTTON
+   ========================================================================== */
+
+.support-float {
+  position: fixed;
+  height: 48px;
+  padding: 0 16px;
+  bottom: 20px;
+  left: 20px;
+  background: linear-gradient(135deg, #0ea5e9, #0284c7);
+  color: #fff;
+  border-radius: 30px;
+  border: 1.5px solid rgba(255, 255, 255, 0.25);
+  box-shadow: 0 4px 20px rgba(14, 165, 233, 0.45);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.88rem;
+  font-weight: 700;
+  font-family: inherit;
+  cursor: pointer;
+  z-index: 999;
+  transition: var(--transition-smooth);
+  text-decoration: none;
+  backdrop-filter: blur(8px);
+}
+
+.support-float i {
+  font-size: 1.15rem;
+}
+
+@media (max-width: 480px) {
+  .support-float {
+    width: 48px;
+    height: 48px;
+    padding: 0;
+    justify-content: center;
+    border-radius: 50%;
+  }
+  .support-float-label {
+    display: none;
+  }
+}
+
+.support-float:hover {
+  background: linear-gradient(135deg, #38bdf8, #0ea5e9);
+  transform: translateY(-4px) scale(1.05);
+  box-shadow: 0 8px 25px rgba(14, 165, 233, 0.65);
+  color: #fff;
+}
+
+/* ==========================================================================
    USER AVATAR
    ========================================================================== */
 
@@ -2357,21 +2429,54 @@ body.light-theme .dev-logo {
   background: rgba(239, 68, 68, 0.08);
 }
 
+.pwa-install-btn,
 #pwa-install-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  background: linear-gradient(135deg, rgba(14, 165, 233, 0.16), rgba(14, 165, 233, 0.08));
+  color: var(--color-accent);
+  border: 1.5px solid rgba(14, 165, 233, 0.45);
+  padding: 0 13px;
+  height: 38px;
+  border-radius: 8px;
+  font-size: 0.82rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.25s ease;
   animation: installPulse 3s infinite ease-in-out;
-  color: var(--color-primary);
-  border-color: rgba(14, 165, 233, 0.4);
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.pwa-install-btn i,
+#pwa-install-btn i {
+  font-size: 0.95rem;
+  color: var(--color-accent);
+  transition: transform 0.2s ease;
+}
+
+.pwa-install-btn:hover,
+#pwa-install-btn:hover {
+  background: linear-gradient(135deg, rgba(14, 165, 233, 0.3), rgba(14, 165, 233, 0.2));
+  border-color: var(--color-accent);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 15px rgba(14, 165, 233, 0.4);
+  color: #fff;
+}
+
+.pwa-install-btn:hover i,
+#pwa-install-btn:hover i {
+  color: #fff;
+  transform: translateY(1px);
 }
 
 @keyframes installPulse {
-
-  0%,
-  100% {
-    box-shadow: 0 0 0 0 rgba(14, 165, 233, 0.2);
+  0%, 100% {
+    box-shadow: 0 0 0 0 rgba(14, 165, 233, 0.25);
   }
-
   50% {
-    box-shadow: 0 0 10px 2px rgba(14, 165, 233, 0.4);
+    box-shadow: 0 0 10px 2px rgba(14, 165, 233, 0.45);
   }
 }
 
