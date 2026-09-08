@@ -683,11 +683,32 @@ document.addEventListener('DOMContentLoaded', () => {
         if (interpretResult) interpretResult.style.display = 'block';
 
         let formattedText = '';
-        // Formatear texto interpretativo
+        // Renderizar markdown a HTML completo
         if (interpretTextContent) {
           formattedText = data.interpretation
-            .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-            .replace(/\*(.*?)\*/g, '<em>$1</em>');
+            // Separadores ---
+            .replace(/^---+$/gm, '<hr style="border:none;border-top:1px solid var(--border-light);margin:1rem 0;">')
+            // Negritas **texto**
+            .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+            // Itálicas *texto*
+            .replace(/\*(.+?)\*/g, '<em>$1</em>')
+            // Encabezados ### -> strong con margen
+            .replace(/^###\s+(.+)$/gm, '<p style="font-weight:700;font-size:1rem;margin:1rem 0 0.4rem;color:var(--color-accent);">$1</p>')
+            .replace(/^##\s+(.+)$/gm,  '<p style="font-weight:700;font-size:1rem;margin:1rem 0 0.4rem;color:var(--color-accent);">$1</p>')
+            .replace(/^#\s+(.+)$/gm,   '<p style="font-weight:700;font-size:1.05rem;margin:1rem 0 0.4rem;color:var(--color-accent);">$1</p>')
+            // Párrafos: bloques separados por línea en blanco
+            .split(/\n{2,}/)
+            .map(block => {
+              block = block.trim();
+              if (!block) return '';
+              // Si ya es HTML (hr o p con estilo), no envolver
+              if (block.startsWith('<hr') || block.startsWith('<p style')) return block;
+              // Convertir saltos de línea simples en <br>
+              return '<p style="margin:0 0 0.75rem;">' + block.replace(/\n/g, '<br>') + '</p>';
+            })
+            .join('');
+
+          interpretTextContent.style.whiteSpace = 'normal';
           interpretTextContent.innerHTML = formattedText;
         }
 
