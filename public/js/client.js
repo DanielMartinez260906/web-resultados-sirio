@@ -704,18 +704,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (printInterpretBtn) printInterpretBtn.style.display = 'inline-flex';
       } else {
-        // Mostrar error en la tarjeta
+        // Mostrar error en la tarjeta con el mensaje real del servidor
         if (interpretLoading) interpretLoading.style.display = 'none';
         if (interpretError) {
           interpretError.style.display = 'flex';
           if (interpretErrorMsg) {
-            let msg = data.message || 'Hubo un error al procesar la interpretación. Estamos trabajando en resolverlo, por favor intenta de nuevo más tarde.';
-            if (msg.includes('high demand') || msg.includes('Spikes in demand') || msg.includes('quota') || msg.includes('ResourceExhausted')) {
-              msg = 'Hubo un inconveniente temporal con el servicio de Inteligencia Artificial debido a una alta demanda. Estamos trabajando en resolverlo, por favor inténtalo de nuevo en unos minutos.';
-            } else if (msg.includes('timeout') || msg.includes('exceeded')) {
-              msg = 'El análisis del examen tomó más tiempo del esperado debido al tamaño del documento o congestión de la red. Por favor inténtalo de nuevo.';
-            }
-            interpretErrorMsg.innerText = msg;
+            interpretErrorMsg.innerText = data.message || 'Hubo un error al procesar la interpretación. Por favor intenta de nuevo más tarde.';
           }
         }
       }

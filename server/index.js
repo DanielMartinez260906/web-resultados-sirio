@@ -1213,9 +1213,9 @@ app.post('/api/client/interpret-exam', async (req, res) => {
 
     // 5. Lista de modelos a intentar en orden de velocidad y disponibilidad
     const modelsToTry = [
-      'gemini-1.5-flash',
       'gemini-2.0-flash',
-      'gemini-1.5-pro'
+      'gemini-2.5-flash',
+      'gemini-1.5-flash'
     ];
 
     let interpretationText = null;
@@ -1225,37 +1225,48 @@ app.post('/api/client/interpret-exam', async (req, res) => {
       try {
         const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${geminiApiKey}`;
         const response = await axios.post(geminiUrl, payload, {
-          headers: {
-            'Content-Type': 'application/json'
-          },
-          timeout: 25000 // 25 segundos por intento
+          headers: { 'Content-Type': 'application/json' },
+          timeout: 55000 // 55 segundos por intento
         });
 
         const candidate = response.data?.candidates?.[0];
         const text = candidate?.content?.parts?.[0]?.text;
         if (text && text.trim().length > 0) {
           interpretationText = text;
-          break; // Éxito con el modelo
+          console.log(`✅ Interpretación exitosa con modelo: ${modelName}`);
+          break;
         }
       } catch (err) {
         lastError = err;
+        const status = err.response?.status;
         const errDetail = err.response?.data?.error?.message || err.message;
-        console.warn(`⚠️ Modelo ${modelName} no pudo completar la solicitud (${errDetail}). Probando alternativa...`);
+        console.warn(`⚠️ Modelo ${modelName} falló [HTTP ${status || 'N/A'}]: ${errDetail}`);
+        // Si el error es de API key inválida (401/403), no seguir intentando
+        if (status === 400 && errDetail && errDetail.toLowerCase().includes('api key')) break;
+        if (status === 403) break;
       }
     }
 
     if (!interpretationText) {
-      console.error('Error al interpretar el examen con Gemini tras probar modelos disponibles:', lastError?.message || lastError);
-      
-      let customMsg = 'Hubo un inconveniente temporal con el servicio de Inteligencia Artificial debido a una alta demanda. Estamos trabajando en resolverlo, por favor inténtalo de nuevo en unos minutos.';
-      if (lastError && (lastError.code === 'ECONNABORTED' || lastError.message?.includes('timeout'))) {
-        customMsg = 'El análisis del examen tomó más tiempo del esperado debido a la congestión del servicio. Por favor inténtalo de nuevo en unos momentos.';
+      const status = lastError?.response?.status;
+      const errDetail = lastError?.response?.data?.error?.message || lastError?.message || 'Error desconocido';
+      console.error(`❌ Error Gemini tras probar todos los modelos. Último error [HTTP ${status || 'N/A'}]: ${errDetail}`);
+
+      let customMsg = 'Hubo un inconveniente temporal con el servicio de Inteligencia Artificial. Por favor inténtalo de nuevo en unos minutos.';
+
+      if (status === 400 && errDetail.toLowerCase().includes('api key')) {
+        customMsg = 'La clave API de Gemini configurada no es válida o ha expirado. El administrador debe actualizar la clave en Configuración.';
+      } else if (status === 403) {
+        customMsg = 'Acceso denegado al servicio de IA. Verifica que la clave API tenga los permisos correctos en Google AI Studio.';
+      } else if (status === 429) {
+        customMsg = 'Se alcanzó el límite de solicitudes de la IA. Por favor espera unos minutos antes de intentarlo de nuevo.';
+      } else if (lastError?.code === 'ECONNABORTED' || errDetail.includes('timeout')) {
+        customMsg = 'El análisis del examen tomó más tiempo del esperado. Por favor inténtalo de nuevo (PDFs muy grandes pueden tardar más).';
+      } else if (status === 503 || status === 500) {
+        customMsg = 'El servicio de Google Gemini está temporalmente no disponible. Inténtalo de nuevo en unos minutos.';
       }
 
-      return res.status(503).json({
-        success: false,
-        message: customMsg
-      });
+      return res.status(503).json({ success: false, message: customMsg });
     }
 
     res.json({
