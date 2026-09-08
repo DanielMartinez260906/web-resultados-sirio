@@ -744,11 +744,10 @@ function handleMockAction(action, data) {
         id_usuario: data.id_usuario || "",
         nombre_cliente: data.nombre_cliente || "",
         usuario: data.usuario || "",
+        nombre_contacto: data.nombre_contacto || data.nombre_cliente || "",
         tipo: data.tipo || "General",
         asunto: data.asunto || "",
         mensaje: data.mensaje || "",
-        correo: data.correo || "",
-        telefono: data.telefono || "",
         fecha_hora: nowFormatted,
         estado: "Pendiente"
       };

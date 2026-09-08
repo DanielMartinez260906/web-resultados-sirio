@@ -1225,6 +1225,10 @@ document.addEventListener('DOMContentLoaded', () => {
       if (targetTab === 'tab-config') {
         loadSystemConfig();
       }
+
+      if (targetTab === 'tab-soporte') {
+        loadSupportTickets();
+      }
     });
   });
 
@@ -3307,3 +3311,107 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
 });
+
+// ==========================================================================
+//  MÓDULO DE SOPORTE TÉCNICO - VISTA DE ADMINISTRADOR
+// ==========================================================================
+(function initSupportAdmin() {
+  const container = document.getElementById('soporte-list-container');
+  const reloadBtn = document.getElementById('reload-soporte-btn');
+
+  const TYPE_ICONS = {
+    'Reporte de Error o Fallo Técnico': { icon: 'fa-bug', color: '#ef4444' },
+    'Duda o Consulta General':           { icon: 'fa-circle-question', color: '#0ea5e9' },
+    'Problema con un Examen o Paciente': { icon: 'fa-flask', color: '#f59e0b' },
+    'Sugerencia o Mejora':               { icon: 'fa-lightbulb', color: '#10b981' },
+    'Otro Asunto':                        { icon: 'fa-file-lines', color: '#8b5cf6' },
+    'General':                            { icon: 'fa-headset', color: '#6b7280' }
+  };
+
+  function statusBadge(estado) {
+    const map = {
+      'Pendiente':  { bg: 'rgba(245,158,11,0.12)', border: 'rgba(245,158,11,0.4)', color: '#b45309', text: '⏳ Pendiente' },
+      'Revisando':  { bg: 'rgba(14,165,233,0.1)',  border: 'rgba(14,165,233,0.4)',  color: '#0369a1', text: '🔍 En Revisión' },
+      'Resuelto':   { bg: 'rgba(16,185,129,0.1)',  border: 'rgba(16,185,129,0.35)', color: '#047857', text: '✅ Resuelto' }
+    };
+    const s = map[estado] || map['Pendiente'];
+    return `<span style="background:${s.bg};border:1px solid ${s.border};color:${s.color};border-radius:20px;padding:2px 10px;font-size:0.75rem;font-weight:600;">${s.text}</span>`;
+  }
+
+  function renderTickets(tickets) {
+    if (!container) return;
+    if (!tickets || tickets.length === 0) {
+      container.innerHTML = `
+        <div style="text-align:center;padding:3rem 1rem;color:var(--text-muted);">
+          <i class="fa-solid fa-inbox" style="font-size:2.5rem;margin-bottom:0.75rem;display:block;opacity:0.4;"></i>
+          <p style="font-size:0.9rem;">No hay mensajes de soporte recibidos aún.</p>
+        </div>`;
+      return;
+    }
+
+    // Ordenar del más reciente al más antiguo
+    const sorted = [...tickets].reverse();
+
+    container.innerHTML = sorted.map(t => {
+      const ti = TYPE_ICONS[t.tipo] || TYPE_ICONS['General'];
+      const clinica = t.nombre_cliente || t.usuario || t.id_usuario || 'Clínica desconocida';
+      const contacto = t.nombre_contacto && t.nombre_contacto !== t.nombre_cliente ? t.nombre_contacto : null;
+      return `
+      <div style="border:1px solid var(--border-light);border-radius:10px;padding:1rem 1.25rem;margin-bottom:0.85rem;background:var(--bg-secondary);transition:box-shadow 0.2s;">
+        <div style="display:flex;align-items:flex-start;gap:12px;">
+          <div style="width:38px;height:38px;border-radius:50%;background:${ti.color}1a;border:1.5px solid ${ti.color}44;display:flex;align-items:center;justify-content:center;color:${ti.color};flex-shrink:0;font-size:1rem;">
+            <i class="fa-solid ${ti.icon}"></i>
+          </div>
+          <div style="flex:1;min-width:0;">
+            <div style="display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-bottom:4px;">
+              <span style="font-weight:700;font-size:0.92rem;color:var(--text-main);">${t.asunto}</span>
+              ${statusBadge(t.estado || 'Pendiente')}
+            </div>
+            <!-- Clínica / Cuenta origen -->
+            <div style="display:flex;align-items:center;gap:6px;margin-bottom:6px;flex-wrap:wrap;">
+              <span style="background:rgba(14,165,233,0.1);border:1px solid rgba(14,165,233,0.3);color:#0369a1;border-radius:20px;padding:2px 10px;font-size:0.75rem;font-weight:600;">
+                <i class="fa-solid fa-hospital"></i> ${clinica}
+              </span>
+              ${t.usuario ? `<span style="font-size:0.75rem;color:var(--text-muted);">@${t.usuario}</span>` : ''}
+              ${contacto ? `<span style="font-size:0.75rem;color:var(--text-muted);">&#128100; ${contacto}</span>` : ''}
+            </div>
+            <!-- Tipo y fecha -->
+            <div style="font-size:0.78rem;color:var(--text-muted);margin-bottom:8px;">
+              <i class="fa-solid fa-tag"></i> ${t.tipo || 'General'} &nbsp;&middot;&nbsp;
+              <i class="fa-regular fa-clock"></i> ${t.fecha_hora || ''}
+              ${t.id_ticket ? ` &nbsp;&middot;&nbsp; <span style="opacity:0.6;">${t.id_ticket}</span>` : ''}
+            </div>
+            <!-- Mensaje -->
+            <div style="background:var(--bg-primary);border:1px solid var(--border-light);border-radius:7px;padding:0.65rem 0.85rem;font-size:0.85rem;color:var(--text-main);line-height:1.55;white-space:pre-wrap;">${t.mensaje}</div>
+          </div>
+        </div>
+      </div>`;
+    }).join('');
+  }
+
+  async function loadSupportTickets() {
+    if (!container) return;
+    container.innerHTML = `
+      <div style="text-align:center;padding:3rem 1rem;color:var(--text-muted);">
+        <i class="fa-solid fa-circle-notch fa-spin" style="font-size:2rem;margin-bottom:0.75rem;display:block;"></i>
+        <p style="font-size:0.88rem;">Cargando mensajes de soporte...</p>
+      </div>`;
+    try {
+      const resp = await fetch(`${SirioAuth.API_BASE}/api/admin/soporte`);
+      const data = await resp.json();
+      if (data.success) {
+        renderTickets(data.tickets || []);
+      } else {
+        container.innerHTML = `<p style="color:var(--error);padding:1rem;">Error al cargar mensajes: ${data.message || 'Error desconocido'}</p>`;
+      }
+    } catch (err) {
+      console.error('[Soporte Admin]', err);
+      container.innerHTML = `<p style="color:var(--error);padding:1rem;">Error de conexión al cargar mensajes de soporte.</p>`;
+    }
+  }
+
+  // Exponer para que el módulo de tabs pueda llamarla
+  window.loadSupportTickets = loadSupportTickets;
+
+  if (reloadBtn) reloadBtn.addEventListener('click', loadSupportTickets);
+}());

@@ -89,6 +89,10 @@
           <i class="fa-solid fa-triangle-exclamation"></i>
           <span>Zona de Peligro</span>
         </button>
+        <button class="nav-tab" data-tab="tab-soporte">
+          <i class="fa-solid fa-headset"></i>
+          <span>Mensajes de Soporte</span>
+        </button>
       </nav>
       <button class="scroll-arrow right" aria-label="Desplazar a la derecha"><i class="fa-solid fa-chevron-right"></i></button>
     </div>
@@ -974,6 +978,27 @@
         <button class="btn btn-danger" id="confirm-delete-staff-btn" disabled>
           <i class="fa-solid fa-trash-can"></i> Confirmar Eliminación
         </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== PESTAÑA ADMIN: MENSAJES DE SOPORTE ===== -->
+  <div id="tab-soporte" class="tab-content" style="display: none;">
+    <div class="panel-card" style="margin-bottom: 1.5rem;">
+      <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; margin-bottom: 1.25rem;">
+        <h3 class="panel-card-title" style="margin: 0;">
+          <i class="fa-solid fa-headset" style="color: var(--color-accent);"></i> Mensajes de Soporte Recibidos
+        </h3>
+        <button class="btn btn-secondary" id="reload-soporte-btn" style="font-size: 0.82rem; padding: 8px 14px;">
+          <i class="fa-solid fa-rotate-right"></i> Actualizar
+        </button>
+      </div>
+      <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 1rem;">Solicitudes enviadas por las clínicas veterinarias a través del portal de clientes.</p>
+      <div id="soporte-list-container">
+        <div style="text-align: center; padding: 3rem 1rem; color: var(--text-muted);">
+          <i class="fa-solid fa-inbox" style="font-size: 2.5rem; margin-bottom: 0.75rem; display: block; opacity: 0.4;"></i>
+          <p style="font-size: 0.9rem;">Cargando mensajes...</p>
+        </div>
       </div>
     </div>
   </div>

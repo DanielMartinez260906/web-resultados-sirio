@@ -1792,17 +1792,9 @@ document.addEventListener('DOMContentLoaded', () => {
   const closeSupportModalBtn = document.getElementById('close-support-modal-btn');
   const cancelSupportBtn = document.getElementById('cancel-support-btn');
   const supportForm = document.getElementById('support-form');
-  const supportCorreoInput = document.getElementById('support-correo');
-  const supportTelefonoInput = document.getElementById('support-telefono');
 
   function openSupportModal() {
     if (!supportModal) return;
-    if (supportCorreoInput && !supportCorreoInput.value) {
-      supportCorreoInput.value = currentUser.correo || '';
-    }
-    if (supportTelefonoInput && !supportTelefonoInput.value) {
-      supportTelefonoInput.value = currentUser.telefono || '';
-    }
     supportModal.style.display = 'flex';
   }
 
@@ -1830,8 +1822,8 @@ document.addEventListener('DOMContentLoaded', () => {
       const tipo = document.getElementById('support-tipo').value;
       const asunto = document.getElementById('support-asunto').value.trim();
       const mensaje = document.getElementById('support-mensaje').value.trim();
-      const correo = document.getElementById('support-correo').value.trim();
-      const telefono = document.getElementById('support-telefono').value.trim();
+      const nombreInput = document.getElementById('support-nombre');
+      const nombreContacto = nombreInput ? nombreInput.value.trim() : '';
 
       if (!asunto || !mensaje) {
         showGlobalAlert('Por favor complete el asunto y la descripción de su solicitud.', 'error');
@@ -1848,11 +1840,10 @@ document.addEventListener('DOMContentLoaded', () => {
             id_usuario: currentUser.id_usuario,
             nombre_cliente: currentUser.nombre,
             usuario: currentUser.usuario,
+            nombre_contacto: nombreContacto || currentUser.nombre || '',
             tipo,
             asunto,
-            mensaje,
-            correo: correo || currentUser.correo || '',
-            telefono: telefono || currentUser.telefono || ''
+            mensaje
           })
         });
 

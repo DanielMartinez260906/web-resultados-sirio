@@ -988,7 +988,7 @@ app.get('/api/client/config', async (req, res) => {
 
 // API: Enviar Ticket de Soporte Técnico (Para Clientes)
 app.post('/api/client/soporte', async (req, res) => {
-  const { id_usuario, nombre_cliente, usuario, tipo, asunto, mensaje, correo, telefono } = req.body;
+  const { id_usuario, nombre_cliente, usuario, nombre_contacto, tipo, asunto, mensaje } = req.body;
 
   if (!asunto || !asunto.trim() || !mensaje || !mensaje.trim()) {
     return res.status(400).json({ success: false, message: "El asunto y el detalle de la consulta o error son requeridos." });
@@ -999,11 +999,10 @@ app.post('/api/client/soporte', async (req, res) => {
       id_usuario: id_usuario || "",
       nombre_cliente: nombre_cliente || "",
       usuario: usuario || "",
+      nombre_contacto: nombre_contacto || nombre_cliente || "",
       tipo: tipo || "General",
       asunto: asunto.trim(),
-      mensaje: mensaje.trim(),
-      correo: correo ? correo.trim() : "",
-      telefono: telefono ? telefono.trim() : ""
+      mensaje: mensaje.trim()
     });
 
     if (result.success) {
