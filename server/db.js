@@ -761,6 +761,24 @@ function handleMockAction(action, data) {
       return { success: true, tickets: db.Soporte };
     }
 
+    case 'updateSupportTicketStatus': {
+      db.Soporte = db.Soporte || [];
+      const idx = db.Soporte.findIndex(t => t.id_ticket === data.id_ticket);
+      if (idx === -1) return { success: false, message: 'Ticket no encontrado.' };
+      db.Soporte[idx].estado = data.estado;
+      writeMockDB(db);
+      return { success: true, message: 'Estado actualizado.' };
+    }
+
+    case 'deleteSupportTicket': {
+      db.Soporte = db.Soporte || [];
+      const before = db.Soporte.length;
+      db.Soporte = db.Soporte.filter(t => t.id_ticket !== data.id_ticket);
+      if (db.Soporte.length === before) return { success: false, message: 'Ticket no encontrado.' };
+      writeMockDB(db);
+      return { success: true, message: 'Ticket eliminado.' };
+    }
+
     default:
       return { success: false, message: `Acción desconocida en MockDB: ${action}` };
   }
@@ -879,5 +897,7 @@ module.exports = {
   updateAdmin: (adminData) => callSheetsAPI('updateAdmin', adminData),
   deleteAdmin: (id_usuario) => callSheetsAPI('deleteAdmin', { id_usuario }),
   createSupportTicket: (ticketData) => callSheetsAPI('createSupportTicket', ticketData),
-  getSupportTickets: () => callSheetsAPI('getSupportTickets')
+  getSupportTickets: () => callSheetsAPI('getSupportTickets'),
+  updateSupportTicketStatus: (id_ticket, estado) => callSheetsAPI('updateSupportTicketStatus', { id_ticket, estado }),
+  deleteSupportTicket: (id_ticket) => callSheetsAPI('deleteSupportTicket', { id_ticket })
 };

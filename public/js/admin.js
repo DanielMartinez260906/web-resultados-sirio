@@ -3331,7 +3331,7 @@ document.addEventListener('DOMContentLoaded', () => {
   function statusBadge(estado) {
     const map = {
       'Pendiente':  { bg: 'rgba(245,158,11,0.12)', border: 'rgba(245,158,11,0.4)', color: '#b45309', text: '⏳ Pendiente' },
-      'Revisando':  { bg: 'rgba(14,165,233,0.1)',  border: 'rgba(14,165,233,0.4)',  color: '#0369a1', text: '🔍 En Revisión' },
+      'En Proceso': { bg: 'rgba(14,165,233,0.1)',  border: 'rgba(14,165,233,0.4)',  color: '#0369a1', text: '🔍 En Proceso' },
       'Resuelto':   { bg: 'rgba(16,185,129,0.1)',  border: 'rgba(16,185,129,0.35)', color: '#047857', text: '✅ Resuelto' }
     };
     const s = map[estado] || map['Pendiente'];
@@ -3356,17 +3356,21 @@ document.addEventListener('DOMContentLoaded', () => {
       const ti = TYPE_ICONS[t.tipo] || TYPE_ICONS['General'];
       const clinica = t.nombre_cliente || t.usuario || t.id_usuario || 'Clínica desconocida';
       const contacto = t.nombre_contacto && t.nombre_contacto !== t.nombre_cliente ? t.nombre_contacto : null;
+      const estado = t.estado || 'Pendiente';
       return `
-      <div style="border:1px solid var(--border-light);border-radius:10px;padding:1rem 1.25rem;margin-bottom:0.85rem;background:var(--bg-secondary);transition:box-shadow 0.2s;">
+      <div id="ticket-card-${t.id_ticket}" style="border:1px solid var(--border-light);border-radius:10px;padding:1rem 1.25rem;margin-bottom:0.85rem;background:var(--bg-secondary);transition:opacity 0.3s,box-shadow 0.2s;">
         <div style="display:flex;align-items:flex-start;gap:12px;">
           <div style="width:38px;height:38px;border-radius:50%;background:${ti.color}1a;border:1.5px solid ${ti.color}44;display:flex;align-items:center;justify-content:center;color:${ti.color};flex-shrink:0;font-size:1rem;">
             <i class="fa-solid ${ti.icon}"></i>
           </div>
           <div style="flex:1;min-width:0;">
+
+            <!-- Asunto + badge estado -->
             <div style="display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-bottom:4px;">
               <span style="font-weight:700;font-size:0.92rem;color:var(--text-main);">${t.asunto}</span>
-              ${statusBadge(t.estado || 'Pendiente')}
+              <span id="badge-${t.id_ticket}">${statusBadge(estado)}</span>
             </div>
+
             <!-- Clínica / Cuenta origen -->
             <div style="display:flex;align-items:center;gap:6px;margin-bottom:6px;flex-wrap:wrap;">
               <span style="background:rgba(14,165,233,0.1);border:1px solid rgba(14,165,233,0.3);color:#0369a1;border-radius:20px;padding:2px 10px;font-size:0.75rem;font-weight:600;">
@@ -3375,14 +3379,51 @@ document.addEventListener('DOMContentLoaded', () => {
               ${t.usuario ? `<span style="font-size:0.75rem;color:var(--text-muted);">@${t.usuario}</span>` : ''}
               ${contacto ? `<span style="font-size:0.75rem;color:var(--text-muted);">&#128100; ${contacto}</span>` : ''}
             </div>
+
             <!-- Tipo y fecha -->
             <div style="font-size:0.78rem;color:var(--text-muted);margin-bottom:8px;">
               <i class="fa-solid fa-tag"></i> ${t.tipo || 'General'} &nbsp;&middot;&nbsp;
               <i class="fa-regular fa-clock"></i> ${t.fecha_hora || ''}
               ${t.id_ticket ? ` &nbsp;&middot;&nbsp; <span style="opacity:0.6;">${t.id_ticket}</span>` : ''}
             </div>
+
             <!-- Mensaje -->
-            <div style="background:var(--bg-primary);border:1px solid var(--border-light);border-radius:7px;padding:0.65rem 0.85rem;font-size:0.85rem;color:var(--text-main);line-height:1.55;white-space:pre-wrap;">${t.mensaje}</div>
+            <div style="background:var(--bg-primary);border:1px solid var(--border-light);border-radius:7px;padding:0.65rem 0.85rem;font-size:0.85rem;color:var(--text-main);line-height:1.55;white-space:pre-wrap;margin-bottom:0.85rem;">${t.mensaje}</div>
+
+            <!-- Acciones: cambiar estado + eliminar -->
+            <div style="display:flex;flex-wrap:wrap;align-items:center;gap:8px;">
+              <!-- Selector de estado -->
+              <select id="sel-${t.id_ticket}"
+                data-ticket="${t.id_ticket}"
+                onchange="window.changeSupportStatus(this)"
+                style="height:34px;font-size:0.8rem;border-radius:7px;border:1px solid var(--border-light);background:var(--bg-primary);color:var(--text-main);padding:0 10px;cursor:pointer;outline:none;">
+                <option value="Pendiente"  ${estado === 'Pendiente'  ? 'selected' : ''}>⏳ Pendiente</option>
+                <option value="En Proceso" ${estado === 'En Proceso' ? 'selected' : ''}>🔍 En Proceso</option>
+                <option value="Resuelto"   ${estado === 'Resuelto'   ? 'selected' : ''}>✅ Resuelto</option>
+              </select>
+
+              <!-- Botón eliminar -->
+              <button id="del-btn-${t.id_ticket}"
+                data-ticket="${t.id_ticket}"
+                onclick="window.initDeleteTicket(this)"
+                style="height:34px;padding:0 12px;font-size:0.8rem;border-radius:7px;border:1px solid rgba(239,68,68,0.4);background:rgba(239,68,68,0.08);color:#b91c1c;cursor:pointer;display:flex;align-items:center;gap:6px;transition:background 0.2s;">
+                <i class="fa-solid fa-trash-can"></i> Eliminar
+              </button>
+
+              <!-- Confirmación inline (oculta por defecto) -->
+              <span id="del-confirm-${t.id_ticket}" style="display:none;align-items:center;gap:6px;">
+                <span style="font-size:0.8rem;color:var(--text-muted);">¿Eliminar definitivamente?</span>
+                <button onclick="window.confirmDeleteTicket('${t.id_ticket}')"
+                  style="height:30px;padding:0 10px;font-size:0.78rem;border-radius:6px;border:none;background:#ef4444;color:#fff;cursor:pointer;font-weight:600;">
+                  Sí, eliminar
+                </button>
+                <button onclick="window.cancelDeleteTicket('${t.id_ticket}')"
+                  style="height:30px;padding:0 10px;font-size:0.78rem;border-radius:6px;border:1px solid var(--border-light);background:transparent;color:var(--text-muted);cursor:pointer;">
+                  Cancelar
+                </button>
+              </span>
+            </div>
+
           </div>
         </div>
       </div>`;
@@ -3409,6 +3450,79 @@ document.addEventListener('DOMContentLoaded', () => {
       container.innerHTML = `<p style="color:var(--error);padding:1rem;">Error de conexión al cargar mensajes de soporte.</p>`;
     }
   }
+
+  // ── Cambiar estado ──────────────────────────────────────────────────────
+  window.changeSupportStatus = async function(selectEl) {
+    const id = selectEl.dataset.ticket;
+    const nuevoEstado = selectEl.value;
+    selectEl.disabled = true;
+    try {
+      const resp = await fetch(`${SirioAuth.API_BASE}/api/admin/soporte/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ estado: nuevoEstado })
+      });
+      const data = await resp.json();
+      if (data.success) {
+        const badge = document.getElementById(`badge-${id}`);
+        if (badge) badge.innerHTML = statusBadge(nuevoEstado);
+      } else {
+        console.error('[Soporte] Error actualizando estado:', data.message);
+      }
+    } catch (err) {
+      console.error('[Soporte] Error de conexión al cambiar estado:', err);
+    } finally {
+      selectEl.disabled = false;
+    }
+  };
+
+  // ── Eliminar: paso 1 – mostrar confirmación ──────────────────────────────
+  window.initDeleteTicket = function(btn) {
+    const id = btn.dataset.ticket;
+    btn.style.display = 'none';
+    const confirm = document.getElementById(`del-confirm-${id}`);
+    if (confirm) confirm.style.display = 'inline-flex';
+  };
+
+  // ── Eliminar: cancelar ────────────────────────────────────────────────────
+  window.cancelDeleteTicket = function(id) {
+    const btn = document.getElementById(`del-btn-${id}`);
+    const confirm = document.getElementById(`del-confirm-${id}`);
+    if (btn) btn.style.display = 'flex';
+    if (confirm) confirm.style.display = 'none';
+  };
+
+  // ── Eliminar: confirmar ───────────────────────────────────────────────────
+  window.confirmDeleteTicket = async function(id) {
+    const card = document.getElementById(`ticket-card-${id}`);
+    if (card) card.style.opacity = '0.4';
+    try {
+      const resp = await fetch(`${SirioAuth.API_BASE}/api/admin/soporte/${id}`, { method: 'DELETE' });
+      const data = await resp.json();
+      if (data.success) {
+        if (card) {
+          card.style.transition = 'opacity 0.35s, max-height 0.45s, margin 0.45s, padding 0.45s';
+          card.style.maxHeight = card.offsetHeight + 'px';
+          requestAnimationFrame(() => {
+            card.style.opacity = '0';
+            card.style.maxHeight = '0';
+            card.style.marginBottom = '0';
+            card.style.padding = '0';
+            card.style.overflow = 'hidden';
+          });
+          setTimeout(() => card.remove(), 500);
+        }
+      } else {
+        if (card) card.style.opacity = '1';
+        window.cancelDeleteTicket(id);
+        console.error('[Soporte] Error al eliminar:', data.message);
+      }
+    } catch (err) {
+      if (card) card.style.opacity = '1';
+      window.cancelDeleteTicket(id);
+      console.error('[Soporte] Error de conexión al eliminar:', err);
+    }
+  };
 
   // Exponer para que el módulo de tabs pueda llamarla
   window.loadSupportTickets = loadSupportTickets;

@@ -1025,6 +1025,34 @@ app.get('/api/admin/soporte', async (req, res) => {
   }
 });
 
+// API: Actualizar estado de un Ticket de Soporte (Solo Admins)
+app.patch('/api/admin/soporte/:id', async (req, res) => {
+  const { id } = req.params;
+  const { estado } = req.body;
+  const VALID_STATES = ['Pendiente', 'En Proceso', 'Resuelto'];
+  if (!estado || !VALID_STATES.includes(estado)) {
+    return res.status(400).json({ success: false, message: `Estado inválido. Use: ${VALID_STATES.join(', ')}` });
+  }
+  try {
+    const result = await db.updateSupportTicketStatus(id, estado);
+    res.json(result);
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
+// API: Eliminar un Ticket de Soporte (Solo Admins)
+app.delete('/api/admin/soporte/:id', async (req, res) => {
+  const { id } = req.params;
+  try {
+    const result = await db.deleteSupportTicket(id);
+    res.json(result);
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
+
 // API: Obtener el portafolio de servicios (Para Admins y Clientes)
 app.get('/api/client/portafolio', async (req, res) => {
   try {
