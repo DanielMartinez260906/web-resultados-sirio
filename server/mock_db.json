@@ -88,6 +88,27 @@
       "rol": "desconocido",
       "fecha_hora": "23/9/2026, 12:51:07 a. m.",
       "estado": "Fallido"
+    },
+    {
+      "id_log": "L00009",
+      "usuario": "PRUEBA",
+      "rol": "desconocido",
+      "fecha_hora": "23/9/2026, 4:02:15 p. m.",
+      "estado": "Fallido"
+    },
+    {
+      "id_log": "L00010",
+      "usuario": "PRUEBA",
+      "rol": "cliente",
+      "fecha_hora": "23/9/2026, 4:03:19 p. m.",
+      "estado": "Exitoso"
+    },
+    {
+      "id_log": "L00011",
+      "usuario": "prueba2",
+      "rol": "desconocido",
+      "fecha_hora": "23/9/2026, 4:04:11 p. m.",
+      "estado": "Fallido"
     }
   ],
   "Configuracion": {

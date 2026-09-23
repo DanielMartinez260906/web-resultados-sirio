@@ -2555,6 +2555,15 @@ body.light-theme .dev-logo {
   transform: translateY(-1px);
 }
 
+.saved-account-row {
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.saved-account-row:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(14, 165, 233, 0.12);
+}
+
 @media (max-width: 640px) {
   .btn-switch-text {
     display: none;

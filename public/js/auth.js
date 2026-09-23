@@ -239,12 +239,21 @@ const SirioAuth = {
       this.saveAdminProfile(user);
     }
 
-    // Si hay sesión y está en el login, redirigir a su dashboard correspondiente
+    // Si hay sesión y está en el login
     if (isLoginPage) {
-      if (['admin', 'jefas', 'programadores'].includes(user.rol)) {
-        window.location.href = '/admin.html';
-      } else if (user.rol === 'cliente') {
+      if (user.rol === 'cliente') {
         window.location.href = '/client.html';
+        return user;
+      } else if (['admin', 'jefas', 'programadores'].includes(user.rol)) {
+        // Para administradores/personal: si hay perfiles guardados, NO auto-redirigir a admin.html
+        // para que en index.html puedan ver el selector de cuentas guardadas en este equipo.
+        const savedProfiles = this.getSavedAdminProfiles();
+        if (!savedProfiles || savedProfiles.length === 0) {
+          window.location.href = '/admin.html';
+          return user;
+        }
+        // Permitir permanecer en index.html para mostrar el selector de cuentas
+        return user;
       }
       return user;
     }

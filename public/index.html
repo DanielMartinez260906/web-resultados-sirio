@@ -40,63 +40,85 @@
         <span id="alert-message">Credenciales incorrectas.</span>
       </div>
 
-      <form id="login-form">
-        <div class="form-group">
-          <label for="username">Nombre de Usuario</label>
-          <div style="position: relative;">
-            <i class="fa-solid fa-user"
-               style="position: absolute; left: 16px; top: 50%; transform: translateY(-50%); color: var(--text-dark); pointer-events: none;"></i>
-            <input type="text" id="username" class="form-control"
-                   placeholder="Ej: pedro.gonzalez"
-                   style="padding-left: 46px;"
-                   required autocomplete="username">
-          </div>
+      <!-- ── VISTA 1: Selector de Cuentas Guardadas (Elegir una cuenta) ── -->
+      <div id="account-chooser-view" style="display: none;">
+        <div style="text-align: center; margin-bottom: 1.25rem;">
+          <h3 style="font-size: 1.25rem; font-weight: 700; color: var(--text-main); margin-bottom: 4px;">
+            Elegir una cuenta
+          </h3>
+          <p style="font-size: 0.85rem; color: var(--text-muted); margin: 0;">
+            Cuentas del personal guardadas en este equipo
+          </p>
         </div>
 
-        <div class="form-group">
-          <label for="password">Contraseña</label>
-          <div style="position: relative;">
-            <i class="fa-solid fa-lock"
-               style="position: absolute; left: 16px; top: 50%; transform: translateY(-50%); color: var(--text-dark); pointer-events: none;"></i>
-            <input type="password" id="password" class="form-control"
-                   placeholder="••••••••"
-                   style="padding-left: 46px; padding-right: 50px;"
-                   required autocomplete="current-password">
-            <button type="button" id="toggle-password"
-                    style="position: absolute; right: 12px; top: 50%; transform: translateY(-50%);
-                           background: none; border: none; cursor: pointer; color: var(--text-dark);
-                           padding: 4px; display: flex; align-items: center; justify-content: center;
-                           transition: color 0.2s;" title="Mostrar/ocultar contraseña">
-              <i class="fa-solid fa-eye" id="toggle-password-icon"></i>
-            </button>
-          </div>
+        <div id="chooser-accounts-list" style="display: flex; flex-direction: column; gap: 8px; margin-bottom: 1.25rem; max-height: 320px; overflow-y: auto; padding-right: 2px;">
+          <!-- Inyectado dinámicamente -->
         </div>
 
-        <div class="login-options">
-          <label class="remember-me">
-            <input type="checkbox" id="remember-me" checked>
-            <span>Recordarme</span>
-          </label>
-        </div>
-
-        <button type="submit" class="btn btn-primary"
-                style="width: 100%; padding: 14px; font-size: 1rem; margin-top: 0.5rem;">
-          <i class="fa-solid fa-right-to-bracket"></i> Ingresar al Portal
-        </button>
-      </form>
-
-      <!-- Accesos Rápidos para Administradores / Personal (Solo visible si hay perfiles guardados en esta PC) -->
-      <div id="admin-quick-select-section" style="display: none; margin-top: 1.25rem; padding-top: 1rem; border-top: 1px dashed var(--border-light);">
-        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.6rem;">
-          <span style="font-size: 0.75rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-dark); display: flex; align-items: center; gap: 5px;">
-            <i class="fa-solid fa-users-gear" style="color: var(--color-primary);"></i> Cuentas del Personal
-          </span>
-          <span style="font-size: 0.7rem; color: var(--text-dark);">En este equipo</span>
-        </div>
-        <div id="admin-quick-chips" style="display: flex; flex-direction: column; gap: 6px;">
-          <!-- Se inyectan dinámicamente -->
+        <div style="display: flex; flex-direction: column; gap: 8px;">
+          <button type="button" id="btn-use-another-account" class="btn btn-secondary"
+                  style="width: 100%; padding: 12px; font-size: 0.92rem; display: flex; align-items: center; justify-content: center; gap: 8px; border-style: dashed;">
+            <i class="fa-solid fa-user-plus" style="color: var(--color-primary);"></i>
+            <span>Iniciar sesión con otra cuenta</span>
+          </button>
         </div>
       </div>
+
+      <!-- ── VISTA 2: Formulario Tradicional de Inicio de Sesión ── -->
+      <div id="traditional-login-view" style="display: block;">
+        <div id="back-to-accounts-container" style="display: none; margin-bottom: 1rem; text-align: left;">
+          <button type="button" id="btn-back-to-accounts"
+                  style="background: none; border: none; font-size: 0.82rem; color: var(--color-primary); cursor: pointer; display: inline-flex; align-items: center; gap: 6px; padding: 4px 0; font-weight: 600;">
+            <i class="fa-solid fa-arrow-left"></i> Volver a las cuentas guardadas
+          </button>
+        </div>
+
+        <form id="login-form">
+          <div class="form-group">
+            <label for="username">Nombre de Usuario</label>
+            <div style="position: relative;">
+              <i class="fa-solid fa-user"
+                 style="position: absolute; left: 16px; top: 50%; transform: translateY(-50%); color: var(--text-dark); pointer-events: none;"></i>
+              <input type="text" id="username" class="form-control"
+                     placeholder="Ej: pedro.gonzalez"
+                     style="padding-left: 46px;"
+                     required autocomplete="username">
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="password">Contraseña</label>
+            <div style="position: relative;">
+              <i class="fa-solid fa-lock"
+                 style="position: absolute; left: 16px; top: 50%; transform: translateY(-50%); color: var(--text-dark); pointer-events: none;"></i>
+              <input type="password" id="password" class="form-control"
+                     placeholder="••••••••"
+                     style="padding-left: 46px; padding-right: 50px;"
+                     required autocomplete="current-password">
+              <button type="button" id="toggle-password"
+                      style="position: absolute; right: 12px; top: 50%; transform: translateY(-50%);
+                             background: none; border: none; cursor: pointer; color: var(--text-dark);
+                             padding: 4px; display: flex; align-items: center; justify-content: center;
+                             transition: color 0.2s;" title="Mostrar/ocultar contraseña">
+                <i class="fa-solid fa-eye" id="toggle-password-icon"></i>
+              </button>
+            </div>
+          </div>
+
+          <div class="login-options">
+            <label class="remember-me">
+              <input type="checkbox" id="remember-me" checked>
+              <span>Recordarme</span>
+            </label>
+          </div>
+
+          <button type="submit" class="btn btn-primary"
+                  style="width: 100%; padding: 14px; font-size: 1rem; margin-top: 0.5rem;">
+            <i class="fa-solid fa-right-to-bracket"></i> Ingresar al Portal
+          </button>
+        </form>
+      </div>
+
     </div>
   </div>
 
@@ -119,7 +141,15 @@
   <script src="js/network-bg.js"></script>
   <script>
     document.addEventListener('DOMContentLoaded', () => {
+      // 1. Verificar sesión previa
       SirioAuth.checkSession();
+
+      const accountChooserView = document.getElementById('account-chooser-view');
+      const chooserAccountsList = document.getElementById('chooser-accounts-list');
+      const traditionalLoginView = document.getElementById('traditional-login-view');
+      const backToAccountsContainer = document.getElementById('back-to-accounts-container');
+      const btnUseAnotherAccount = document.getElementById('btn-use-another-account');
+      const btnBackToAccounts = document.getElementById('btn-back-to-accounts');
 
       const form = document.getElementById('login-form');
       const alertBox = document.getElementById('login-alert');
@@ -127,20 +157,33 @@
       const usernameInput = document.getElementById('username');
       const passwordInput = document.getElementById('password');
 
-      // Renderizar perfiles de administradores guardados en este navegador (si existen)
-      function renderAdminQuickProfiles() {
-        const section = document.getElementById('admin-quick-select-section');
-        const chipsContainer = document.getElementById('admin-quick-chips');
-        if (!section || !chipsContainer) return;
+      function showAlert(msg) {
+        alertMsg.innerText = msg;
+        alertBox.style.display = 'flex';
+      }
 
+      function hideAlert() {
+        alertBox.style.display = 'none';
+      }
+
+      // Renderizar el selector de cuentas del personal
+      function renderAccountChooser() {
         const profiles = SirioAuth.getSavedAdminProfiles();
+
+        // Si NO hay perfiles guardados de personal, mostrar directamente el login tradicional
         if (!profiles || profiles.length === 0) {
-          section.style.display = 'none';
-          return;
+          accountChooserView.style.display = 'none';
+          traditionalLoginView.style.display = 'block';
+          backToAccountsContainer.style.display = 'none';
+          return false;
         }
 
-        section.style.display = 'block';
-        chipsContainer.innerHTML = profiles.slice(0, 4).map(p => {
+        // Si hay perfiles guardados, mostrar la pantalla de selección de cuentas
+        accountChooserView.style.display = 'block';
+        traditionalLoginView.style.display = 'none';
+        backToAccountsContainer.style.display = 'block';
+
+        chooserAccountsList.innerHTML = profiles.map(p => {
           if (!p || typeof p !== 'object') return '';
           const rawUname = p.username !== undefined ? p.username : (p.usuario !== undefined ? p.usuario : '');
           const uname = String(rawUname || '').trim();
@@ -149,63 +192,122 @@
           let roleBadge = 'Personal';
           let roleColor = '#0ea5e9';
           let roleBg = 'rgba(14, 165, 233, 0.12)';
+          let roleIcon = 'fa-solid fa-user-shield';
           const roleStr = String(p.rol || '').toLowerCase().trim();
+
           if (roleStr === 'jefas') {
-            roleBadge = 'Jefa 👑';
+            roleBadge = 'Jefa';
             roleColor = '#f472b6';
             roleBg = 'rgba(244, 114, 182, 0.12)';
+            roleIcon = 'fa-solid fa-crown';
           } else if (roleStr === 'programadores') {
-            roleBadge = 'Dev 💻';
+            roleBadge = 'Desarrollador';
             roleColor = '#c084fc';
             roleBg = 'rgba(192, 132, 252, 0.12)';
+            roleIcon = 'fa-solid fa-laptop-code';
           }
 
+          const initial = String(p.nombre || uname || 'A').charAt(0).toUpperCase();
+
           return `
-            <div class="admin-quick-chip" data-username="${uname}" style="display: flex; align-items: center; justify-content: space-between; padding: 6px 10px; border-radius: 8px; background: rgba(255, 255, 255, 0.03); border: 1px solid var(--border-light); cursor: pointer; transition: all 0.2s;" onmouseover="this.style.borderColor='var(--color-primary)'; this.style.background='rgba(14, 165, 233, 0.08)';" onmouseout="this.style.borderColor='var(--border-light)'; this.style.background='rgba(255, 255, 255, 0.03)';">
-              <div style="display: flex; align-items: center; gap: 8px; min-width: 0; flex: 1;">
-                <div style="width: 26px; height: 26px; border-radius: 50%; background: ${roleBg}; color: ${roleColor}; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.8rem; flex-shrink: 0;">
-                  ${String(p.nombre || uname || 'A').charAt(0).toUpperCase()}
+            <div class="saved-account-row" data-username="${uname}" style="display: flex; align-items: center; justify-content: space-between; padding: 10px 14px; border-radius: 12px; background: rgba(255, 255, 255, 0.03); border: 1.5px solid var(--border-light); cursor: pointer; transition: all 0.2s;" onmouseover="this.style.borderColor='var(--color-primary)'; this.style.background='rgba(14, 165, 233, 0.08)';" onmouseout="this.style.borderColor='var(--border-light)'; this.style.background='rgba(255, 255, 255, 0.03)';">
+              <div class="account-click-zone" style="display: flex; align-items: center; gap: 12px; min-width: 0; flex: 1;">
+                <div style="width: 38px; height: 38px; border-radius: 50%; background: ${roleBg}; color: ${roleColor}; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 1.05rem; flex-shrink: 0; border: 1px solid ${roleColor}40;">
+                  ${initial}
                 </div>
                 <div style="min-width: 0; flex: 1; text-align: left;">
-                  <span style="font-weight: 600; font-size: 0.82rem; color: var(--text-main); display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                  <div style="font-weight: 600; font-size: 0.92rem; color: var(--text-main); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
                     ${String(p.nombre || uname)}
-                  </span>
-                  <span style="font-size: 0.7rem; color: var(--text-dark);">@${uname}</span>
+                  </div>
+                  <div style="display: flex; align-items: center; gap: 6px; margin-top: 2px;">
+                    <span style="font-size: 0.75rem; color: var(--text-dark);">@${uname}</span>
+                    <span style="font-size: 0.68rem; color: ${roleColor}; background: ${roleBg}; padding: 1px 6px; border-radius: 4px; font-weight: 600; display: inline-flex; align-items: center; gap: 3px;">
+                      <i class="${roleIcon}" style="font-size: 0.65rem;"></i> ${roleBadge}
+                    </span>
+                  </div>
                 </div>
               </div>
-              <div style="display: flex; align-items: center; gap: 6px;">
-                <span style="font-size: 0.68rem; color: ${roleColor}; background: ${roleBg}; padding: 1px 5px; border-radius: 4px; font-weight: 500;">${roleBadge}</span>
-                <i class="fa-solid fa-arrow-right-to-bracket" style="font-size: 0.75rem; color: var(--color-primary); opacity: 0.7;"></i>
+              <div style="display: flex; align-items: center; gap: 8px;">
+                <button type="button" class="btn-remove-saved-account" data-username="${uname}" title="Quitar de este equipo" style="background: none; border: none; width: 28px; height: 28px; border-radius: 6px; color: var(--text-dark); cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.2s; padding: 0;" onmouseover="this.style.color='#ef4444'; this.style.background='rgba(239,68,68,0.1)';" onmouseout="this.style.color='var(--text-dark)'; this.style.background='none';">
+                  <i class="fa-solid fa-xmark" style="font-size: 0.85rem;"></i>
+                </button>
+                <div class="account-click-zone" style="color: var(--color-primary); padding-left: 2px;">
+                  <i class="fa-solid fa-chevron-right" style="font-size: 0.85rem; opacity: 0.7;"></i>
+                </div>
               </div>
             </div>
           `;
         }).join('');
 
-        // Clic en chip -> Ingreso directo instantáneo 1-clic al panel de administración
-        chipsContainer.querySelectorAll('.admin-quick-chip').forEach(chip => {
-          chip.addEventListener('click', () => {
-            const uname = chip.getAttribute('data-username');
-            if (uname) {
-              SirioAuth.showLoading(`Accediendo como @${uname}...`);
-              const ok = SirioAuth.switchToAdminProfile(uname);
-              if (ok) {
-                setTimeout(() => {
-                  window.location.href = 'admin.html';
-                }, 300);
-              } else {
-                SirioAuth.hideLoading();
-                if (usernameInput && passwordInput) {
-                  usernameInput.value = uname;
-                  passwordInput.focus();
+        // Manejar clics para ingresar instantáneamente (1-clic)
+        chooserAccountsList.querySelectorAll('.saved-account-row').forEach(row => {
+          const uname = row.getAttribute('data-username');
+          const clickZones = row.querySelectorAll('.account-click-zone');
+          clickZones.forEach(zone => {
+            zone.addEventListener('click', () => {
+              if (uname) {
+                SirioAuth.showLoading(`Accediendo como @${uname}...`);
+                const ok = SirioAuth.switchToAdminProfile(uname);
+                if (ok) {
+                  setTimeout(() => {
+                    window.location.href = 'admin.html';
+                  }, 250);
+                } else {
+                  SirioAuth.hideLoading();
+                  // Si falló, pasar al formulario y rellenar usuario
+                  accountChooserView.style.display = 'none';
+                  traditionalLoginView.style.display = 'block';
+                  if (usernameInput && passwordInput) {
+                    usernameInput.value = uname;
+                    passwordInput.focus();
+                  }
                 }
               }
+            });
+          });
+        });
+
+        // Manejar clics para remover perfiles guardados
+        chooserAccountsList.querySelectorAll('.btn-remove-saved-account').forEach(btn => {
+          btn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const uname = btn.getAttribute('data-username');
+            if (uname) {
+              SirioAuth.removeAdminProfile(uname);
+              renderAccountChooser();
             }
           });
         });
+
+        return true;
       }
 
-      renderAdminQuickProfiles();
+      // Inicializar selector de cuentas
+      renderAccountChooser();
 
+      // Botón: Iniciar sesión con otra cuenta
+      if (btnUseAnotherAccount) {
+        btnUseAnotherAccount.addEventListener('click', () => {
+          accountChooserView.style.display = 'none';
+          traditionalLoginView.style.display = 'block';
+          if (usernameInput) {
+            usernameInput.value = '';
+            usernameInput.focus();
+          }
+          if (passwordInput) passwordInput.value = '';
+          hideAlert();
+        });
+      }
+
+      // Botón: Volver a las cuentas guardadas
+      if (btnBackToAccounts) {
+        btnBackToAccounts.addEventListener('click', () => {
+          hideAlert();
+          renderAccountChooser();
+        });
+      }
+
+      // Envío de formulario tradicional
       form.addEventListener('submit', async (e) => {
         e.preventDefault();
 
@@ -213,7 +315,7 @@
         const password = passwordInput.value;
         const rememberMe = document.getElementById('remember-me').checked;
 
-        alertBox.style.display = 'none';
+        hideAlert();
         SirioAuth.showLoading('Autenticando...');
 
         const result = await SirioAuth.login(username, password, rememberMe);
@@ -224,13 +326,14 @@
           if (['admin', 'jefas', 'programadores'].includes(result.user.rol)) {
             window.location.href = 'admin.html';
           } else {
+            // Clientes van directo a su portal
             window.location.href = 'client.html';
           }
         } else {
-          alertMsg.innerText = result.message;
-          alertBox.style.display = 'flex';
+          showAlert(result.message || 'Credenciales incorrectas.');
         }
       });
+
       // Toggle mostrar/ocultar contraseña
       const toggleBtn  = document.getElementById('toggle-password');
       const toggleIcon = document.getElementById('toggle-password-icon');
