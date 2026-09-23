@@ -84,6 +84,19 @@
           <i class="fa-solid fa-right-to-bracket"></i> Ingresar al Portal
         </button>
       </form>
+
+      <!-- Accesos Rápidos para Administradores / Personal (Solo visible si hay perfiles guardados en esta PC) -->
+      <div id="admin-quick-select-section" style="display: none; margin-top: 1.25rem; padding-top: 1rem; border-top: 1px dashed var(--border-light);">
+        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.6rem;">
+          <span style="font-size: 0.75rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-dark); display: flex; align-items: center; gap: 5px;">
+            <i class="fa-solid fa-users-gear" style="color: var(--color-primary);"></i> Cuentas del Personal
+          </span>
+          <span style="font-size: 0.7rem; color: var(--text-dark);">En este equipo</span>
+        </div>
+        <div id="admin-quick-chips" style="display: flex; flex-direction: column; gap: 6px;">
+          <!-- Se inyectan dinámicamente -->
+        </div>
+      </div>
     </div>
   </div>
 
@@ -111,12 +124,93 @@
       const form = document.getElementById('login-form');
       const alertBox = document.getElementById('login-alert');
       const alertMsg = document.getElementById('alert-message');
+      const usernameInput = document.getElementById('username');
+      const passwordInput = document.getElementById('password');
+
+      // Renderizar perfiles de administradores guardados en este navegador (si existen)
+      function renderAdminQuickProfiles() {
+        const section = document.getElementById('admin-quick-select-section');
+        const chipsContainer = document.getElementById('admin-quick-chips');
+        if (!section || !chipsContainer) return;
+
+        const profiles = SirioAuth.getSavedAdminProfiles();
+        if (!profiles || profiles.length === 0) {
+          section.style.display = 'none';
+          return;
+        }
+
+        section.style.display = 'block';
+        chipsContainer.innerHTML = profiles.slice(0, 4).map(p => {
+          if (!p || typeof p !== 'object') return '';
+          const rawUname = p.username !== undefined ? p.username : (p.usuario !== undefined ? p.usuario : '');
+          const uname = String(rawUname || '').trim();
+          if (!uname) return '';
+
+          let roleBadge = 'Personal';
+          let roleColor = '#0ea5e9';
+          let roleBg = 'rgba(14, 165, 233, 0.12)';
+          const roleStr = String(p.rol || '').toLowerCase().trim();
+          if (roleStr === 'jefas') {
+            roleBadge = 'Jefa 👑';
+            roleColor = '#f472b6';
+            roleBg = 'rgba(244, 114, 182, 0.12)';
+          } else if (roleStr === 'programadores') {
+            roleBadge = 'Dev 💻';
+            roleColor = '#c084fc';
+            roleBg = 'rgba(192, 132, 252, 0.12)';
+          }
+
+          return `
+            <div class="admin-quick-chip" data-username="${uname}" style="display: flex; align-items: center; justify-content: space-between; padding: 6px 10px; border-radius: 8px; background: rgba(255, 255, 255, 0.03); border: 1px solid var(--border-light); cursor: pointer; transition: all 0.2s;" onmouseover="this.style.borderColor='var(--color-primary)'; this.style.background='rgba(14, 165, 233, 0.08)';" onmouseout="this.style.borderColor='var(--border-light)'; this.style.background='rgba(255, 255, 255, 0.03)';">
+              <div style="display: flex; align-items: center; gap: 8px; min-width: 0; flex: 1;">
+                <div style="width: 26px; height: 26px; border-radius: 50%; background: ${roleBg}; color: ${roleColor}; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.8rem; flex-shrink: 0;">
+                  ${String(p.nombre || uname || 'A').charAt(0).toUpperCase()}
+                </div>
+                <div style="min-width: 0; flex: 1; text-align: left;">
+                  <span style="font-weight: 600; font-size: 0.82rem; color: var(--text-main); display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                    ${String(p.nombre || uname)}
+                  </span>
+                  <span style="font-size: 0.7rem; color: var(--text-dark);">@${uname}</span>
+                </div>
+              </div>
+              <div style="display: flex; align-items: center; gap: 6px;">
+                <span style="font-size: 0.68rem; color: ${roleColor}; background: ${roleBg}; padding: 1px 5px; border-radius: 4px; font-weight: 500;">${roleBadge}</span>
+                <i class="fa-solid fa-arrow-right-to-bracket" style="font-size: 0.75rem; color: var(--color-primary); opacity: 0.7;"></i>
+              </div>
+            </div>
+          `;
+        }).join('');
+
+        // Clic en chip -> Ingreso directo instantáneo 1-clic al panel de administración
+        chipsContainer.querySelectorAll('.admin-quick-chip').forEach(chip => {
+          chip.addEventListener('click', () => {
+            const uname = chip.getAttribute('data-username');
+            if (uname) {
+              SirioAuth.showLoading(`Accediendo como @${uname}...`);
+              const ok = SirioAuth.switchToAdminProfile(uname);
+              if (ok) {
+                setTimeout(() => {
+                  window.location.href = 'admin.html';
+                }, 300);
+              } else {
+                SirioAuth.hideLoading();
+                if (usernameInput && passwordInput) {
+                  usernameInput.value = uname;
+                  passwordInput.focus();
+                }
+              }
+            }
+          });
+        });
+      }
+
+      renderAdminQuickProfiles();
 
       form.addEventListener('submit', async (e) => {
         e.preventDefault();
 
-        const username = document.getElementById('username').value;
-        const password = document.getElementById('password').value;
+        const username = usernameInput.value.trim();
+        const password = passwordInput.value;
         const rememberMe = document.getElementById('remember-me').checked;
 
         alertBox.style.display = 'none';
@@ -127,7 +221,7 @@
         SirioAuth.hideLoading();
 
         if (result.success) {
-          if (result.user.rol === 'admin') {
+          if (['admin', 'jefas', 'programadores'].includes(result.user.rol)) {
             window.location.href = 'admin.html';
           } else {
             window.location.href = 'client.html';

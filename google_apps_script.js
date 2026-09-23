@@ -95,6 +95,11 @@ function doPost(e) {
     else if (action === "deleteAdmin") { response = deleteAdmin(doc, data); }
     else if (action === "createSupportTicket") { response = createSupportTicket(doc, data); }
     else if (action === "getSupportTickets") { response = getSupportTickets(doc); }
+    else if (action === "createAlerta") { response = createAlerta(doc, data); }
+    else if (action === "getAlertasAdmin") { response = getAlertasAdmin(doc); }
+    else if (action === "getAlertasCliente") { response = getAlertasCliente(doc, data); }
+    else if (action === "registrarVistaAlerta") { response = registrarVistaAlerta(doc, data); }
+    else if (action === "deleteAlerta") { response = deleteAlerta(doc, data); }
     else { response.message = "Accion no reconocida: " + action; }
 
   } catch (error) {
@@ -235,6 +240,19 @@ function migrateSheets(doc) {
     soporteRng.setFontColor("#ffffff");
     SpreadsheetApp.flush();
   }
+
+  // 5. Migración de Alertas
+  var alertasSheet = doc.getSheetByName("Alertas");
+  if (!alertasSheet) {
+    alertasSheet = doc.insertSheet("Alertas");
+    var alertasHdr = ["id_alerta", "titulo", "mensaje", "tipo", "tipo_personalizado", "fecha_creacion", "creada_por", "creada_por_nombre", "destinatarios", "vista_por"];
+    alertasSheet.appendRow(alertasHdr);
+    var alertasRng = alertasSheet.getRange(1, 1, 1, alertasHdr.length);
+    alertasRng.setFontWeight("bold");
+    alertasRng.setBackground("#1a0a3f");
+    alertasRng.setFontColor("#ffffff");
+    SpreadsheetApp.flush();
+  }
 }
 
 // ============================================================
@@ -249,7 +267,8 @@ function checkAndInitSheets(doc) {
     "Estado_Portafolio": ["clave", "valor"],
     "Portafolio": ["id_examen", "seccion", "examen", "precio", "tiempo_reporte", "muestra", "recipiente"],
     "Push_Subscriptions": ["id_usuario", "endpoint", "p256dh", "auth"],
-    "Soporte": ["id_ticket", "id_usuario", "nombre_cliente", "usuario", "tipo", "asunto", "mensaje", "correo", "telefono", "fecha_hora", "estado"]
+    "Soporte": ["id_ticket", "id_usuario", "nombre_cliente", "usuario", "tipo", "asunto", "mensaje", "correo", "telefono", "fecha_hora", "estado"],
+    "Alertas": ["id_alerta", "titulo", "mensaje", "tipo", "tipo_personalizado", "fecha_creacion", "creada_por", "creada_por_nombre", "destinatarios", "vista_por"]
   };
 
   for (var name in sheetsConfig) {
@@ -1591,5 +1610,188 @@ function getSupportTickets(doc) {
   return { success: true, tickets: tickets };
 }
 
+// ============================================================
+// CREAR ALERTA (ADMIN)
+// ============================================================
+function createAlerta(doc, data) {
+  var sheet = doc.getSheetByName("Alertas");
+  if (!sheet) {
+    return { success: false, message: "La hoja de Alertas no existe." };
+  }
 
+  var timezone = Session.getScriptTimeZone();
+  var nowISO = new Date().toISOString();
 
+  // Generar ID autoincremental
+  var lastRow = sheet.getLastRow();
+  var lastNum = 0;
+  if (lastRow > 1) {
+    var lastId = sheet.getRange(lastRow, 1).getValue().toString();
+    var match = lastId.match(/A(\d+)/);
+    if (match) lastNum = parseInt(match[1]);
+  }
+  var newId = "A" + String(lastNum + 1).padStart(3, "0");
+
+  // Serializar destinatarios a JSON string
+  var destinatariosStr = (data.destinatarios === "todos") ? "todos" : JSON.stringify(data.destinatarios);
+
+  var newRow = [
+    newId,
+    data.titulo || "",
+    data.mensaje || "",
+    data.tipo || "informacion",
+    data.tipo_personalizado || "",
+    nowISO,
+    data.creada_por || "",
+    data.creada_por_nombre || "Administrador",
+    destinatariosStr,
+    "[]"  // vista_por comienza vacío
+  ];
+
+  sheet.appendRow(newRow);
+  SpreadsheetApp.flush();
+
+  return {
+    success: true,
+    message: "Alerta creada correctamente.",
+    id_alerta: newId,
+    alerta: {
+      id_alerta: newId,
+      titulo: data.titulo || "",
+      mensaje: data.mensaje || "",
+      tipo: data.tipo || "informacion",
+      tipo_personalizado: data.tipo_personalizado || "",
+      fecha_creacion: nowISO,
+      creada_por: data.creada_por || "",
+      creada_por_nombre: data.creada_por_nombre || "Administrador",
+      destinatarios: data.destinatarios || "todos",
+      vista_por: []
+    }
+  };
+}
+
+// ============================================================
+// OBTENER TODAS LAS ALERTAS (ADMIN)
+// ============================================================
+function getAlertasAdmin(doc) {
+  var sheet = doc.getSheetByName("Alertas");
+  if (!sheet || sheet.getLastRow() <= 1) {
+    return { success: true, alertas: [] };
+  }
+
+  var rows = sheet.getDataRange().getValues();
+  var headers = rows[0];
+  var colMap = buildColMap(headers);
+  var alertas = [];
+
+  for (var i = 1; i < rows.length; i++) {
+    var row = rows[i];
+    if (!row[colMap["id_alerta"]]) continue;
+
+    // Deserializar destinatarios y vista_por
+    var destRaw = colMap["destinatarios"] !== undefined ? row[colMap["destinatarios"]].toString() : "todos";
+    var destinatarios;
+    try { destinatarios = (destRaw === "todos") ? "todos" : JSON.parse(destRaw); } catch(e) { destinatarios = "todos"; }
+
+    var vistaPorRaw = colMap["vista_por"] !== undefined ? row[colMap["vista_por"]].toString() : "[]";
+    var vistaPor;
+    try { vistaPor = JSON.parse(vistaPorRaw || "[]"); } catch(e) { vistaPor = []; }
+
+    alertas.push({
+      id_alerta: row[colMap["id_alerta"]].toString(),
+      titulo: colMap["titulo"] !== undefined ? row[colMap["titulo"]].toString() : "",
+      mensaje: colMap["mensaje"] !== undefined ? row[colMap["mensaje"]].toString() : "",
+      tipo: colMap["tipo"] !== undefined ? row[colMap["tipo"]].toString() : "informacion",
+      tipo_personalizado: colMap["tipo_personalizado"] !== undefined ? row[colMap["tipo_personalizado"]].toString() : "",
+      fecha_creacion: colMap["fecha_creacion"] !== undefined ? row[colMap["fecha_creacion"]].toString() : "",
+      creada_por: colMap["creada_por"] !== undefined ? row[colMap["creada_por"]].toString() : "",
+      creada_por_nombre: colMap["creada_por_nombre"] !== undefined ? row[colMap["creada_por_nombre"]].toString() : "",
+      destinatarios: destinatarios,
+      vista_por: vistaPor
+    });
+  }
+
+  // Ordenar de más reciente a más antigua
+  alertas.sort(function(a, b) { return new Date(b.fecha_creacion) - new Date(a.fecha_creacion); });
+  return { success: true, alertas: alertas };
+}
+
+// ============================================================
+// OBTENER ALERTAS DE UN CLIENTE ESPECÍFICO
+// ============================================================
+function getAlertasCliente(doc, data) {
+  var idCliente = data.id_usuario || "";
+  var allResult = getAlertasAdmin(doc);
+  if (!allResult.success) return allResult;
+
+  var alertasCliente = allResult.alertas.filter(function(a) {
+    if (a.destinatarios === "todos") return true;
+    if (Array.isArray(a.destinatarios)) return a.destinatarios.indexOf(idCliente) !== -1;
+    return false;
+  }).map(function(a) {
+    var vistaPor = Array.isArray(a.vista_por) ? a.vista_por : [];
+    return Object.assign({}, a, {
+      es_nueva: vistaPor.indexOf(idCliente) === -1
+    });
+  });
+
+  return { success: true, alertas: alertasCliente };
+}
+
+// ============================================================
+// REGISTRAR QUE EL CLIENTE VIO UNA ALERTA
+// ============================================================
+function registrarVistaAlerta(doc, data) {
+  var sheet = doc.getSheetByName("Alertas");
+  if (!sheet) return { success: false, message: "La hoja de Alertas no existe." };
+
+  var idAlerta = data.id_alerta || "";
+  var idUsuario = data.id_usuario || "";
+  if (!idAlerta || !idUsuario) {
+    return { success: false, message: "id_alerta e id_usuario son requeridos." };
+  }
+
+  var rows = sheet.getDataRange().getValues();
+  var headers = rows[0];
+  var colMap = buildColMap(headers);
+
+  for (var i = 1; i < rows.length; i++) {
+    if (rows[i][colMap["id_alerta"]].toString() === idAlerta) {
+      var vistaPorRaw = colMap["vista_por"] !== undefined ? rows[i][colMap["vista_por"]].toString() : "[]";
+      var vistaPor;
+      try { vistaPor = JSON.parse(vistaPorRaw || "[]"); } catch(e) { vistaPor = []; }
+
+      if (vistaPor.indexOf(idUsuario) === -1) {
+        vistaPor.push(idUsuario);
+        sheet.getRange(i + 1, colMap["vista_por"] + 1).setValue(JSON.stringify(vistaPor));
+        SpreadsheetApp.flush();
+      }
+      return { success: true, message: "Vista registrada." };
+    }
+  }
+  return { success: false, message: "Alerta no encontrada." };
+}
+
+// ============================================================
+// ELIMINAR UNA ALERTA (ADMIN)
+// ============================================================
+function deleteAlerta(doc, data) {
+  var sheet = doc.getSheetByName("Alertas");
+  if (!sheet) return { success: false, message: "La hoja de Alertas no existe." };
+
+  var idAlerta = data.id_alerta || "";
+  if (!idAlerta) return { success: false, message: "id_alerta es requerido." };
+
+  var rows = sheet.getDataRange().getValues();
+  var headers = rows[0];
+  var colMap = buildColMap(headers);
+
+  for (var i = 1; i < rows.length; i++) {
+    if (rows[i][colMap["id_alerta"]].toString() === idAlerta) {
+      sheet.deleteRow(i + 1);
+      SpreadsheetApp.flush();
+      return { success: true, message: "Alerta eliminada correctamente." };
+    }
+  }
+  return { success: false, message: "Alerta no encontrada." };
+}

@@ -39,6 +39,10 @@
           <button class="btn btn-secondary btn-icon" id="theme-toggle" title="Cambiar tema">
             <i class="fa-solid fa-sun"></i>
           </button>
+          <button class="btn btn-secondary" id="admin-switch-account-btn" title="Cambiar a otra cuenta de administrador en este equipo" style="display: inline-flex; align-items: center; gap: 6px; border-color: rgba(14, 165, 233, 0.4); background: rgba(14, 165, 233, 0.1);">
+            <i class="fa-solid fa-users-gear" style="color: var(--color-primary);"></i>
+            <span class="btn-switch-text" style="font-weight: 500;">Cambiar Cuenta</span>
+          </button>
         </div>
         <button class="btn btn-secondary" id="logout-btn">
           <i class="fa-solid fa-right-from-bracket"></i>
@@ -92,6 +96,10 @@
         <button class="nav-tab" data-tab="tab-soporte">
           <i class="fa-solid fa-headset"></i>
           <span>Mensajes de Soporte</span>
+        </button>
+        <button class="nav-tab" data-tab="tab-alertas">
+          <i class="fa-solid fa-bell-exclamation"></i>
+          <span>Alertas a Clientes</span>
         </button>
       </nav>
       <button class="scroll-arrow right" aria-label="Desplazar a la derecha"><i class="fa-solid fa-chevron-right"></i></button>
@@ -1214,6 +1222,187 @@
         <button class="btn btn-secondary" id="cancel-jefas-password-btn" style="padding: 10px 18px;">Cancelar</button>
         <button class="btn btn-primary" id="confirm-jefas-password-btn" style="padding: 10px 20px; background: var(--color-accent); font-weight: 600;">
           <i class="fa-solid fa-key"></i> Autorizar Acceso
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════════════════════
+       PESTAÑA: ALERTAS A CLIENTES
+  ════════════════════════════════════════════════════════════════════ -->
+  <div id="tab-alertas" class="tab-content" style="display: none;">
+    <div class="panel-card">
+      <!-- Encabezado -->
+      <div class="overview-header" style="margin-bottom: 1.5rem;">
+        <h3 style="display: flex; align-items: center; gap: 10px;">
+          <i class="fa-solid fa-bell-exclamation" style="color: var(--color-accent);"></i>
+          Alertas a Clientes
+        </h3>
+        <span style="font-size: 0.78rem; color: var(--text-dark); background: rgba(255,255,255,0.05); padding: 4px 12px; border-radius: 20px; border: 1px solid var(--border-light);">Comunicados del Laboratorio</span>
+      </div>
+
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; align-items: start;">
+
+        <!-- ── Panel Izquierdo: Formulario ─────────────────────────────── -->
+        <div style="background: rgba(255,255,255,0.03); border: 1px solid var(--border-light); border-radius: 12px; padding: 1.5rem;">
+          <h4 style="margin: 0 0 1.25rem 0; font-size: 0.95rem; font-weight: 700; color: var(--text-main); display: flex; align-items: center; gap: 8px;">
+            <i class="fa-solid fa-paper-plane" style="color: var(--color-accent);"></i>
+            Nueva Alerta
+          </h4>
+
+          <div class="form-group" style="margin-bottom: 1rem;">
+            <label for="alerta-titulo" style="font-size: 0.8rem; font-weight: 600; color: var(--text-main); display: block; margin-bottom: 6px;">Título <span style="color: #ef4444;">*</span></label>
+            <input type="text" id="alerta-titulo" class="form-control" placeholder="Ej: Mantenimiento el próximo viernes" maxlength="100" style="width: 100%;">
+          </div>
+
+          <div class="form-group" style="margin-bottom: 1rem;">
+            <label for="alerta-tipo" style="font-size: 0.8rem; font-weight: 600; color: var(--text-main); display: block; margin-bottom: 6px;">Categoría <span style="color: #ef4444;">*</span></label>
+            <select id="alerta-tipo" class="form-control" onchange="toggleAlertaTipoPersonalizado()" style="width: 100%;">
+              <option value="informacion">ℹ️ Información General</option>
+              <option value="actualizacion">📲 Actualización de la App</option>
+              <option value="mantenimiento">🔧 Mantenimiento Programado</option>
+              <option value="cambio_servicio">📋 Cambio en Servicios</option>
+              <option value="personalizada">✏️ Personalizada...</option>
+            </select>
+          </div>
+
+          <div class="form-group" id="alerta-tipo-personalizado-wrapper" style="display: none; margin-bottom: 1rem;">
+            <label for="alerta-tipo-personalizado" style="font-size: 0.8rem; font-weight: 600; color: var(--text-main); display: block; margin-bottom: 6px;">Nombre de categoría personalizada</label>
+            <input type="text" id="alerta-tipo-personalizado" class="form-control" placeholder="Ej: Recordatorio de cita, Oferta especial..." maxlength="60" style="width: 100%;">
+          </div>
+
+          <div class="form-group" style="margin-bottom: 1rem;">
+            <label for="alerta-mensaje" style="font-size: 0.8rem; font-weight: 600; color: var(--text-main); display: block; margin-bottom: 6px;">Mensaje <span style="color: #ef4444;">*</span></label>
+            <textarea id="alerta-mensaje" class="form-control" placeholder="Escriba aquí el contenido del comunicado..." rows="4" maxlength="600" style="width: 100%; resize: vertical; font-family: inherit;"></textarea>
+            <div style="text-align: right; font-size: 0.72rem; color: var(--text-dark); margin-top: 3px;"><span id="alerta-mensaje-count">0</span>/600</div>
+          </div>
+
+          <!-- Destinatarios -->
+          <div class="form-group" style="margin-bottom: 1.25rem;">
+            <label style="font-size: 0.8rem; font-weight: 600; color: var(--text-main); display: block; margin-bottom: 8px;">Destinatarios</label>
+            <div style="display: flex; gap: 1rem; margin-bottom: 0.75rem;">
+              <label style="display: flex; align-items: center; gap: 6px; cursor: pointer; font-size: 0.84rem;">
+                <input type="radio" name="alerta-destinatarios" id="alerta-dest-todos" value="todos" checked onchange="toggleAlertaDestinatarios()" style="accent-color: var(--color-accent);">
+                <i class="fa-solid fa-users"></i> Todos los clientes
+              </label>
+              <label style="display: flex; align-items: center; gap: 6px; cursor: pointer; font-size: 0.84rem;">
+                <input type="radio" name="alerta-destinatarios" id="alerta-dest-especificos" value="especificos" onchange="toggleAlertaDestinatarios()" style="accent-color: var(--color-accent);">
+                <i class="fa-solid fa-user-check"></i> Clientes específicos
+              </label>
+            </div>
+            <div id="alerta-clientes-lista" style="display: none; max-height: 180px; overflow-y: auto; border: 1px solid var(--border-light); border-radius: 8px; padding: 0.75rem; background: rgba(0,0,0,0.15); font-size: 0.82rem;">
+              <div style="color: var(--text-dark); font-style: italic;"><i class="fa-solid fa-circle-notch fa-spin"></i> Cargando clientes...</div>
+            </div>
+          </div>
+
+          <button id="alerta-enviar-btn" class="btn btn-primary" style="width: 100%; padding: 12px; font-size: 0.9rem; font-weight: 700;" onclick="sendAlerta()">
+            <i class="fa-solid fa-paper-plane"></i> Enviar Alerta
+          </button>
+        </div>
+
+        <!-- ── Panel Derecho: Historial ────────────────────────────────── -->
+        <div style="background: rgba(255,255,255,0.03); border: 1px solid var(--border-light); border-radius: 12px; padding: 1.5rem; min-height: 400px;">
+          <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.25rem;">
+            <h4 style="margin: 0; font-size: 0.95rem; font-weight: 700; color: var(--text-main); display: flex; align-items: center; gap: 8px;">
+              <i class="fa-solid fa-clock-rotate-left" style="color: var(--color-accent);"></i>
+              Alertas Enviadas
+            </h4>
+            <button class="btn btn-secondary" style="font-size: 0.75rem; padding: 6px 12px;" onclick="loadAlertas()">
+              <i class="fa-solid fa-rotate-right"></i> Actualizar
+            </button>
+          </div>
+          <div id="alertas-historial-lista">
+            <div class="empty-state" style="padding: 2rem; text-align: center; color: var(--text-dark);">
+              <i class="fa-solid fa-bell-slash" style="font-size: 2rem; opacity: 0.3; display: block; margin-bottom: 0.75rem;"></i>
+              <p style="font-size: 0.85rem;">No hay alertas enviadas aún.</p>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Modal Cambio Rápido de Cuenta (Solo Personal/Admin) ────────────── -->
+  <div id="modal-switch-account" class="modal-overlay" style="display: none;">
+    <div class="modal-card" style="max-width: 480px; border: 1px solid var(--border-focus); box-shadow: 0 20px 40px rgba(0,0,0,0.6);">
+      <div class="modal-header" style="display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--border-light); padding-bottom: 1rem; margin-bottom: 1.25rem;">
+        <div style="display: flex; align-items: center; gap: 10px;">
+          <div style="width: 40px; height: 40px; border-radius: 10px; background: rgba(14, 165, 233, 0.15); display: flex; align-items: center; justify-content: center; color: var(--color-primary); font-size: 1.2rem;">
+            <i class="fa-solid fa-users-gear"></i>
+          </div>
+          <div>
+            <h3 style="margin: 0; font-size: 1.15rem; font-weight: 700; color: var(--text-main);">Cambio de Administrador</h3>
+            <p style="margin: 2px 0 0 0; font-size: 0.8rem; color: var(--text-muted);">Acceso rápido para personal del laboratorio en este equipo</p>
+          </div>
+        </div>
+        <button class="btn btn-secondary btn-icon" id="close-switch-modal-btn" style="border-radius: 50%; width: 32px; height: 32px; padding: 0;">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <!-- Alerta en modal de switch -->
+      <div id="switch-modal-alert" class="alert alert-error" style="display: none; margin-bottom: 1rem; padding: 8px 12px; font-size: 0.85rem;">
+        <i class="fa-solid fa-triangle-exclamation"></i>
+        <span id="switch-modal-alert-text"></span>
+      </div>
+
+      <!-- Lista de cuentas guardadas en esta PC -->
+      <div style="margin-bottom: 1.25rem;">
+        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.6rem;">
+          <label style="font-size: 0.82rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-dark); margin: 0;">
+            Selecciona para cambiar al instante
+          </label>
+          <span style="font-size: 0.75rem; color: #10b981; font-weight: 600; display: flex; align-items: center; gap: 4px;">
+            <i class="fa-solid fa-bolt"></i> 1 Clic
+          </span>
+        </div>
+        <div id="saved-admin-accounts-list" style="display: flex; flex-direction: column; gap: 8px; max-height: 280px; overflow-y: auto; padding-right: 4px;">
+          <!-- Se inyecta dinámicamente -->
+        </div>
+      </div>
+
+      <!-- Botón para añadir una nueva cuenta de personal -->
+      <div id="switch-add-new-container" style="margin-bottom: 1rem;">
+        <button type="button" id="switch-use-another-btn" class="btn btn-secondary" style="width: 100%; padding: 10px; font-size: 0.88rem; display: flex; align-items: center; justify-content: center; gap: 8px; border-style: dashed;">
+          <i class="fa-solid fa-user-plus" style="color: var(--color-primary);"></i> Iniciar sesión con otra cuenta de personal
+        </button>
+      </div>
+
+      <!-- Formulario desplegable solo para agregar una nueva cuenta que no esté guardada -->
+      <form id="switch-account-form" style="display: none; background: rgba(255, 255, 255, 0.03); border: 1px solid var(--border-light); border-radius: 12px; padding: 1rem; margin-bottom: 1rem;">
+        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.75rem;">
+          <span style="font-size: 0.88rem; font-weight: 600; color: var(--text-main);">
+            <i class="fa-solid fa-key" style="color: var(--color-accent); margin-right: 4px;"></i> Ingresar Nuevo Personal
+          </span>
+          <button type="button" id="switch-cancel-new-btn" style="background: none; border: none; font-size: 0.78rem; color: var(--text-muted); cursor: pointer; text-decoration: underline; padding: 0;">
+            Volver a la lista
+          </button>
+        </div>
+
+        <div class="form-group" style="margin-bottom: 0.75rem;">
+          <label for="switch-username-input" style="font-size: 0.8rem; margin-bottom: 4px;">Usuario</label>
+          <input type="text" id="switch-username-input" class="form-control" placeholder="Ej: admin.laboratorio" style="padding: 8px 12px; font-size: 0.9rem;">
+        </div>
+
+        <div class="form-group" style="margin-bottom: 0.75rem;">
+          <label for="switch-password-input" style="font-size: 0.8rem; margin-bottom: 4px;">Contraseña</label>
+          <div style="position: relative;">
+            <input type="password" id="switch-password-input" class="form-control" placeholder="Ingresa tu contraseña" style="padding: 8px 36px 8px 12px; font-size: 0.9rem;">
+            <button type="button" id="toggle-switch-pwd" style="position: absolute; right: 8px; top: 50%; transform: translateY(-50%); background: none; border: none; color: var(--text-dark); cursor: pointer; padding: 4px;">
+              <i class="fa-solid fa-eye" id="toggle-switch-pwd-icon" style="font-size: 0.85rem;"></i>
+            </button>
+          </div>
+        </div>
+
+        <button type="submit" class="btn btn-primary" id="btn-submit-switch" style="width: 100%; padding: 10px; font-size: 0.92rem; display: flex; align-items: center; justify-content: center; gap: 8px;">
+          <i class="fa-solid fa-right-to-bracket"></i> Iniciar y Guardar en este equipo
+        </button>
+      </form>
+
+      <div style="display: flex; justify-content: flex-end;">
+        <button type="button" class="btn btn-secondary" id="close-switch-modal-secondary-btn" style="font-size: 0.85rem; padding: 8px 16px;">
+          Cerrar
         </button>
       </div>
     </div>

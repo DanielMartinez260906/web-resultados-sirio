@@ -48,12 +48,15 @@ const SirioAuth = {
   
   // Obtener usuario actualmente logueado
   getCurrentUser() {
-    const userJson = this.getCookie(this.STORAGE_KEY);
+    let userJson = this.getCookie(this.STORAGE_KEY);
+    if (!userJson) {
+      userJson = localStorage.getItem(this.STORAGE_KEY);
+    }
     if (!userJson) return null;
     try {
-      return JSON.parse(userJson);
+      const u = typeof userJson === 'object' ? userJson : JSON.parse(userJson);
+      return (u && typeof u === 'object') ? u : null;
     } catch (e) {
-      this.logout();
       return null;
     }
   },
@@ -73,8 +76,15 @@ const SirioAuth = {
 
       if (result.success) {
         const userData = result.user;
-        const days = rememberMe ? 7 : null;
+        const days = rememberMe ? 30 : 7;
         this.setCookie(this.STORAGE_KEY, JSON.stringify(userData), days);
+        localStorage.setItem(this.STORAGE_KEY, JSON.stringify(userData));
+        
+        // Si el usuario es administrador/personal (admin, jefas, programadores), registrar su cuenta para cambio rápido
+        if (this.isAdminRole(userData.rol)) {
+          this.saveAdminProfile(userData);
+        }
+
         return { success: true, user: userData };
       } else {
         return { success: false, message: result.message || 'Error de inicio de sesion.' };
@@ -85,9 +95,106 @@ const SirioAuth = {
     }
   },
 
+  // Helper para verificar si un rol es del personal/administrador
+  isAdminRole(rol) {
+    if (!rol) return false;
+    const r = String(rol).trim().toLowerCase();
+    return ['admin', 'jefas', 'programadores', 'administrador'].includes(r);
+  },
+
+  // Perfiles de administradores guardados en este navegador para cambio rápido
+  ADMIN_PROFILES_KEY: 'sirio_admin_profiles',
+
+  getSavedAdminProfiles() {
+    try {
+      const raw = localStorage.getItem(this.ADMIN_PROFILES_KEY);
+      if (!raw) return [];
+      const list = JSON.parse(raw);
+      return Array.isArray(list) ? list : [];
+    } catch (e) {
+      return [];
+    }
+  },
+
+  saveAdminProfile(userData) {
+    if (!userData || typeof userData !== 'object') return;
+    
+    // Extraer de forma 100% segura el username como String
+    const rawUname = userData.username !== undefined ? userData.username : (userData.usuario !== undefined ? userData.usuario : '');
+    const uname = String(rawUname || '').trim();
+    if (!uname) return;
+
+    try {
+      let profiles = this.getSavedAdminProfiles();
+      // Filtrar entrada previa del mismo usuario
+      profiles = profiles.filter(p => {
+        if (!p || typeof p !== 'object') return false;
+        const u = String(p.username || p.usuario || '').trim().toLowerCase();
+        return u !== uname.toLowerCase();
+      });
+
+      // Crear objeto de sesión completo guardado
+      const newProfile = {
+        id_usuario: userData.id_usuario ? String(userData.id_usuario) : '',
+        username: uname,
+        usuario: uname,
+        nombre: userData.nombre ? String(userData.nombre) : uname,
+        rol: String(userData.rol || 'admin').toLowerCase().trim(),
+        identificacion: userData.identificacion ? String(userData.identificacion) : '',
+        correo: userData.correo ? String(userData.correo) : '',
+        telefono: userData.telefono ? String(userData.telefono) : '',
+        lastLogin: new Date().toISOString()
+      };
+
+      // Agregar al inicio
+      profiles.unshift(newProfile);
+      // Guardar máximo 15 perfiles
+      if (profiles.length > 15) profiles = profiles.slice(0, 15);
+      localStorage.setItem(this.ADMIN_PROFILES_KEY, JSON.stringify(profiles));
+    } catch (e) {
+      console.warn('No se pudo guardar el perfil de administrador local:', e);
+    }
+  },
+
+  removeAdminProfile(username) {
+    try {
+      const uname = String(username || '').trim().toLowerCase();
+      let profiles = this.getSavedAdminProfiles();
+      profiles = profiles.filter(p => {
+        if (!p || typeof p !== 'object') return false;
+        const u = String(p.username || p.usuario || '').trim().toLowerCase();
+        return u !== uname;
+      });
+      localStorage.setItem(this.ADMIN_PROFILES_KEY, JSON.stringify(profiles));
+      return profiles;
+    } catch (e) {
+      return [];
+    }
+  },
+
+  // Cambiar instantáneamente a una cuenta de administrador guardada (1-clic sin pedir contraseña)
+  switchToAdminProfile(username) {
+    const uname = (username || '').trim().toLowerCase();
+    const profiles = this.getSavedAdminProfiles();
+    const profile = profiles.find(p => (p.username || p.usuario || '').trim().toLowerCase() === uname);
+    if (!profile) return false;
+
+    // Actualizar cookies y localStorage de sesión
+    this.setCookie(this.STORAGE_KEY, JSON.stringify(profile), 30);
+    localStorage.setItem(this.STORAGE_KEY, JSON.stringify(profile));
+    
+    // Actualizar fecha de último uso
+    this.saveAdminProfile(profile);
+    return true;
+  },
+
   // Actualizar datos de la sesión actual
   updateSessionData(userData) {
-    this.setCookie(this.STORAGE_KEY, JSON.stringify(userData), 7);
+    this.setCookie(this.STORAGE_KEY, JSON.stringify(userData), 30);
+    localStorage.setItem(this.STORAGE_KEY, JSON.stringify(userData));
+    if (userData && this.isAdminRole(userData.rol)) {
+      this.saveAdminProfile(userData);
+    }
   },
 
   // Cerrar sesión
@@ -125,6 +232,11 @@ const SirioAuth = {
         window.location.href = '/index.html';
       }
       return null;
+    }
+
+    // Auto-asegurar que el usuario administrador actual esté en los perfiles guardados
+    if (this.isAdminRole(user.rol)) {
+      this.saveAdminProfile(user);
     }
 
     // Si hay sesión y está en el login, redirigir a su dashboard correspondiente

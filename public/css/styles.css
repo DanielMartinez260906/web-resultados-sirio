@@ -2541,3 +2541,51 @@ body.light-theme .dev-logo {
   background: rgba(16, 185, 129, 0.15) !important;
   box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.2) !important;
 }
+
+/* ── Cambio Rápido de Cuenta de Administradores ────────────────────────── */
+.admin-account-card:hover {
+  border-color: var(--color-primary) !important;
+  background: rgba(14, 165, 233, 0.06) !important;
+  transform: translateY(-1px);
+}
+
+.admin-quick-chip:hover {
+  border-color: var(--color-primary) !important;
+  background: rgba(14, 165, 233, 0.08) !important;
+  transform: translateY(-1px);
+}
+
+@media (max-width: 640px) {
+  .btn-switch-text {
+    display: none;
+  }
+  #admin-switch-account-btn {
+    padding: 8px 10px !important;
+  }
+}
+
+/* ── Pestaña Solo Ícono en Navegación (Notificaciones Cliente) ────────── */
+.nav-tab.nav-tab-icon-only {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 16px;
+  min-width: 48px;
+  flex-shrink: 0;
+}
+
+.nav-tab.nav-tab-icon-only i {
+  margin: 0 !important;
+  font-size: 1.15rem;
+  transition: transform 0.2s ease;
+}
+
+.nav-tab.nav-tab-icon-only:hover i {
+  transform: scale(1.15);
+}
+
+.nav-tab.nav-tab-icon-only.active {
+  border-color: #f472b6 !important;
+  background: rgba(244, 114, 182, 0.12) !important;
+}
+

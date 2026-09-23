@@ -99,7 +99,8 @@ function createDefaultMockDB() {
     Portafolio: defaultPortafolio,
     Pacientes: [],
     Suscripciones: [],
-    Soporte: []
+    Soporte: [],
+    Alertas: []
   };
   fs.writeFileSync(MOCK_DB_PATH, JSON.stringify(defaultData, null, 2));
 }
@@ -779,6 +780,76 @@ function handleMockAction(action, data) {
       return { success: true, message: 'Ticket eliminado.' };
     }
 
+    // ============================================================
+    // ALERTAS ADMINISTRATIVAS
+    // ============================================================
+
+    case 'createAlerta': {
+      db.Alertas = db.Alertas || [];
+      const lastAlertaNum = db.Alertas.reduce((max, a) => {
+        const num = parseInt((a.id_alerta || 'A000').substring(1));
+        return num > max ? num : max;
+      }, 0);
+      const newAlertaId = 'A' + String(lastAlertaNum + 1).padStart(3, '0');
+      const newAlerta = {
+        id_alerta: newAlertaId,
+        titulo: data.titulo || '',
+        mensaje: data.mensaje || '',
+        tipo: data.tipo || 'informacion',
+        tipo_personalizado: data.tipo_personalizado || '',
+        fecha_creacion: new Date().toISOString(),
+        creada_por: data.creada_por || '',
+        creada_por_nombre: data.creada_por_nombre || 'Administrador',
+        destinatarios: data.destinatarios || 'todos', // 'todos' o array de id_usuario
+        vista_por: []
+      };
+      db.Alertas.push(newAlerta);
+      writeMockDB(db);
+      return { success: true, message: 'Alerta creada correctamente.', id_alerta: newAlertaId, alerta: newAlerta };
+    }
+
+    case 'getAlertasAdmin': {
+      db.Alertas = db.Alertas || [];
+      const alertasOrdenadas = [...db.Alertas].sort((a, b) => new Date(b.fecha_creacion) - new Date(a.fecha_creacion));
+      return { success: true, alertas: alertasOrdenadas };
+    }
+
+    case 'getAlertasCliente': {
+      db.Alertas = db.Alertas || [];
+      const idCliente = data.id_usuario;
+      const alertasCliente = db.Alertas.filter(a => {
+        if (a.destinatarios === 'todos') return true;
+        if (Array.isArray(a.destinatarios)) return a.destinatarios.includes(idCliente);
+        return false;
+      }).map(a => ({
+        ...a,
+        es_nueva: !Array.isArray(a.vista_por) || !a.vista_por.includes(idCliente)
+      })).sort((a, b) => new Date(b.fecha_creacion) - new Date(a.fecha_creacion));
+      return { success: true, alertas: alertasCliente };
+    }
+
+    case 'registrarVistaAlerta': {
+      db.Alertas = db.Alertas || [];
+      const { id_alerta, id_usuario } = data;
+      const alerta = db.Alertas.find(a => a.id_alerta === id_alerta);
+      if (!alerta) return { success: false, message: 'Alerta no encontrada.' };
+      if (!Array.isArray(alerta.vista_por)) alerta.vista_por = [];
+      if (!alerta.vista_por.includes(id_usuario)) {
+        alerta.vista_por.push(id_usuario);
+        writeMockDB(db);
+      }
+      return { success: true, message: 'Vista registrada.' };
+    }
+
+    case 'deleteAlerta': {
+      db.Alertas = db.Alertas || [];
+      const beforeCount = db.Alertas.length;
+      db.Alertas = db.Alertas.filter(a => a.id_alerta !== data.id_alerta);
+      if (db.Alertas.length === beforeCount) return { success: false, message: 'Alerta no encontrada.' };
+      writeMockDB(db);
+      return { success: true, message: 'Alerta eliminada correctamente.' };
+    }
+
     default:
       return { success: false, message: `Acción desconocida en MockDB: ${action}` };
   }
@@ -899,5 +970,11 @@ module.exports = {
   createSupportTicket: (ticketData) => callSheetsAPI('createSupportTicket', ticketData),
   getSupportTickets: () => callSheetsAPI('getSupportTickets'),
   updateSupportTicketStatus: (id_ticket, estado) => callSheetsAPI('updateSupportTicketStatus', { id_ticket, estado }),
-  deleteSupportTicket: (id_ticket) => callSheetsAPI('deleteSupportTicket', { id_ticket })
+  deleteSupportTicket: (id_ticket) => callSheetsAPI('deleteSupportTicket', { id_ticket }),
+  // Alertas administrativas
+  createAlerta: (alertaData) => callSheetsAPI('createAlerta', alertaData),
+  getAlertasAdmin: () => callSheetsAPI('getAlertasAdmin'),
+  getAlertasCliente: (id_usuario) => callSheetsAPI('getAlertasCliente', { id_usuario }),
+  registrarVistaAlerta: (id_alerta, id_usuario) => callSheetsAPI('registrarVistaAlerta', { id_alerta, id_usuario }),
+  deleteAlerta: (id_alerta) => callSheetsAPI('deleteAlerta', { id_alerta })
 };

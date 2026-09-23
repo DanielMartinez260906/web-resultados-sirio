@@ -79,7 +79,8 @@ document.addEventListener('DOMContentLoaded', () => {
     'tab-client-results': 'Mis Resultados 📊',
     'tab-client-ingresar': 'Ingresar Paciente ✍️',
     'tab-client-portafolio': 'Portafolio de Servicios 📑',
-    'tab-client-profile': 'Mi Perfil 👤'
+    'tab-client-profile': 'Mi Perfil 👤',
+    'tab-client-alertas': 'Notificaciones del Laboratorio 🔔'
   };
 
   tabButtons.forEach(btn => {
@@ -110,6 +111,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
       if (targetTab === 'tab-client-ingresar') {
         checkIngresoPacientesStatus();
+      } else if (targetTab === 'tab-client-alertas') {
+        if (typeof window.loadAlertasCliente === 'function') {
+          window.loadAlertasCliente();
+        }
       }
     });
   });
@@ -1881,3 +1886,291 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
 }); 
+
+// ==========================================================================
+// MÓDULO: NOTIFICACIONES/ALERTAS DEL LABORATORIO (CLIENTE)
+// ==========================================================================
+
+(function () {
+  'use strict';
+
+  // ── Mapa de tipos ─────────────────────────────────────────────────────────
+  const TIPO_INFO = {
+    informacion:    { label: 'Información General',      icon: 'fa-circle-info',       color: '#38bdf8' },
+    actualizacion:  { label: 'Actualización de la App',  icon: 'fa-mobile-screen',     color: '#a78bfa' },
+    mantenimiento:  { label: 'Mantenimiento Programado', icon: 'fa-screwdriver-wrench', color: '#fb923c' },
+    cambio_servicio:{ label: 'Cambio en Servicios',      icon: 'fa-clipboard-list',    color: '#34d399' },
+    personalizada:  { label: 'Personalizada',            icon: 'fa-tag',               color: '#f472b6' }
+  };
+
+  function getTipoInfo(tipo, tipoPersonalizado) {
+    const base = TIPO_INFO[tipo] || TIPO_INFO.informacion;
+    if (tipo === 'personalizada' && tipoPersonalizado) return { ...base, label: tipoPersonalizado };
+    return base;
+  }
+
+  let todasLasAlertas = [];
+  let alertasNuevas = [];
+  let popupIndex = 0;
+
+  // ── Cargar alertas del cliente ────────────────────────────────────────────
+  async function loadAlertasCliente() {
+    const currentUser = SirioAuth.getCurrentUser();
+    if (!currentUser) return;
+    try {
+      const res = await fetch(`${SirioAuth.API_BASE}/api/client/alertas?id_usuario=${currentUser.id_usuario}`);
+      const data = await res.json();
+      if (!data.success) return;
+      todasLasAlertas = data.alertas || [];
+      alertasNuevas = todasLasAlertas.filter(a => a.es_nueva);
+
+      actualizarBadgeCampana(alertasNuevas.length);
+      renderHistorialAlertas(todasLasAlertas);
+
+      // Mostrar popup automáticamente si hay alertas nuevas
+      if (alertasNuevas.length > 0) {
+        popupIndex = 0;
+        mostrarPopupAlertas();
+      }
+    } catch (err) {
+      console.error('[Alertas] Error al cargar alertas del cliente:', err);
+    }
+  }
+
+  // ── Badge de notificaciones ───────────────────────────────────────────────
+  function actualizarBadgeCampana(count) {
+    const badgeNav = document.getElementById('alertas-badge-nav');
+    const badgeDropdown = document.getElementById('alertas-badge-dropdown');
+    if (badgeNav) {
+      badgeNav.textContent = count > 9 ? '9+' : String(count);
+      badgeNav.style.display = count > 0 ? 'inline-block' : 'none';
+    }
+    if (badgeDropdown) {
+      badgeDropdown.textContent = count > 9 ? '9+' : String(count);
+      badgeDropdown.style.display = count > 0 ? 'inline-block' : 'none';
+    }
+  }
+
+  window.loadAlertasCliente = loadAlertasCliente;
+
+  // ── Popup de alertas nuevas ────────────────────────────────────────────────
+  function mostrarPopupAlertas() {
+    if (!alertasNuevas || alertasNuevas.length === 0) return;
+    const modal = document.getElementById('lab-alerta-modal');
+    if (!modal) return;
+    renderPopupAlerta(alertasNuevas[popupIndex], popupIndex, alertasNuevas.length);
+    modal.style.display = 'flex';
+  }
+
+  function renderPopupAlerta(alerta, idx, total) {
+    const info = getTipoInfo(alerta.tipo, alerta.tipo_personalizado);
+    const fecha = new Date(alerta.fecha_creacion).toLocaleString('es-CO', {
+      timeZone: 'America/Bogota', year: 'numeric', month: 'long',
+      day: 'numeric', hour: '2-digit', minute: '2-digit'
+    });
+
+    // Actualizar icono y color del header
+    const iconEl = document.getElementById('lab-alerta-modal-icon');
+    const iconWrap = document.getElementById('lab-alerta-modal-icon-wrap');
+    if (iconEl) { iconEl.className = `fa-solid ${info.icon}`; iconEl.style.color = info.color; }
+    if (iconWrap) iconWrap.style.background = `${info.color}22`;
+
+    const tipoEl = document.getElementById('lab-alerta-modal-tipo');
+    if (tipoEl) tipoEl.textContent = info.label;
+
+    const counterEl = document.getElementById('lab-alerta-modal-counter');
+    if (counterEl) counterEl.textContent = total > 1 ? `${idx + 1} / ${total}` : '';
+
+    const tituloEl = document.getElementById('lab-alerta-modal-titulo');
+    if (tituloEl) tituloEl.textContent = alerta.titulo;
+
+    const mensajeEl = document.getElementById('lab-alerta-modal-mensaje');
+    if (mensajeEl) mensajeEl.textContent = alerta.mensaje;
+
+    const fechaEl = document.querySelector('#lab-alerta-modal-fecha span');
+    if (fechaEl) fechaEl.textContent = fecha;
+
+    // Botones
+    const nextBtn = document.getElementById('lab-alerta-modal-next-btn');
+    const closeBtn = document.getElementById('lab-alerta-modal-close-btn');
+    const esUltima = idx >= total - 1;
+    if (nextBtn) nextBtn.style.display = esUltima ? 'none' : 'inline-flex';
+    if (closeBtn) closeBtn.style.display = esUltima ? 'inline-flex' : 'none';
+  }
+
+  window.cerrarPopupAlertas = function () {
+    const modal = document.getElementById('lab-alerta-modal');
+    if (modal) modal.style.display = 'none';
+    // Poner badge a 0 tras haber visto todas
+    actualizarBadgeCampana(0);
+  };
+
+  // Botón "Siguiente"
+  const nextBtn = document.getElementById('lab-alerta-modal-next-btn');
+  if (nextBtn) {
+    nextBtn.addEventListener('click', async () => {
+      await registrarVista(alertasNuevas[popupIndex]);
+      popupIndex++;
+      if (popupIndex < alertasNuevas.length) {
+        renderPopupAlerta(alertasNuevas[popupIndex], popupIndex, alertasNuevas.length);
+      }
+    });
+  }
+
+  // Botón "Entendido"
+  const closeBtn = document.getElementById('lab-alerta-modal-close-btn');
+  if (closeBtn) {
+    closeBtn.addEventListener('click', async () => {
+      await registrarVista(alertasNuevas[popupIndex]);
+      cerrarPopupAlertas();
+    });
+  }
+
+  // ── Registrar vista en el servidor ────────────────────────────────────────
+  async function registrarVista(alerta) {
+    if (!alerta || !alerta.es_nueva) return;
+    const currentUser = SirioAuth.getCurrentUser();
+    if (!currentUser) return;
+    try {
+      await fetch(`${SirioAuth.API_BASE}/api/client/alertas/vista`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id_alerta: alerta.id_alerta, id_usuario: currentUser.id_usuario })
+      });
+      alerta.es_nueva = false; // Marcar localmente
+    } catch (err) {
+      console.error('[Alertas] Error al registrar vista:', err);
+    }
+  }
+
+  // ── Renderizar historial en la sección ────────────────────────────────────
+  function renderHistorialAlertas(alertas) {
+    const lista = document.getElementById('client-alertas-lista');
+    const totalBadge = document.getElementById('alertas-total-badge');
+    if (!lista) return;
+
+    if (totalBadge) totalBadge.textContent = `${alertas.length} notificacion${alertas.length !== 1 ? 'es' : ''}`;
+
+    if (!alertas || alertas.length === 0) {
+      lista.innerHTML = `
+        <div style="text-align:center; padding: 3rem 1rem; color:var(--text-dark);">
+          <i class="fa-solid fa-bell-slash" style="font-size:2.5rem; opacity:0.25; display:block; margin-bottom:1rem;"></i>
+          <p style="font-size:0.88rem;">No hay notificaciones del laboratorio aún.</p>
+        </div>`;
+      return;
+    }
+
+    lista.innerHTML = alertas.map(a => {
+      const info = getTipoInfo(a.tipo, a.tipo_personalizado);
+      const fecha = new Date(a.fecha_creacion).toLocaleString('es-CO', {
+        timeZone: 'America/Bogota', year: 'numeric', month: 'short', day: 'numeric',
+        hour: '2-digit', minute: '2-digit'
+      });
+      const esNueva = a.es_nueva;
+      return `
+        <div style="
+          border: 1px solid ${esNueva ? info.color + '44' : 'var(--border-light)'};
+          border-left: 3px solid ${info.color};
+          border-radius: 10px;
+          padding: 1rem 1.1rem;
+          margin-bottom: 0.75rem;
+          background: ${esNueva ? info.color + '0a' : 'rgba(255,255,255,0.02)'};
+          transition: all 0.3s;
+        ">
+          <div style="display:flex; align-items:flex-start; gap:12px;">
+            <div style="width:34px; height:34px; border-radius:50%; background:${info.color}18; display:flex; align-items:center; justify-content:center; flex-shrink:0; margin-top:2px;">
+              <i class="fa-solid ${info.icon}" style="color:${info.color}; font-size:0.9rem;"></i>
+            </div>
+            <div style="flex:1; min-width:0;">
+              <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap; margin-bottom:4px;">
+                <strong style="font-size:0.9rem; color:var(--text-main); word-break:break-word;">${a.titulo}</strong>
+                ${esNueva ? `<span style="background:${info.color}; color:#000; font-size:0.65rem; font-weight:800; padding:2px 7px; border-radius:20px; text-transform:uppercase;">Nuevo</span>` : ''}
+              </div>
+              <p style="font-size:0.83rem; color:var(--text-dark); margin:0 0 8px 0; line-height:1.5; word-break:break-word;">${a.mensaje}</p>
+              <div style="display:flex; gap:10px; flex-wrap:wrap; font-size:0.73rem; color:var(--text-muted);">
+                <span style="background:rgba(255,255,255,0.05); padding:2px 8px; border-radius:20px; border:1px solid var(--border-light);">
+                  <i class="fa-solid ${info.icon}" style="color:${info.color};"></i> ${info.label}
+                </span>
+                <span><i class="fa-regular fa-clock"></i> ${fecha}</span>
+              </div>
+            </div>
+          </div>
+        </div>`;
+    }).join('');
+  }
+
+  // ── Abrir sección de notificaciones ──────────────────────────────────────
+  window.abrirSeccionNotificaciones = function () {
+    const navBtn = document.querySelector('#client-nav .nav-tab[data-tab="tab-client-alertas"]');
+    if (navBtn) {
+      navBtn.click();
+    } else {
+      const tabEl = document.getElementById('tab-client-alertas');
+      const allTabs = document.querySelectorAll('.tab-content');
+      allTabs.forEach(t => t.style.display = 'none');
+      if (tabEl) tabEl.style.display = 'block';
+
+      const triggerText = document.getElementById('dropdown-trigger-text');
+      if (triggerText) triggerText.innerText = 'Notificaciones del Laboratorio 🔔';
+
+      document.querySelectorAll('.dropdown-item').forEach(item => {
+        item.classList.toggle('active', item.getAttribute('data-value') === 'tab-client-alertas');
+      });
+      renderHistorialAlertas(todasLasAlertas);
+    }
+  };
+
+  // ── Listener SSE para alertas en tiempo real ──────────────────────────────
+  function connectSSE() {
+    const currentUser = SirioAuth.getCurrentUser();
+    if (!currentUser) return;
+    const source = new EventSource(`${SirioAuth.API_BASE}/api/client/events?id_usuario=${currentUser.id_usuario}`);
+
+    source.addEventListener('nueva_alerta', (e) => {
+      try {
+        const alertaData = JSON.parse(e.data);
+        // Añadir a la lista de alertas nuevas
+        const alertaConFlag = { ...alertaData, es_nueva: true };
+        todasLasAlertas.unshift(alertaConFlag);
+        alertasNuevas.unshift(alertaConFlag);
+
+        actualizarBadgeCampana(alertasNuevas.filter(a => a.es_nueva).length);
+        renderHistorialAlertas(todasLasAlertas);
+
+        // Mostrar popup si el modal no está abierto
+        const modal = document.getElementById('lab-alerta-modal');
+        if (modal && modal.style.display !== 'flex') {
+          popupIndex = 0;
+          mostrarPopupAlertas();
+        }
+      } catch (err) {
+        console.error('[Alertas SSE] Error procesando evento:', err);
+      }
+    });
+
+    source.addEventListener('ping', () => {}); // Mantener viva la conexión
+    source.onerror = () => {
+      source.close();
+      setTimeout(connectSSE, 10000); // Reconectar en 10s
+    };
+  }
+
+  // ── Inicializar al cargar ─────────────────────────────────────────────────
+  document.addEventListener('DOMContentLoaded', () => {
+    const currentUser = SirioAuth.getCurrentUser();
+    if (!currentUser || currentUser.rol !== 'cliente') return;
+    loadAlertasCliente();
+    connectSSE();
+  });
+
+  // Si DOMContentLoaded ya ocurrió (carga tardía del script)
+  if (document.readyState === 'complete' || document.readyState === 'interactive') {
+    const currentUser = SirioAuth.getCurrentUser();
+    if (currentUser && currentUser.rol === 'cliente') {
+      loadAlertasCliente();
+      connectSSE();
+    }
+  }
+
+}());
+

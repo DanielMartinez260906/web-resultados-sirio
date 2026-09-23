@@ -556,6 +556,135 @@ app.post('/api/push/test', async (req, res) => {
   }
 });
 
+// ============================================================
+// ENDPOINTS PARA ALERTAS ADMINISTRATIVAS
+// ============================================================
+
+// API: Crear y enviar una alerta (Solo Admins)
+app.post('/api/admin/alertas', async (req, res) => {
+  const { titulo, mensaje, tipo, tipo_personalizado, destinatarios, creada_por, creada_por_nombre } = req.body;
+
+  if (!titulo || !mensaje) {
+    return res.status(400).json({ success: false, message: 'El título y el mensaje son obligatorios.' });
+  }
+
+  try {
+    // 1. Guardar la alerta en la base de datos
+    const alertaData = { titulo, mensaje, tipo: tipo || 'informacion', tipo_personalizado: tipo_personalizado || '', destinatarios: destinatarios || 'todos', creada_por: creada_por || '', creada_por_nombre: creada_por_nombre || 'Administrador' };
+    const result = await db.createAlerta(alertaData);
+
+    if (!result.success) {
+      return res.status(500).json(result);
+    }
+
+    // 2. Determinar lista de IDs a notificar
+    let idsANotificar = [];
+    if (destinatarios === 'todos') {
+      const clientsRes = await db.getClients();
+      if (clientsRes.success && clientsRes.clients) {
+        idsANotificar = clientsRes.clients.map(c => c.id_usuario);
+      }
+    } else if (Array.isArray(destinatarios)) {
+      idsANotificar = destinatarios;
+    }
+
+    const tipoLabel = {
+      actualizacion: 'Actualización de la App 📲',
+      mantenimiento: 'Mantenimiento Programado 🔧',
+      cambio_servicio: 'Cambio en Servicios 📋',
+      informacion: 'Información General ℹ️',
+      personalizada: tipo_personalizado || 'Notificación del Laboratorio'
+    }[tipo] || 'Notificación del Laboratorio 🔔';
+
+    // 3. Notificar a cada destinatario (Push + SSE)
+    let notificados = 0;
+    for (const id of idsANotificar) {
+      // Notificación Push (si está suscrito)
+      notifyUser(id, {
+        title: tipoLabel,
+        body: titulo,
+        icon: '/logo.png',
+        data: { url: '/client.html' }
+      });
+
+      // SSE en tiempo real (si está conectado)
+      sendSSEEvent(id, 'nueva_alerta', {
+        id_alerta: result.id_alerta,
+        titulo,
+        mensaje,
+        tipo,
+        tipo_personalizado: tipo_personalizado || '',
+        fecha_creacion: new Date().toISOString()
+      });
+
+      notificados++;
+    }
+
+    console.log(`[Alertas] Alerta "${titulo}" enviada a ${notificados} cliente(s).`);
+    res.status(201).json({
+      success: true,
+      message: `Alerta enviada correctamente a ${notificados} cliente(s).`,
+      id_alerta: result.id_alerta,
+      notificados
+    });
+  } catch (error) {
+    console.error('Error al crear alerta:', error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
+// API: Listar todas las alertas (Solo Admins)
+app.get('/api/admin/alertas', async (req, res) => {
+  try {
+    const result = await db.getAlertasAdmin();
+    res.json(result);
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
+// API: Eliminar una alerta (Solo Admins)
+app.delete('/api/admin/alertas/:id', async (req, res) => {
+  const { id } = req.params;
+  if (!id) {
+    return res.status(400).json({ success: false, message: 'El ID de alerta es requerido.' });
+  }
+  try {
+    const result = await db.deleteAlerta(id);
+    res.json(result);
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
+// API: Obtener alertas de un cliente específico
+app.get('/api/client/alertas', async (req, res) => {
+  const { id_usuario } = req.query;
+  if (!id_usuario) {
+    return res.status(400).json({ success: false, message: 'El ID de usuario es requerido.' });
+  }
+  try {
+    const result = await db.getAlertasCliente(id_usuario);
+    res.json(result);
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
+// API: Registrar que el cliente vio el popup de una alerta
+app.post('/api/client/alertas/vista', async (req, res) => {
+  const { id_alerta, id_usuario } = req.body;
+  if (!id_alerta || !id_usuario) {
+    return res.status(400).json({ success: false, message: 'id_alerta e id_usuario son requeridos.' });
+  }
+  try {
+    const result = await db.registrarVistaAlerta(id_alerta, id_usuario);
+    res.json(result);
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
 // API: Obtener perfil de un cliente (Para verificar el plan/créditos más recientes)
 app.get('/api/client/profile', async (req, res) => {
   const { id_usuario } = req.query;

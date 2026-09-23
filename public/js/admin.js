@@ -3529,3 +3529,585 @@ document.addEventListener('DOMContentLoaded', () => {
 
   if (reloadBtn) reloadBtn.addEventListener('click', loadSupportTickets);
 }());
+
+// ==========================================================================
+// MÓDULO: ALERTAS A CLIENTES
+// ==========================================================================
+
+(function () {
+  'use strict';
+
+  const API_BASE = SirioAuth.API_BASE;
+
+  // ── Mapa de tipos de alerta ───────────────────────────────────────────────
+  const TIPO_INFO = {
+    informacion:    { label: 'Información General',      icon: 'fa-circle-info',       color: '#38bdf8' },
+    actualizacion:  { label: 'Actualización de la App',  icon: 'fa-mobile-screen',     color: '#a78bfa' },
+    mantenimiento:  { label: 'Mantenimiento Programado', icon: 'fa-screwdriver-wrench', color: '#fb923c' },
+    cambio_servicio:{ label: 'Cambio en Servicios',      icon: 'fa-clipboard-list',    color: '#34d399' },
+    personalizada:  { label: 'Personalizada',            icon: 'fa-tag',               color: '#f472b6' }
+  };
+
+  function getTipoInfo(tipo, tipoPersonalizado) {
+    const base = TIPO_INFO[tipo] || TIPO_INFO.informacion;
+    if (tipo === 'personalizada' && tipoPersonalizado) {
+      return { ...base, label: tipoPersonalizado };
+    }
+    return base;
+  }
+
+  // ── Toggle categoría personalizada ────────────────────────────────────────
+  window.toggleAlertaTipoPersonalizado = function () {
+    const sel = document.getElementById('alerta-tipo');
+    const wrapper = document.getElementById('alerta-tipo-personalizado-wrapper');
+    if (!sel || !wrapper) return;
+    wrapper.style.display = sel.value === 'personalizada' ? 'block' : 'none';
+    if (sel.value !== 'personalizada') {
+      const inp = document.getElementById('alerta-tipo-personalizado');
+      if (inp) inp.value = '';
+    }
+  };
+
+  // ── Toggle lista de clientes específicos ──────────────────────────────────
+  window.toggleAlertaDestinatarios = async function () {
+    const especificos = document.getElementById('alerta-dest-especificos');
+    const lista = document.getElementById('alerta-clientes-lista');
+    if (!lista) return;
+    if (especificos && especificos.checked) {
+      lista.style.display = 'block';
+      await renderAlertaClientesList();
+    } else {
+      lista.style.display = 'none';
+    }
+  };
+
+  async function renderAlertaClientesList() {
+    const lista = document.getElementById('alerta-clientes-lista');
+    if (!lista) return;
+
+    let clients = window._alertaAllClients;
+    if (!clients || clients.length === 0) {
+      lista.innerHTML = '<div style="color: var(--text-muted); font-style: italic; font-size:0.81rem; padding: 4px 0;"><i class="fa-solid fa-circle-notch fa-spin"></i> Cargando lista de clientes...</div>';
+      try {
+        const res = await fetch(`${API_BASE}/api/admin/clients`);
+        const data = await res.json();
+        if (data.success && Array.isArray(data.clients)) {
+          clients = data.clients;
+          window._alertaAllClients = clients;
+        }
+      } catch (err) {
+        console.error('Error cargando clientes para alertas:', err);
+      }
+    }
+
+    if (!clients || clients.length === 0) {
+      lista.innerHTML = '<div style="color: var(--text-dark); font-style: italic; font-size:0.81rem; padding: 4px 0;">No se encontraron clientes registrados en la base de datos.</div>';
+      return;
+    }
+
+    lista.innerHTML = `
+      <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; padding-bottom: 6px; border-bottom: 1px solid var(--border-light);">
+        <input type="text" id="alerta-filtro-cliente" placeholder="Buscar cliente..." style="padding: 4px 8px; font-size: 0.78rem; border-radius: 6px; background: rgba(255,255,255,0.06); border: 1px solid var(--border-light); color: var(--text-main); width: 60%;">
+        <div style="display: flex; gap: 6px;">
+          <button type="button" id="alerta-select-all" style="background: none; border: none; font-size: 0.72rem; color: var(--color-primary); cursor: pointer; text-decoration: underline; padding: 0;">Todos</button>
+          <button type="button" id="alerta-deselect-all" style="background: none; border: none; font-size: 0.72rem; color: var(--text-muted); cursor: pointer; text-decoration: underline; padding: 0;">Ninguno</button>
+        </div>
+      </div>
+      <div id="alerta-clientes-checkboxes" style="display: flex; flex-direction: column; gap: 4px;">
+        ${clients.map(c => `
+          <label class="alerta-cliente-item" data-search="${(c.nombre + ' ' + (c.usuario || '')).toLowerCase()}" style="display: flex; align-items: center; gap: 8px; padding: 5px 6px; cursor: pointer; border-radius: 6px; transition: background 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.04)'" onmouseout="this.style.background='transparent'">
+            <input type="checkbox" class="alerta-cliente-check" value="${c.id_usuario}" style="accent-color: var(--color-accent); width:15px; height:15px; cursor: pointer;">
+            <span style="flex:1; font-weight: 500; color: var(--text-main);">${c.nombre}</span>
+            <span style="color: var(--text-dark); font-size:0.75rem;">@${c.usuario || c.id_usuario}</span>
+          </label>
+        `).join('')}
+      </div>
+    `;
+
+    // Buscador interactivo en vivo
+    const searchInp = document.getElementById('alerta-filtro-cliente');
+    if (searchInp) {
+      searchInp.addEventListener('input', () => {
+        const query = searchInp.value.toLowerCase().trim();
+        lista.querySelectorAll('.alerta-cliente-item').forEach(item => {
+          const text = item.getAttribute('data-search') || '';
+          item.style.display = text.includes(query) ? 'flex' : 'none';
+        });
+      });
+    }
+
+    // Botones de seleccionar/deseleccionar todos
+    const selAllBtn = document.getElementById('alerta-select-all');
+    const deselAllBtn = document.getElementById('alerta-deselect-all');
+    if (selAllBtn) {
+      selAllBtn.addEventListener('click', () => {
+        lista.querySelectorAll('.alerta-cliente-check').forEach(cb => cb.checked = true);
+      });
+    }
+    if (deselAllBtn) {
+      deselAllBtn.addEventListener('click', () => {
+        lista.querySelectorAll('.alerta-cliente-check').forEach(cb => cb.checked = false);
+      });
+    }
+  }
+
+  // ── Conteo de caracteres del mensaje ──────────────────────────────────────
+  const mensajeTextarea = document.getElementById('alerta-mensaje');
+  const mensajeCount = document.getElementById('alerta-mensaje-count');
+  if (mensajeTextarea && mensajeCount) {
+    mensajeTextarea.addEventListener('input', () => {
+      mensajeCount.textContent = mensajeTextarea.value.length;
+    });
+  }
+
+  // ── Cargar historial de alertas ───────────────────────────────────────────
+  async function loadAlertas() {
+    const lista = document.getElementById('alertas-historial-lista');
+    if (!lista) return;
+    lista.innerHTML = '<div style="text-align:center; padding: 1.5rem; color: var(--text-dark);"><i class="fa-solid fa-circle-notch fa-spin"></i> Cargando alertas...</div>';
+    try {
+      const res = await fetch(`${API_BASE}/api/admin/alertas`);
+      const data = await res.json();
+      if (data.success) {
+        renderAlertasHistory(data.alertas || []);
+      } else {
+        lista.innerHTML = `<div style="color:#ef4444; font-size:0.82rem; padding:1rem;">${data.message}</div>`;
+      }
+    } catch (err) {
+      lista.innerHTML = '<div style="color:#ef4444; font-size:0.82rem; padding:1rem;">Error de conexión al cargar alertas.</div>';
+    }
+  }
+  window.loadAlertas = loadAlertas;
+
+  // ── Renderizar historial ──────────────────────────────────────────────────
+  function renderAlertasHistory(alertas) {
+    const lista = document.getElementById('alertas-historial-lista');
+    if (!lista) return;
+    if (!alertas || alertas.length === 0) {
+      lista.innerHTML = `
+        <div style="padding: 2rem; text-align: center; color: var(--text-dark);">
+          <i class="fa-solid fa-bell-slash" style="font-size: 2rem; opacity: 0.3; display: block; margin-bottom: 0.75rem;"></i>
+          <p style="font-size: 0.85rem;">No hay alertas enviadas aún.</p>
+        </div>`;
+      return;
+    }
+    lista.innerHTML = alertas.map(a => {
+      const info = getTipoInfo(a.tipo, a.tipo_personalizado);
+      const fecha = new Date(a.fecha_creacion).toLocaleString('es-CO', {
+        timeZone: 'America/Bogota', year: 'numeric', month: 'short',
+        day: 'numeric', hour: '2-digit', minute: '2-digit'
+      });
+      const vistosCount = Array.isArray(a.vista_por) ? a.vista_por.length : 0;
+      const destLabel = a.destinatarios === 'todos'
+        ? '<i class="fa-solid fa-users"></i> Todos'
+        : `<i class="fa-solid fa-user-check"></i> ${Array.isArray(a.destinatarios) ? a.destinatarios.length + ' cliente(s)' : '?'}`;
+      return `
+        <div id="alerta-card-${a.id_alerta}" style="border: 1px solid var(--border-light); border-radius: 10px; padding: 0.9rem 1rem; margin-bottom: 0.75rem; background: rgba(255,255,255,0.02); transition: opacity 0.3s, max-height 0.4s, padding 0.4s;">
+          <div style="display: flex; align-items: flex-start; gap: 10px;">
+            <div style="width:32px; height:32px; border-radius:50%; background: rgba(255,255,255,0.05); display:flex; align-items:center; justify-content:center; flex-shrink:0;">
+              <i class="fa-solid ${info.icon}" style="color:${info.color}; font-size:0.85rem;"></i>
+            </div>
+            <div style="flex:1; min-width:0;">
+              <div style="display:flex; align-items:center; justify-content:space-between; gap:6px; flex-wrap:wrap;">
+                <strong style="font-size:0.88rem; color:var(--text-main); word-break:break-word;">${a.titulo}</strong>
+                <button onclick="deleteAlerta('${a.id_alerta}')" title="Eliminar alerta"
+                  style="background:none; border:none; color:#ef4444; cursor:pointer; font-size:0.85rem; padding:2px 6px; opacity:0.7; transition:opacity 0.2s;"
+                  onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.7'">
+                  <i class="fa-solid fa-trash"></i>
+                </button>
+              </div>
+              <p style="font-size:0.78rem; color:var(--text-dark); margin:4px 0; line-height:1.4; word-break:break-word;">${a.mensaje}</p>
+              <div style="display:flex; gap:10px; flex-wrap:wrap; margin-top:6px; font-size:0.72rem; color:var(--text-dark);">
+                <span style="background: rgba(255,255,255,0.05); padding: 2px 8px; border-radius:20px; border:1px solid var(--border-light);">
+                  <i class="fa-solid ${info.icon}" style="color:${info.color};"></i> ${info.label}
+                </span>
+                <span>${destLabel}</span>
+                <span><i class="fa-regular fa-clock"></i> ${fecha}</span>
+                <span style="color:${vistosCount > 0 ? '#34d399' : 'var(--text-dark)'};">
+                  <i class="fa-solid fa-eye"></i> ${vistosCount} visto(s)
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>`;
+    }).join('');
+  }
+
+  // ── Enviar alerta ─────────────────────────────────────────────────────────
+  window.sendAlerta = async function () {
+    const titulo = (document.getElementById('alerta-titulo')?.value || '').trim();
+    const tipo = document.getElementById('alerta-tipo')?.value || 'informacion';
+    const tipoPersonalizado = tipo === 'personalizada'
+      ? (document.getElementById('alerta-tipo-personalizado')?.value || '').trim() : '';
+    const mensaje = (document.getElementById('alerta-mensaje')?.value || '').trim();
+
+    if (!titulo) return showGlobalAlert('El título es obligatorio.', 'error');
+    if (tipo === 'personalizada' && !tipoPersonalizado) return showGlobalAlert('Escribe el nombre de la categoría personalizada.', 'error');
+    if (!mensaje) return showGlobalAlert('El mensaje es obligatorio.', 'error');
+
+    const todosRadio = document.getElementById('alerta-dest-todos');
+    let destinatarios = 'todos';
+    if (!todosRadio || !todosRadio.checked) {
+      const checks = Array.from(document.querySelectorAll('.alerta-cliente-check:checked')).map(c => c.value);
+      if (checks.length === 0) return showGlobalAlert('Selecciona al menos un cliente destinatario.', 'error');
+      destinatarios = checks;
+    }
+
+    const btn = document.getElementById('alerta-enviar-btn');
+    if (btn) { btn.disabled = true; btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> Enviando...'; }
+
+    try {
+      const currentUser = SirioAuth.getCurrentUser();
+      const res = await fetch(`${API_BASE}/api/admin/alertas`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          titulo, mensaje, tipo, tipo_personalizado: tipoPersonalizado, destinatarios,
+          creada_por: currentUser?.id_usuario || '',
+          creada_por_nombre: currentUser?.nombre || 'Administrador'
+        })
+      });
+      const data = await res.json();
+      if (data.success) {
+        showGlobalAlert('✅ ' + data.message, 'success');
+        document.getElementById('alerta-titulo').value = '';
+        document.getElementById('alerta-mensaje').value = '';
+        if (mensajeCount) mensajeCount.textContent = '0';
+        document.getElementById('alerta-tipo').value = 'informacion';
+        toggleAlertaTipoPersonalizado();
+        const todosR = document.getElementById('alerta-dest-todos');
+        if (todosR) todosR.checked = true;
+        const listaEl = document.getElementById('alerta-clientes-lista');
+        if (listaEl) listaEl.style.display = 'none';
+        loadAlertas();
+      } else {
+        showGlobalAlert(data.message || 'Error al enviar la alerta.', 'error');
+      }
+    } catch (err) {
+      showGlobalAlert('Error de conexión al enviar la alerta.', 'error');
+    } finally {
+      if (btn) { btn.disabled = false; btn.innerHTML = '<i class="fa-solid fa-paper-plane"></i> Enviar Alerta'; }
+    }
+  };
+
+  // ── Eliminar alerta ───────────────────────────────────────────────────────
+  window.deleteAlerta = async function (id) {
+    if (!confirm('¿Eliminar esta alerta del historial?')) return;
+    const card = document.getElementById('alerta-card-' + id);
+    if (card) card.style.opacity = '0.4';
+    try {
+      const res = await fetch(`${API_BASE}/api/admin/alertas/${id}`, { method: 'DELETE' });
+      const data = await res.json();
+      if (data.success) {
+        if (card) {
+          card.style.maxHeight = '0'; card.style.padding = '0'; card.style.overflow = 'hidden';
+          setTimeout(() => card.remove(), 400);
+        }
+        showGlobalAlert('Alerta eliminada correctamente.', 'success');
+      } else {
+        if (card) card.style.opacity = '1';
+        showGlobalAlert(data.message || 'Error al eliminar.', 'error');
+      }
+    } catch (err) {
+      if (card) card.style.opacity = '1';
+      showGlobalAlert('Error de conexión.', 'error');
+    }
+  };
+
+  // ── Precargar clientes para el selector ──────────────────────────────────
+  async function preloadClientsForAlertas() {
+    try {
+      const res = await fetch(`${API_BASE}/api/admin/clients`);
+      const data = await res.json();
+      if (data.success) window._alertaAllClients = data.clients || [];
+    } catch (_) {}
+  }
+
+  // ── Activar tab de alertas → cargar datos ────────────────────────────────
+  document.addEventListener('click', function (e) {
+    const btn = e.target.closest('[data-tab="tab-alertas"]');
+    if (btn) {
+      loadAlertas();
+      preloadClientsForAlertas();
+    }
+  });
+
+  // =========================================================================
+  // MÓDULO: CAMBIO RÁPIDO DE CUENTA DE ADMINISTRADOR (1-Clic Switcher)
+  // =========================================================================
+  (function initAdminAccountSwitcher() {
+    const switchBtn = document.getElementById('admin-switch-account-btn');
+    const modal = document.getElementById('modal-switch-account');
+    const closeBtn = document.getElementById('close-switch-modal-btn');
+    const closeSecBtn = document.getElementById('close-switch-modal-secondary-btn');
+    const listContainer = document.getElementById('saved-admin-accounts-list');
+    const form = document.getElementById('switch-account-form');
+    const usernameInput = document.getElementById('switch-username-input');
+    const passwordInput = document.getElementById('switch-password-input');
+    const alertBox = document.getElementById('switch-modal-alert');
+    const alertText = document.getElementById('switch-modal-alert-text');
+    const togglePwdBtn = document.getElementById('toggle-switch-pwd');
+    const togglePwdIcon = document.getElementById('toggle-switch-pwd-icon');
+    const useAnotherBtn = document.getElementById('switch-use-another-btn');
+    const cancelNewBtn = document.getElementById('switch-cancel-new-btn');
+    const addNewContainer = document.getElementById('switch-add-new-container');
+
+    if (!switchBtn || !modal) return;
+
+    // Asegurar que el usuario actual quede registrado en la lista de cuentas
+    const currentAdmin = SirioAuth.getCurrentUser();
+    if (currentAdmin && SirioAuth.isAdminRole(currentAdmin.rol)) {
+      SirioAuth.saveAdminProfile(currentAdmin);
+    }
+
+    function showAlert(msg) {
+      if (!alertBox || !alertText) return;
+      alertText.innerText = msg;
+      alertBox.style.display = 'flex';
+    }
+
+    function hideAlert() {
+      if (alertBox) alertBox.style.display = 'none';
+    }
+
+    function renderSavedAccounts() {
+      if (!listContainer) return;
+      const profiles = SirioAuth.getSavedAdminProfiles();
+      const current = SirioAuth.getCurrentUser() || {};
+      const rawCurrentUname = current.username !== undefined ? current.username : (current.usuario !== undefined ? current.usuario : '');
+      const currentUname = String(rawCurrentUname || '').trim().toLowerCase();
+
+      if (profiles.length === 0) {
+        listContainer.innerHTML = `
+          <div style="padding: 1.25rem; text-align: center; color: var(--text-dark); background: rgba(255,255,255,0.02); border-radius: 10px; border: 1px dashed var(--border-light); font-size: 0.85rem;">
+            <i class="fa-solid fa-users" style="font-size: 1.5rem; opacity: 0.3; margin-bottom: 6px; display: block;"></i>
+            Aún no hay otras cuentas de personal guardadas en este equipo.
+          </div>
+        `;
+        return;
+      }
+
+      listContainer.innerHTML = profiles.map(p => {
+        if (!p || typeof p !== 'object') return '';
+        const rawUname = p.username !== undefined ? p.username : (p.usuario !== undefined ? p.usuario : '');
+        const uname = String(rawUname || '').trim();
+        if (!uname) return '';
+        const isCurrent = uname.toLowerCase() === currentUname;
+        
+        let roleBadge = 'Personal';
+        let roleColor = '#0ea5e9';
+        let roleBg = 'rgba(14, 165, 233, 0.15)';
+        const roleStr = String(p.rol || '').toLowerCase().trim();
+        if (roleStr === 'jefas') {
+          roleBadge = 'Jefa 👑';
+          roleColor = '#f472b6';
+          roleBg = 'rgba(244, 114, 182, 0.15)';
+        } else if (roleStr === 'programadores') {
+          roleBadge = 'Programador 💻';
+          roleColor = '#c084fc';
+          roleBg = 'rgba(192, 132, 252, 0.15)';
+        }
+
+        const borderStyle = isCurrent 
+          ? 'border: 1.5px solid #10b981; background: rgba(16, 185, 129, 0.08);' 
+          : 'border: 1px solid var(--border-light); background: rgba(255, 255, 255, 0.03);';
+
+        return `
+          <div class="admin-account-card" data-username="${uname}" style="display: flex; align-items: center; justify-content: space-between; padding: 12px 14px; border-radius: 12px; cursor: pointer; transition: all 0.2s; ${borderStyle}">
+            <div style="display: flex; align-items: center; gap: 12px; min-width: 0; flex: 1;">
+              <div style="width: 38px; height: 38px; border-radius: 50%; background: ${roleBg}; color: ${roleColor}; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 1rem; flex-shrink: 0;">
+                ${String(p.nombre || uname || 'A').charAt(0).toUpperCase()}
+              </div>
+              <div style="min-width: 0; flex: 1;">
+                <div style="display: flex; align-items: center; gap: 6px; flex-wrap: wrap;">
+                  <span style="font-weight: 600; font-size: 0.92rem; color: var(--text-main); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                    ${String(p.nombre || uname)}
+                  </span>
+                  ${isCurrent ? '<span style="font-size: 0.68rem; background: rgba(16, 185, 129, 0.2); color: #10b981; padding: 2px 6px; border-radius: 6px; font-weight: 700;">Sesión Activa</span>' : ''}
+                </div>
+                <div style="display: flex; align-items: center; gap: 8px; margin-top: 2px;">
+                  <span style="font-size: 0.75rem; color: var(--text-muted);">@${uname}</span>
+                  <span style="font-size: 0.68rem; color: ${roleColor}; background: ${roleBg}; padding: 1px 6px; border-radius: 4px; font-weight: 500;">${roleBadge}</span>
+                </div>
+              </div>
+            </div>
+            <div style="display: flex; align-items: center; gap: 8px;">
+              ${!isCurrent ? `
+                <button type="button" class="btn btn-primary btn-switch-now" data-username="${uname}" style="font-size: 0.75rem; padding: 6px 12px; border-radius: 8px; display: inline-flex; align-items: center; gap: 5px;">
+                  <i class="fa-solid fa-right-to-bracket"></i> Entrar
+                </button>
+              ` : `
+                <span style="font-size: 0.8rem; color: #10b981; padding-right: 4px;"><i class="fa-solid fa-circle-check"></i></span>
+              `}
+              <button type="button" class="btn-remove-admin-profile" data-username="${uname}" title="Quitar de este equipo" style="background: none; border: none; color: var(--text-dark); cursor: pointer; padding: 6px; border-radius: 6px; transition: color 0.2s;" onmouseover="this.style.color='#ef4444'" onmouseout="this.style.color='var(--text-dark)'">
+                <i class="fa-solid fa-trash-can" style="font-size: 0.85rem;"></i>
+              </button>
+            </div>
+          </div>
+        `;
+      }).join('');
+
+      // Clic en tarjeta -> CAMBIO INSTANTÁNEO 1-CLIC
+      listContainer.querySelectorAll('.admin-account-card').forEach(card => {
+        card.addEventListener('click', (e) => {
+          if (e.target.closest('.btn-remove-admin-profile')) return;
+          const uname = card.getAttribute('data-username');
+          executeImmediateSwitch(uname);
+        });
+      });
+
+      // Clic en botón "Entrar"
+      listContainer.querySelectorAll('.btn-switch-now').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          const uname = btn.getAttribute('data-username');
+          executeImmediateSwitch(uname);
+        });
+      });
+
+      // Eliminar cuenta guardada de este equipo
+      listContainer.querySelectorAll('.btn-remove-admin-profile').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          const uname = btn.getAttribute('data-username');
+          if (confirm(`¿Quitar la cuenta de @${uname} de la lista de este computador?`)) {
+            SirioAuth.removeAdminProfile(uname);
+            renderSavedAccounts();
+          }
+        });
+      });
+    }
+
+    // Función que realiza el cambio instantáneo
+    function executeImmediateSwitch(uname) {
+      if (!uname) return;
+      const current = SirioAuth.getCurrentUser() || {};
+      const rawCurrentUname = current.username !== undefined ? current.username : (current.usuario !== undefined ? current.usuario : '');
+      const currentUname = String(rawCurrentUname || '').trim().toLowerCase();
+      
+      if (String(uname).trim().toLowerCase() === currentUname) {
+        // Ya es la cuenta activa, cerrar modal
+        modal.style.display = 'none';
+        return;
+      }
+
+      SirioAuth.showLoading(`Cambiando a @${uname}...`);
+      const ok = SirioAuth.switchToAdminProfile(uname);
+      if (ok) {
+        setTimeout(() => {
+          window.location.reload();
+        }, 300);
+      } else {
+        SirioAuth.hideLoading();
+        showAlert('No se pudo cambiar de cuenta. Intenta iniciar sesión nuevamente.');
+      }
+    }
+
+    // Alternar formulario para añadir nueva cuenta
+    if (useAnotherBtn && form && addNewContainer) {
+      useAnotherBtn.addEventListener('click', () => {
+        form.style.display = 'block';
+        addNewContainer.style.display = 'none';
+        if (usernameInput) {
+          usernameInput.value = '';
+          usernameInput.focus();
+        }
+        if (passwordInput) passwordInput.value = '';
+        hideAlert();
+      });
+    }
+
+    if (cancelNewBtn && form && addNewContainer) {
+      cancelNewBtn.addEventListener('click', () => {
+        form.style.display = 'none';
+        addNewContainer.style.display = 'block';
+        hideAlert();
+      });
+    }
+
+    // Toggle ver/ocultar contraseña
+    if (togglePwdBtn && passwordInput) {
+      togglePwdBtn.addEventListener('click', () => {
+        const isHidden = passwordInput.type === 'password';
+        passwordInput.type = isHidden ? 'text' : 'password';
+        if (togglePwdIcon) togglePwdIcon.className = isHidden ? 'fa-solid fa-eye-slash' : 'fa-solid fa-eye';
+        togglePwdBtn.style.color = isHidden ? 'var(--color-primary)' : 'var(--text-dark)';
+      });
+    }
+
+    // Abrir modal
+    switchBtn.addEventListener('click', () => {
+      hideAlert();
+      if (form) form.style.display = 'none';
+      if (addNewContainer) addNewContainer.style.display = 'block';
+      renderSavedAccounts();
+      modal.style.display = 'flex';
+    });
+
+    // Cerrar modal
+    const closeModal = () => {
+      modal.style.display = 'none';
+      if (passwordInput) passwordInput.value = '';
+      hideAlert();
+    };
+    if (closeBtn) closeBtn.addEventListener('click', closeModal);
+    if (closeSecBtn) closeSecBtn.addEventListener('click', closeModal);
+    modal.addEventListener('click', (e) => {
+      if (e.target === modal) closeModal();
+    });
+
+    // Enviar formulario para autenticar y guardar nueva cuenta de personal
+    if (form) {
+      form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        hideAlert();
+
+        const username = usernameInput ? usernameInput.value.trim() : '';
+        const password = passwordInput ? passwordInput.value : '';
+
+        if (!username || !password) {
+          showAlert('Por favor ingresa usuario y contraseña.');
+          return;
+        }
+
+        const submitBtn = document.getElementById('btn-submit-switch');
+        const origBtnHtml = submitBtn ? submitBtn.innerHTML : '';
+        if (submitBtn) {
+          submitBtn.disabled = true;
+          submitBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Autenticando...';
+        }
+
+        try {
+          const result = await SirioAuth.login(username, password, true);
+
+          if (result.success) {
+            if (SirioAuth.isAdminRole(result.user.rol)) {
+              if (submitBtn) submitBtn.innerHTML = '<i class="fa-solid fa-check"></i> ¡Cuenta Guardada!';
+              setTimeout(() => {
+                window.location.reload();
+              }, 400);
+            } else {
+              window.location.href = 'client.html';
+            }
+          } else {
+            if (submitBtn) {
+              submitBtn.disabled = false;
+              submitBtn.innerHTML = origBtnHtml;
+            }
+            showAlert(result.message || 'Contraseña o usuario incorrecto.');
+          }
+        } catch (err) {
+          if (submitBtn) {
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = origBtnHtml;
+          }
+          showAlert('Error de conexión con el servidor.');
+        }
+      });
+    }
+  }());
+
+}());
+
+
+
