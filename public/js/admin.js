@@ -3978,7 +3978,7 @@ document.addEventListener('DOMContentLoaded', () => {
       });
     }
 
-    // Función que realiza el cambio instantáneo
+    // Función que realiza el cambio de cuenta
     function executeImmediateSwitch(uname) {
       if (!uname) return;
       const current = SirioAuth.getCurrentUser() || {};
@@ -3988,6 +3988,30 @@ document.addEventListener('DOMContentLoaded', () => {
       if (String(uname).trim().toLowerCase() === currentUname) {
         // Ya es la cuenta activa, cerrar modal
         modal.style.display = 'none';
+        return;
+      }
+
+      // Buscar perfil guardado
+      const profiles = SirioAuth.getSavedAdminProfiles();
+      const profile = profiles.find(p => String(p.username || p.usuario || '').trim().toLowerCase() === String(uname).trim().toLowerCase());
+      const roleStr = String(profile?.rol || '').toLowerCase().trim();
+
+      // REGLA DE SEGURIDAD:
+      // Si el rol es 'programadores' o 'jefas', solicitar contraseña obligatoriamente
+      if (roleStr === 'programadores' || roleStr === 'jefas') {
+        if (form && addNewContainer) {
+          form.style.display = 'block';
+          addNewContainer.style.display = 'none';
+          if (usernameInput) {
+            usernameInput.value = uname;
+          }
+          if (passwordInput) {
+            passwordInput.value = '';
+            passwordInput.focus();
+          }
+          const roleLabel = roleStr === 'jefas' ? 'Jefa' : 'Programador';
+          showAlert(`Por seguridad, ingresa la contraseña para cambiar a la cuenta de ${roleLabel} (@${uname}).`);
+        }
         return;
       }
 

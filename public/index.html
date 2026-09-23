@@ -239,28 +239,47 @@
           `;
         }).join('');
 
-        // Manejar clics para ingresar instantáneamente (1-clic)
+        // Manejar clics para ingresar a cuentas guardadas
         chooserAccountsList.querySelectorAll('.saved-account-row').forEach(row => {
           const uname = row.getAttribute('data-username');
           const clickZones = row.querySelectorAll('.account-click-zone');
           clickZones.forEach(zone => {
             zone.addEventListener('click', () => {
-              if (uname) {
-                SirioAuth.showLoading(`Accediendo como @${uname}...`);
-                const ok = SirioAuth.switchToAdminProfile(uname);
-                if (ok) {
-                  setTimeout(() => {
-                    window.location.href = 'admin.html';
-                  }, 250);
-                } else {
-                  SirioAuth.hideLoading();
-                  // Si falló, pasar al formulario y rellenar usuario
-                  accountChooserView.style.display = 'none';
-                  traditionalLoginView.style.display = 'block';
-                  if (usernameInput && passwordInput) {
-                    usernameInput.value = uname;
-                    passwordInput.focus();
-                  }
+              if (!uname) return;
+              
+              // Buscar información del perfil guardado
+              const profile = profiles.find(p => String(p.username || p.usuario || '').trim().toLowerCase() === uname.toLowerCase());
+              const roleStr = String(profile?.rol || '').toLowerCase().trim();
+
+              // REGLA DE SEGURIDAD:
+              // Si la cuenta tiene rol 'programadores' o 'jefas', SIEMPRE pedir la contraseña.
+              if (roleStr === 'programadores' || roleStr === 'jefas') {
+                accountChooserView.style.display = 'none';
+                traditionalLoginView.style.display = 'block';
+                if (usernameInput && passwordInput) {
+                  usernameInput.value = uname;
+                  passwordInput.value = '';
+                  passwordInput.focus();
+                }
+                const roleLabel = roleStr === 'jefas' ? 'Jefa' : 'Programador / Dev';
+                showAlert(`Por seguridad, introduce la contraseña para la cuenta de ${roleLabel} (@${uname}).`);
+                return;
+              }
+
+              // Si es administrador general / otro personal, permitir acceso directo
+              SirioAuth.showLoading(`Accediendo como @${uname}...`);
+              const ok = SirioAuth.switchToAdminProfile(uname);
+              if (ok) {
+                setTimeout(() => {
+                  window.location.href = 'admin.html';
+                }, 250);
+              } else {
+                SirioAuth.hideLoading();
+                accountChooserView.style.display = 'none';
+                traditionalLoginView.style.display = 'block';
+                if (usernameInput && passwordInput) {
+                  usernameInput.value = uname;
+                  passwordInput.focus();
                 }
               }
             });
