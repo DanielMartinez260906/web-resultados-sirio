@@ -850,6 +850,36 @@ function handleMockAction(action, data) {
       return { success: true, message: 'Alerta eliminada correctamente.' };
     }
 
+    case 'ingresarPaciente': {
+      db.PacientesIngresados = db.PacientesIngresados || [];
+      const now = new Date();
+      const fechaCO = now.toLocaleString('es-CO', {
+        timeZone: 'America/Bogota',
+        year: 'numeric',
+        month: 'numeric',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit',
+        hour12: false
+      });
+      const codigo = "218" + Math.floor(1000 + Math.random() * 9000);
+      const nuevoPaciente = {
+        id: codigo,
+        codigo_registro: codigo,
+        fecha: fechaCO,
+        ...data
+      };
+      db.PacientesIngresados.push(nuevoPaciente);
+      writeMockDB(db);
+      return {
+        success: true,
+        message: "Paciente ingresado correctamente (Modo Mock).",
+        codigo_registro: codigo,
+        fecha: fechaCO
+      };
+    }
+
     default:
       return { success: false, message: `Acción desconocida en MockDB: ${action}` };
   }
@@ -950,14 +980,16 @@ module.exports = {
   getPortafolio: () => callSheetsAPI('getPortafolio'),
   savePortafolioPrecios: (preciosData) => callSheetsAPI('savePortafolioPrecios', preciosData),
   addPortafolioExamen: (examenData) => callSheetsAPI('addPortafolioExamen', examenData),
-  ingresarPaciente: async (pacienteData) => {
-    const configRes = await callSheetsAPI('getConfig');
-    const config = configRes.config || {};
-    if (config.ingreso_pacientes_visible === 'false' || config.ingreso_pacientes_visible === false) {
-      return {
-        success: false,
-        message: "El ingreso de pacientes se encuentra inhabilitado por el momento. Por favor comuníquese directamente con el laboratorio."
-      };
+  ingresarPaciente: async (pacienteData, bypassMaintenance = false) => {
+    if (!bypassMaintenance) {
+      const configRes = await callSheetsAPI('getConfig');
+      const config = configRes.config || {};
+      if (config.ingreso_pacientes_visible === 'false' || config.ingreso_pacientes_visible === false) {
+        return {
+          success: false,
+          message: "El ingreso de pacientes se encuentra inhabilitado por el momento. Por favor comuníquese directamente con el laboratorio."
+        };
+      }
     }
     return callPacientesAPI('ingresarPaciente', pacienteData);
   },

@@ -723,8 +723,10 @@ app.get('/api/client/results', async (req, res) => {
 // API: Ingresar Paciente (Para Clientes)
 app.post('/api/client/ingresar-paciente', async (req, res) => {
   const { 
-    id_usuario, veterinaria, medico, propietario, paciente_nombre, especie, raza, edad, sexo, 
-    tipo_muestra, examenes_solicitados, otros_examenes, observaciones, 
+    id_usuario, email, veterinaria, medico, propietario, paciente_nombre, especie, raza, edad, sexo,
+    esterilizado, es_control,
+    tipo_muestra, examenes_solicitados, examenes_comunes, examenes_individuales, examenes_cultivos, examenes_perfiles, examenes_toxicologia,
+    otros_examenes, observaciones, 
     direccion_recoleccion, contacto_recoleccion, quien_diligencia, 
     datos_especiales_tipo, datos_especiales_detalle 
   } = req.body;
@@ -744,11 +746,64 @@ app.post('/api/client/ingresar-paciente', async (req, res) => {
     }
 
     const result = await db.ingresarPaciente({
-      id_usuario, veterinaria, medico, propietario, paciente_nombre, especie, raza, edad, sexo,
-      tipo_muestra, examenes_solicitados, otros_examenes, observaciones,
+      id_usuario, email, veterinaria, medico, propietario, paciente_nombre, especie, raza, edad, sexo,
+      esterilizado, es_control,
+      tipo_muestra, examenes_solicitados, examenes_comunes, examenes_individuales, examenes_cultivos, examenes_perfiles, examenes_toxicologia,
+      otros_examenes, observaciones,
       direccion_recoleccion, contacto_recoleccion, quien_diligencia,
       datos_especiales_tipo, datos_especiales_detalle
-    });
+    }, false);
+    
+    if (result.success) {
+      if (!result.codigo_registro) {
+        result.codigo_registro = "218" + Math.floor(1000 + Math.random() * 9000);
+      }
+      if (!result.fecha) {
+        const now = new Date();
+        result.fecha = now.toLocaleString('es-CO', { 
+          timeZone: 'America/Bogota',
+          year: 'numeric',
+          month: 'numeric',
+          day: 'numeric',
+          hour: '2-digit',
+          minute: '2-digit',
+          second: '2-digit',
+          hour12: false
+        });
+      }
+      res.json(result);
+    } else {
+      res.status(400).json(result);
+    }
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
+// API: Ingresar Paciente (Para Administradores - Nunca se deshabilita)
+app.post('/api/admin/ingresar-paciente', async (req, res) => {
+  const { 
+    id_usuario, email, veterinaria, medico, propietario, paciente_nombre, especie, raza, edad, sexo,
+    esterilizado, es_control,
+    tipo_muestra, examenes_solicitados, examenes_comunes, examenes_individuales, examenes_cultivos, examenes_perfiles, examenes_toxicologia,
+    otros_examenes, observaciones, 
+    direccion_recoleccion, contacto_recoleccion, quien_diligencia, 
+    datos_especiales_tipo, datos_especiales_detalle 
+  } = req.body;
+
+  if (!id_usuario || !paciente_nombre || !especie || !sexo) {
+    return res.status(400).json({ success: false, message: "Los campos de usuario, nombre de paciente, especie y sexo son requeridos." });
+  }
+
+  try {
+    const result = await db.ingresarPaciente({
+      id_usuario, email, veterinaria, medico, propietario, paciente_nombre, especie, raza, edad, sexo,
+      esterilizado, es_control,
+      tipo_muestra, examenes_solicitados, examenes_comunes, examenes_individuales, examenes_cultivos, examenes_perfiles, examenes_toxicologia,
+      otros_examenes, observaciones,
+      direccion_recoleccion, contacto_recoleccion, quien_diligencia,
+      datos_especiales_tipo, datos_especiales_detalle
+    }, true); // bypassMaintenance = true
     
     if (result.success) {
       if (!result.codigo_registro) {

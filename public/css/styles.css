@@ -2597,4 +2597,49 @@ body.light-theme .dev-logo {
   border-color: #f472b6 !important;
   background: rgba(244, 114, 182, 0.12) !important;
 }
+
+/* ── Filtros Avanzados del Historial y Panel Estadístico ────────── */
+.history-filters-grid {
+  transition: all 0.3s ease;
+  animation: fadeInDown 0.25s ease-out;
+}
+
+@keyframes fadeInDown {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.stats-controls-panel {
+  transition: border-color 0.25s ease, background 0.25s ease;
+}
+
+body.light-theme .history-filters-grid,
+body.light-theme .stats-controls-panel,
+body.light-theme #stats-recent-table-section {
+  background: rgba(241, 245, 249, 0.75) !important;
+  border-color: rgba(203, 213, 225, 0.8) !important;
+}
+
+body.light-theme #stats-client-focus-banner {
+  background: linear-gradient(135deg, rgba(14, 165, 233, 0.1), rgba(168, 85, 247, 0.08)) !important;
+  border-color: rgba(14, 165, 233, 0.3) !important;
+}
+
+body.light-theme #stats-recent-count-badge {
+  background: rgba(0, 0, 0, 0.05) !important;
+  border-color: rgba(0, 0, 0, 0.08) !important;
+}
+
+@media (max-width: 768px) {
+  .history-filters-grid {
+    grid-template-columns: 1fr !important;
+  }
+}
+
 

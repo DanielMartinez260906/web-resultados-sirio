@@ -196,6 +196,9 @@ document.addEventListener('DOMContentLoaded', () => {
         allClients = data.clients;
         renderClients(allClients);
         renderDirClients(allClients);
+        populateHistoryFilters();
+        populateStatsFilters();
+        populateAdminClientSelect();
         
         const activeTab = sessionStorage.getItem('sirio_active_tab_admin');
         if (activeTab === 'tab-stats') {
@@ -227,6 +230,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
       if (data.success) {
         allResults = data.results;
+        populateHistoryFilters();
+        populateStatsFilters();
         renderGeneralOverview(allResults);
         
         const activeTab = sessionStorage.getItem('sirio_active_tab_admin');
@@ -305,19 +310,193 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // Filtrado del historial general
-  searchAllResults.addEventListener('keyup', () => {
-    const query = searchAllResults.value.toLowerCase().trim();
-    if (!query) {
-      renderGeneralOverview(allResults);
-      return;
+  // Elementos de Filtros Avanzados para Historial General
+  const toggleHistoryFiltersBtn = document.getElementById('toggle-history-filters-btn');
+  const historyAdvancedFiltersPanel = document.getElementById('history-advanced-filters-panel');
+  const historyFilterClient = document.getElementById('history-filter-client');
+  const historyFilterExam = document.getElementById('history-filter-exam');
+  const historyFilterDateFrom = document.getElementById('history-filter-date-from');
+  const historyFilterDateTo = document.getElementById('history-filter-date-to');
+  const historyFilterUploader = document.getElementById('history-filter-uploader');
+  const historyClearFiltersBtn = document.getElementById('history-clear-filters-btn');
+
+  // Toggle de panel de filtros avanzados
+  if (toggleHistoryFiltersBtn && historyAdvancedFiltersPanel) {
+    toggleHistoryFiltersBtn.addEventListener('click', () => {
+      const isVisible = historyAdvancedFiltersPanel.style.display !== 'none';
+      historyAdvancedFiltersPanel.style.display = isVisible ? 'none' : 'grid';
+      toggleHistoryFiltersBtn.classList.toggle('btn-primary', !isVisible);
+      toggleHistoryFiltersBtn.classList.toggle('btn-secondary', isVisible);
+    });
+  }
+
+  // Poblar selectores de filtros del historial general
+  function populateHistoryFilters() {
+    // 1. Selector de Clientes
+    if (historyFilterClient) {
+      const currentSelected = historyFilterClient.value;
+      historyFilterClient.innerHTML = '<option value="">Todos los clientes</option>';
+      
+      // Obtener lista única ordenada de clientes
+      const clientsMap = new Map();
+      allClients.forEach(c => clientsMap.set(c.id_usuario, c.nombre));
+      allResults.forEach(r => {
+        if (r.id_usuario && !clientsMap.has(r.id_usuario)) {
+          clientsMap.set(r.id_usuario, r.nombre_cliente || r.id_usuario);
+        }
+      });
+
+      const sortedClients = Array.from(clientsMap.entries()).sort((a, b) => a[1].localeCompare(b[1]));
+      sortedClients.forEach(([id, name]) => {
+        const opt = document.createElement('option');
+        opt.value = id;
+        opt.textContent = `${name} (${id})`;
+        if (id === currentSelected) opt.selected = true;
+        historyFilterClient.appendChild(opt);
+      });
     }
-    const filtered = allResults.filter(res => 
-      res.nombre_cliente.toLowerCase().includes(query) || 
-      res.nombre_examen.toLowerCase().includes(query)
-    );
+
+    // 2. Selector de Colaboradores / Enviado Por
+    if (historyFilterUploader) {
+      const currentSelected = historyFilterUploader.value;
+      historyFilterUploader.innerHTML = '<option value="">Todos los colaboradores</option>';
+      
+      const uploadersSet = new Set();
+      allResults.forEach(r => {
+        const uploader = r.admin_nombre || r.admin_id;
+        if (uploader && uploader !== 'Desconocido') {
+          uploadersSet.add(uploader.trim());
+        }
+      });
+
+      Array.from(uploadersSet).sort().forEach(uploader => {
+        const opt = document.createElement('option');
+        opt.value = uploader;
+        opt.textContent = uploader;
+        if (uploader === currentSelected) opt.selected = true;
+        historyFilterUploader.appendChild(opt);
+      });
+    }
+  }
+
+  // Parsear fecha flexible (ISO o DD/MM/YYYY o DD/MM/YYYY HH:mm o YYYY-MM-DD) a objeto Date seguro
+  function parseFlexibleDate(dateStr) {
+    if (!dateStr) return null;
+    try {
+      if (dateStr instanceof Date) {
+        return isNaN(dateStr.getTime()) ? null : dateStr;
+      }
+      const str = String(dateStr).trim();
+      if (!str) return null;
+
+      // Caso formato DD/MM/YYYY o DD/MM/YYYY HH:mm
+      if (str.includes('/')) {
+        const parts = str.split(' ')[0].split('/');
+        if (parts.length >= 3) {
+          const day = parseInt(parts[0], 10);
+          const month = parseInt(parts[1], 10) - 1;
+          let year = parseInt(parts[2], 10);
+          if (year < 100) year += 2000;
+          return new Date(year, month, day, 12, 0, 0); // mediodía para evitar saltos UTC
+        }
+      }
+
+      // Caso formato YYYY-MM-DD
+      if (/^\d{4}-\d{2}-\d{2}/.test(str)) {
+        const parts = str.split('T')[0].split(' ')[0].split('-');
+        if (parts.length >= 3) {
+          const year = parseInt(parts[0], 10);
+          const month = parseInt(parts[1], 10) - 1;
+          const day = parseInt(parts[2], 10);
+          return new Date(year, month, day, 12, 0, 0);
+        }
+      }
+
+      const d = new Date(str);
+      return isNaN(d.getTime()) ? null : d;
+    } catch {
+      return null;
+    }
+  }
+
+  // Filtrado compuesto para el historial general
+  function applyHistoryFilters() {
+    const query = searchAllResults ? searchAllResults.value.toLowerCase().trim() : '';
+    const selectedClientId = historyFilterClient ? historyFilterClient.value : '';
+    const examQuery = historyFilterExam ? historyFilterExam.value.toLowerCase().trim() : '';
+    const dateFromStr = historyFilterDateFrom ? historyFilterDateFrom.value : '';
+    const dateToStr = historyFilterDateTo ? historyFilterDateTo.value : '';
+    const selectedUploader = historyFilterUploader ? historyFilterUploader.value : '';
+
+    const dateFrom = dateFromStr ? new Date(dateFromStr + 'T00:00:00') : null;
+    const dateTo = dateToStr ? new Date(dateToStr + 'T23:59:59') : null;
+
+    const filtered = allResults.filter(res => {
+      // 1. Buscador global
+      if (query) {
+        const matchName = (res.nombre_cliente || '').toLowerCase().includes(query);
+        const matchExam = (res.nombre_examen || '').toLowerCase().includes(query);
+        const matchId = (res.id_usuario || '').toLowerCase().includes(query);
+        const matchAdmin = (res.admin_nombre || res.admin_id || '').toLowerCase().includes(query);
+        if (!matchName && !matchExam && !matchId && !matchAdmin) return false;
+      }
+
+      // 2. Filtro Cliente
+      if (selectedClientId && res.id_usuario !== selectedClientId) {
+        return false;
+      }
+
+      // 3. Filtro Examen / PDF
+      if (examQuery) {
+        const examName = (res.nombre_examen || '').toLowerCase();
+        const fileName = (res.nombre_archivo || '').toLowerCase();
+        if (!examName.includes(examQuery) && !fileName.includes(examQuery)) {
+          return false;
+        }
+      }
+
+      // 4. Filtro Enviado por
+      if (selectedUploader) {
+        const uploader = (res.admin_nombre || res.admin_id || '').trim();
+        if (uploader !== selectedUploader) {
+          return false;
+        }
+      }
+
+      // 5. Filtro de Fechas
+      if (dateFrom || dateTo) {
+        const resDate = parseFlexibleDate(res.fecha_subida);
+        if (resDate) {
+          if (dateFrom && resDate < dateFrom) return false;
+          if (dateTo && resDate > dateTo) return false;
+        }
+      }
+
+      return true;
+    });
+
     renderGeneralOverview(filtered);
-  });
+  }
+
+  // Event Listeners de los filtros de Historial
+  if (searchAllResults) searchAllResults.addEventListener('input', applyHistoryFilters);
+  if (historyFilterClient) historyFilterClient.addEventListener('change', applyHistoryFilters);
+  if (historyFilterExam) historyFilterExam.addEventListener('input', applyHistoryFilters);
+  if (historyFilterDateFrom) historyFilterDateFrom.addEventListener('change', applyHistoryFilters);
+  if (historyFilterDateTo) historyFilterDateTo.addEventListener('change', applyHistoryFilters);
+  if (historyFilterUploader) historyFilterUploader.addEventListener('change', applyHistoryFilters);
+
+  if (historyClearFiltersBtn) {
+    historyClearFiltersBtn.addEventListener('click', () => {
+      if (searchAllResults) searchAllResults.value = '';
+      if (historyFilterClient) historyFilterClient.value = '';
+      if (historyFilterExam) historyFilterExam.value = '';
+      if (historyFilterDateFrom) historyFilterDateFrom.value = '';
+      if (historyFilterDateTo) historyFilterDateTo.value = '';
+      if (historyFilterUploader) historyFilterUploader.value = '';
+      applyHistoryFilters();
+    });
+  }
 
   // Delegacion de eventos para eliminar desde la tabla general
   allResultsTableBody.addEventListener('click', async (e) => {
@@ -3069,61 +3248,256 @@ document.addEventListener('DOMContentLoaded', () => {
   let chartStaffDistribution = null;
   let chartTopClients = null;
 
+  // DOM Elements para controles de estadísticas
+  const statsFilterClient = document.getElementById('stats-filter-client');
+  const statsFilterPeriod = document.getElementById('stats-filter-period');
+  const statsCustomDates = document.getElementById('stats-custom-dates');
+  const statsFilterDateFrom = document.getElementById('stats-filter-date-from');
+  const statsFilterDateTo = document.getElementById('stats-filter-date-to');
+  const statsResetFiltersBtn = document.getElementById('stats-reset-filters-btn');
+  const refreshStatsBtn = document.getElementById('refresh-stats-btn');
+  const statsActiveFilterBadge = document.getElementById('stats-active-filter-badge');
+
+  // Banner y KPI Elements
+  const statsClientFocusBanner = document.getElementById('stats-client-focus-banner');
+  const statsClientFocusName = document.getElementById('stats-client-focus-name');
+  const statsClientFocusId = document.getElementById('stats-client-focus-id');
+  const statsClientFocusCount = document.getElementById('stats-client-focus-count');
+  const statsClientFocusShare = document.getElementById('stats-client-focus-share');
+
+  const statsKpiTotalLabel = document.getElementById('stats-kpi-total-label');
+  const statsTotalResults = document.getElementById('stats-total-results');
+  const statsKpi2Label = document.getElementById('stats-kpi2-label');
+  const statsTopClient = document.getElementById('stats-top-client');
+  const statsKpi2Icon = document.getElementById('stats-kpi2-icon');
+  const statsKpi2IconWrap = document.getElementById('stats-kpi2-icon-wrap');
+  const statsKpi3Label = document.getElementById('stats-kpi3-label');
+  const statsTopUploader = document.getElementById('stats-top-uploader');
+  const statsKpi4Label = document.getElementById('stats-kpi4-label');
+  const statsKpi4Value = document.getElementById('stats-kpi4-value');
+
+  const chartTrendTitle = document.getElementById('chart-trend-title');
+  const chartTrendSubtitle = document.getElementById('chart-trend-subtitle');
+  const chartStaffTitle = document.getElementById('chart-staff-title');
+  const chartTopTitle = document.getElementById('chart-top-title');
+  const statsRecentTableBody = document.getElementById('stats-recent-table-body');
+  const statsRecentCountBadge = document.getElementById('stats-recent-count-badge');
+
+  // Poblar dropdown de clientes en estadísticas
+  function populateStatsFilters() {
+    if (!statsFilterClient) return;
+    const currentVal = statsFilterClient.value;
+    statsFilterClient.innerHTML = '<option value="">📊 Todos los Clientes (Visión Global)</option>';
+
+    // Unir clientes con exámenes existentes y ordenarlos
+    const clientMap = new Map();
+    allClients.forEach(c => clientMap.set(c.id_usuario, c.nombre));
+    allResults.forEach(r => {
+      if (r.id_usuario && !clientMap.has(r.id_usuario)) {
+        clientMap.set(r.id_usuario, r.nombre_cliente || r.id_usuario);
+      }
+    });
+
+    const sorted = Array.from(clientMap.entries()).sort((a, b) => a[1].localeCompare(b[1]));
+    sorted.forEach(([id, name]) => {
+      // Contar resultados para este cliente
+      const count = allResults.filter(r => r.id_usuario === id).length;
+      const opt = document.createElement('option');
+      opt.value = id;
+      opt.textContent = `${name} (${count} ${count === 1 ? 'examen' : 'exámenes'})`;
+      if (id === currentVal) opt.selected = true;
+      statsFilterClient.appendChild(opt);
+    });
+  }
+
+  // Escuchar cambios de período (mes, año, personalizado)
+  if (statsFilterPeriod) {
+    statsFilterPeriod.addEventListener('change', () => {
+      if (statsCustomDates) {
+        statsCustomDates.style.display = statsFilterPeriod.value === 'custom' ? 'flex' : 'none';
+      }
+      loadAndRenderStats();
+    });
+  }
+  if (statsFilterClient) statsFilterClient.addEventListener('change', loadAndRenderStats);
+  if (statsFilterDateFrom) statsFilterDateFrom.addEventListener('change', loadAndRenderStats);
+  if (statsFilterDateTo) statsFilterDateTo.addEventListener('change', loadAndRenderStats);
+
+  if (statsResetFiltersBtn) {
+    statsResetFiltersBtn.addEventListener('click', () => {
+      if (statsFilterClient) statsFilterClient.value = '';
+      if (statsFilterPeriod) statsFilterPeriod.value = 'all';
+      if (statsCustomDates) statsCustomDates.style.display = 'none';
+      if (statsFilterDateFrom) statsFilterDateFrom.value = '';
+      if (statsFilterDateTo) statsFilterDateTo.value = '';
+      loadAndRenderStats();
+    });
+  }
+
+  if (refreshStatsBtn) {
+    refreshStatsBtn.addEventListener('click', async () => {
+      SirioAuth.showLoading('Actualizando datos estadísticos...');
+      await loadGeneralOverview();
+      SirioAuth.hideLoading();
+    });
+  }
+
+  // Función principal para cargar y renderizar estadísticas interactivas
   function loadAndRenderStats() {
     if (typeof Chart === 'undefined') {
       console.warn('Chart.js no está cargado.');
       return;
     }
 
-    // Configurar defaults visuales de Chart.js según el tema activo (claro u oscuro)
+    const selectedClientId = statsFilterClient ? statsFilterClient.value : '';
+    const selectedPeriod = statsFilterPeriod ? statsFilterPeriod.value : 'all';
+    const customFromStr = statsFilterDateFrom ? statsFilterDateFrom.value : '';
+    const customToStr = statsFilterDateTo ? statsFilterDateTo.value : '';
+
+    const isFiltered = !!selectedClientId || selectedPeriod !== 'all' || !!customFromStr || !!customToStr;
+    if (statsActiveFilterBadge) {
+      statsActiveFilterBadge.style.display = isFiltered ? 'inline-block' : 'none';
+    }
+
+    // Configurar tema de Chart.js
     const isLightMode = document.body.classList.contains('light-theme');
     Chart.defaults.font.family = "'Outfit', 'Inter', sans-serif";
     Chart.defaults.color = isLightMode ? 'rgba(30, 41, 59, 0.75)' : 'rgba(255, 255, 255, 0.65)';
     Chart.defaults.scale.grid.color = isLightMode ? 'rgba(30, 41, 59, 0.08)' : 'rgba(255, 255, 255, 0.05)';
 
-    // Destruir gráficos previos si existen
+    // Destruir gráficos previos
     if (chartMonthlyTrend) chartMonthlyTrend.destroy();
     if (chartStaffDistribution) chartStaffDistribution.destroy();
     if (chartTopClients) chartTopClients.destroy();
 
-    // 1. Total Exámenes
-    document.getElementById('stats-total-results').innerText = allResults.length;
+    // 1. Filtrar conjunto de datos para el análisis estadístico
+    const now = new Date();
+    const currentYear = now.getFullYear();
+    const currentMonth = now.getMonth();
 
-    // 2. Cliente Estrella
+    const filteredStatsResults = allResults.filter(res => {
+      // Filtro de cliente
+      if (selectedClientId && res.id_usuario !== selectedClientId) return false;
+
+      // Filtro de fecha/período
+      const resDate = parseFlexibleDate(res.fecha_subida);
+      if (!resDate) return true; // si no tiene fecha identificable se deja por compatibilidad
+
+      if (selectedPeriod === 'this_month') {
+        if (resDate.getFullYear() !== currentYear || resDate.getMonth() !== currentMonth) return false;
+      } else if (selectedPeriod === 'last_3_months') {
+        const threeMonthsAgo = new Date(now.getFullYear(), now.getMonth() - 2, 1);
+        if (resDate < threeMonthsAgo) return false;
+      } else if (selectedPeriod === 'this_year') {
+        if (resDate.getFullYear() !== currentYear) return false;
+      } else if (selectedPeriod === 'custom') {
+        if (customFromStr) {
+          const fromD = new Date(customFromStr + 'T00:00:00');
+          if (resDate < fromD) return false;
+        }
+        if (customToStr) {
+          const toD = new Date(customToStr + 'T23:59:59');
+          if (resDate > toD) return false;
+        }
+      }
+
+      return true;
+    });
+
+    const totalFilteredCount = filteredStatsResults.length;
+    const globalTotalCount = allResults.length;
+
+    // 2. Manejo de Banner y KPIs si hay Cliente Seleccionado
+    const selectedClientObj = selectedClientId ? allClients.find(c => c.id_usuario === selectedClientId) : null;
+    const selectedClientName = selectedClientObj ? selectedClientObj.nombre : selectedClientId;
+
+    if (selectedClientId && statsClientFocusBanner) {
+      statsClientFocusBanner.style.display = 'block';
+      if (statsClientFocusName) statsClientFocusName.innerText = selectedClientName;
+      if (statsClientFocusId) statsClientFocusId.innerText = `ID: ${selectedClientId}`;
+      if (statsClientFocusCount) statsClientFocusCount.innerText = `${totalFilteredCount} exam.`;
+      
+      const sharePct = globalTotalCount > 0 ? ((totalFilteredCount / globalTotalCount) * 100).toFixed(1) : '0';
+      if (statsClientFocusShare) statsClientFocusShare.innerText = `${sharePct}% del total`;
+    } else if (statsClientFocusBanner) {
+      statsClientFocusBanner.style.display = 'none';
+    }
+
+    // Actualizar KPI 1 (Total)
+    if (statsTotalResults) statsTotalResults.innerText = totalFilteredCount;
+    if (statsKpiTotalLabel) {
+      statsKpiTotalLabel.innerText = selectedClientId ? 'Exámenes del Cliente' : (isFiltered ? 'Exámenes Filtrados' : 'Total Exámenes');
+    }
+
+    // Contadores auxiliares por cliente y uploader
     const clientCounts = {};
-    allResults.forEach(res => {
+    const uploaderCounts = {};
+    let latestUploadDate = null;
+    let latestUploadResult = null;
+
+    filteredStatsResults.forEach(res => {
+      // Cliente
       if (res.id_usuario) {
         clientCounts[res.id_usuario] = (clientCounts[res.id_usuario] || 0) + 1;
       }
+      // Colaborador / Uploader
+      const uploader = res.admin_nombre || res.admin_id || 'Desconocido';
+      uploaderCounts[uploader] = (uploaderCounts[uploader] || 0) + 1;
+
+      // Calcular más reciente
+      const rDate = parseFlexibleDate(res.fecha_subida);
+      if (rDate && (!latestUploadDate || rDate > latestUploadDate)) {
+        latestUploadDate = rDate;
+        latestUploadResult = res;
+      }
     });
 
-    let topClientId = '';
-    let topClientCount = 0;
-    for (const cid in clientCounts) {
-      if (clientCounts[cid] > topClientCount) {
-        topClientCount = clientCounts[cid];
-        topClientId = cid;
+    // Actualizar KPI 2: Si cliente seleccionado -> "Último Examen Enviado"; Si visión global -> "Cliente Estrella"
+    if (selectedClientId) {
+      if (statsKpi2Label) statsKpi2Label.innerText = 'Último Envío';
+      if (statsKpi2Icon) statsKpi2Icon.className = 'fa-solid fa-clock-rotate-left';
+      if (statsKpi2IconWrap) {
+        statsKpi2IconWrap.style.background = 'rgba(56, 189, 248, 0.12)';
+        statsKpi2IconWrap.style.color = '#38bdf8';
+      }
+      if (statsTopClient) {
+        if (latestUploadResult) {
+          const dateStr = SirioAuth.formatDate(latestUploadResult.fecha_subida).split(',')[0];
+          statsTopClient.innerText = `${latestUploadResult.nombre_examen} (${dateStr})`;
+          statsTopClient.title = `${latestUploadResult.nombre_examen} - ${SirioAuth.formatDate(latestUploadResult.fecha_subida)}`;
+        } else {
+          statsTopClient.innerText = 'Sin registros';
+          statsTopClient.title = 'Sin registros';
+        }
+      }
+    } else {
+      if (statsKpi2Label) statsKpi2Label.innerText = 'Cliente Estrella';
+      if (statsKpi2Icon) statsKpi2Icon.className = 'fa-solid fa-trophy';
+      if (statsKpi2IconWrap) {
+        statsKpi2IconWrap.style.background = 'rgba(236, 72, 153, 0.12)';
+        statsKpi2IconWrap.style.color = '#f472b6';
+      }
+
+      let topCId = '';
+      let topCCount = 0;
+      for (const cid in clientCounts) {
+        if (clientCounts[cid] > topCCount) {
+          topCCount = clientCounts[cid];
+          topCId = cid;
+        }
+      }
+      let topCName = 'Ninguno';
+      if (topCId) {
+        const client = allClients.find(c => c.id_usuario === topCId);
+        topCName = client ? `${client.nombre} (${topCCount} env.)` : `${topCId} (${topCCount} env.)`;
+      }
+      if (statsTopClient) {
+        statsTopClient.innerText = topCName;
+        statsTopClient.title = topCName;
       }
     }
 
-    let topClientName = 'Ninguno';
-    if (topClientId) {
-      const client = allClients.find(c => c.id_usuario === topClientId);
-      topClientName = client ? `${client.nombre} (${topClientCount} env.)` : `${topClientId} (${topClientCount} env.)`;
-    }
-    const statsTopClientEl = document.getElementById('stats-top-client');
-    if (statsTopClientEl) {
-      statsTopClientEl.innerText = topClientName;
-      statsTopClientEl.title = topClientName;
-    }
-
-    // 3. Colaborador Activo
-    const uploaderCounts = {};
-    allResults.forEach(res => {
-      const name = res.admin_nombre || 'Desconocido';
-      uploaderCounts[name] = (uploaderCounts[name] || 0) + 1;
-    });
-
+    // Actualizar KPI 3: Colaborador Activo
     let topUploaderName = 'Ninguno';
     let topUploaderCount = 0;
     for (const name in uploaderCounts) {
@@ -3132,80 +3506,162 @@ document.addEventListener('DOMContentLoaded', () => {
         topUploaderName = `${name} (${topUploaderCount} env.)`;
       }
     }
-    const statsTopUploaderEl = document.getElementById('stats-top-uploader');
-    if (statsTopUploaderEl) {
-      statsTopUploaderEl.innerText = topUploaderName;
-      statsTopUploaderEl.title = topUploaderName;
+    if (statsTopUploader) {
+      statsTopUploader.innerText = topUploaderName;
+      statsTopUploader.title = topUploaderName;
     }
 
+    // Actualizar KPI 4: Promedio diario estimado o tipo de examen predominante
+    if (selectedClientId) {
+      if (statsKpi4Label) statsKpi4Label.innerText = 'Colaboradores que procesaron';
+      const staffCount = Object.keys(uploaderCounts).filter(u => u !== 'Desconocido').length;
+      if (statsKpi4Value) statsKpi4Value.innerText = `${staffCount} miembros`;
+    } else {
+      if (statsKpi4Label) statsKpi4Label.innerText = 'Promedio por Cliente';
+      const activeClientsCount = Object.keys(clientCounts).length;
+      const avg = activeClientsCount > 0 ? (totalFilteredCount / activeClientsCount).toFixed(1) : 0;
+      if (statsKpi4Value) statsKpi4Value.innerText = `${avg} env./cliente`;
+    }
 
-    // === GRÁFICO 1: TENDENCIA MENSUAL ===
-    const monthlyData = {};
-    const parseMonth = (dateStr) => {
-      if (!dateStr) return 'Desconocido';
-      if (dateStr.includes('/')) {
-        const parts = dateStr.split('/');
-        if (parts.length >= 3) {
-          const year = parts[2].substring(0, 4);
-          const month = parts[1];
-          return `${year}-${month}`;
-        }
-      }
-      if (dateStr.includes('-')) {
-        const parts = dateStr.split('-');
-        if (parts.length >= 2) {
-          return `${parts[0]}-${parts[1]}`;
-        }
-      }
-      return 'Desconocido';
-    };
+    // === GRÁFICO 1: TENDENCIA TEMPORAL (Evolución de Envíos) ===
+    const monthNames = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
+    const monthlyCounts = {};
 
-    allResults.forEach(res => {
-      const m = parseMonth(res.fecha_subida);
-      if (m !== 'Desconocido') {
-        monthlyData[m] = (monthlyData[m] || 0) + 1;
+    filteredStatsResults.forEach(res => {
+      const d = parseFlexibleDate(res.fecha_subida);
+      if (d) {
+        const year = d.getFullYear();
+        const month = String(d.getMonth() + 1).padStart(2, '0');
+        const key = `${year}-${month}`;
+        monthlyCounts[key] = (monthlyCounts[key] || 0) + 1;
       }
     });
 
-    const sortedMonths = Object.keys(monthlyData).sort();
-    const trendLabels = sortedMonths.map(m => {
-      const parts = m.split('-');
-      if (parts.length < 2) return m;
-      const year = parts[0];
-      const month = parts[1];
-      const monthNames = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
-      const mIndex = parseInt(month, 10) - 1;
-      return mIndex >= 0 && mIndex < 12 ? `${monthNames[mIndex]} ${year}` : m;
+    // Construir una línea de tiempo coherente y continua
+    let timelineKeys = Object.keys(monthlyCounts).sort();
+
+    if (timelineKeys.length === 0) {
+      // Si no hay datos, mostrar los últimos 6 meses en cero
+      timelineKeys = [];
+      for (let i = 5; i >= 0; i--) {
+        const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+        const y = d.getFullYear();
+        const m = String(d.getMonth() + 1).padStart(2, '0');
+        timelineKeys.push(`${y}-${m}`);
+      }
+    } else if (timelineKeys.length === 1) {
+      // Si solo hay 1 mes con datos (ej. un solo punto), agregar contexto (2 meses antes y 1 después) para que no quede pegado a la izquierda
+      const [onlyY, onlyM] = timelineKeys[0].split('-').map(Number);
+      const expanded = [];
+      for (let offset = -2; offset <= 2; offset++) {
+        const d = new Date(onlyY, (onlyM - 1) + offset, 1);
+        const y = d.getFullYear();
+        const m = String(d.getMonth() + 1).padStart(2, '0');
+        expanded.push(`${y}-${m}`);
+      }
+      timelineKeys = expanded;
+    } else {
+      // Si hay 2 o más meses, rellenar los meses intermedios vacíos para que la escala temporal sea real
+      const startParts = timelineKeys[0].split('-').map(Number);
+      const endParts = timelineKeys[timelineKeys.length - 1].split('-').map(Number);
+      const startDate = new Date(startParts[0], startParts[1] - 1, 1);
+      const endDate = new Date(endParts[0], endParts[1] - 1, 1);
+      
+      const continuousKeys = [];
+      const cursor = new Date(startDate);
+      // Incluir 1 mes antes para margen estético
+      cursor.setMonth(cursor.getMonth() - 1);
+      const limitDate = new Date(endDate);
+      limitDate.setMonth(limitDate.getMonth() + 1);
+
+      while (cursor <= limitDate) {
+        const y = cursor.getFullYear();
+        const m = String(cursor.getMonth() + 1).padStart(2, '0');
+        continuousKeys.push(`${y}-${m}`);
+        cursor.setMonth(cursor.getMonth() + 1);
+      }
+      timelineKeys = continuousKeys;
+    }
+
+    const trendLabels = timelineKeys.map(k => {
+      const [year, month] = k.split('-');
+      const mIdx = parseInt(month, 10) - 1;
+      return `${monthNames[mIdx]} ${year}`;
     });
-    const trendValues = sortedMonths.map(m => monthlyData[m]);
+    const trendValues = timelineKeys.map(k => monthlyCounts[k] || 0);
+
+    const maxVal = Math.max(...trendValues, 0);
+    const suggestedMax = maxVal === 0 ? 5 : (maxVal <= 5 ? maxVal + 2 : Math.ceil(maxVal * 1.25));
+
+    if (chartTrendTitle) {
+      chartTrendTitle.innerHTML = selectedClientId
+        ? `<i class="fa-solid fa-chart-area"></i> Flujo Histórico para ${selectedClientName}`
+        : `<i class="fa-solid fa-chart-area"></i> Flujo Histórico de Exámenes Enviados`;
+    }
+    if (chartTrendSubtitle) {
+      chartTrendSubtitle.innerText = isFiltered ? `Filtrado (${totalFilteredCount} exámenes)` : 'Evolución mensual';
+    }
 
     const ctxTrend = document.getElementById('chart-monthly-trend');
     if (ctxTrend) {
       chartMonthlyTrend = new Chart(ctxTrend, {
         type: 'line',
         data: {
-          labels: trendLabels.length ? trendLabels : ['Sin Datos'],
+          labels: trendLabels,
           datasets: [{
-            label: 'Exámenes Enviados',
-            data: trendValues.length ? trendValues : [0],
-            borderColor: '#38bdf8',
-            backgroundColor: 'rgba(56, 189, 248, 0.12)',
+            label: selectedClientId ? `Exámenes para ${selectedClientName}` : 'Exámenes Enviados',
+            data: trendValues,
+            borderColor: selectedClientId ? '#a855f7' : '#38bdf8',
+            backgroundColor: selectedClientId ? 'rgba(168, 85, 247, 0.15)' : 'rgba(56, 189, 248, 0.12)',
             borderWidth: 3,
-            tension: 0.35,
+            tension: 0.3,
             fill: true,
-            pointBackgroundColor: '#38bdf8',
-            pointRadius: 4,
-            pointHoverRadius: 6
+            pointBackgroundColor: selectedClientId ? '#c084fc' : '#38bdf8',
+            pointBorderColor: '#ffffff',
+            pointBorderWidth: 2,
+            pointRadius: 5,
+            pointHoverRadius: 7
           }]
         },
         options: {
           responsive: true,
           maintainAspectRatio: false,
           plugins: {
-            legend: { display: false }
+            legend: { display: false },
+            tooltip: {
+              backgroundColor: 'rgba(15, 23, 42, 0.9)',
+              titleColor: '#38bdf8',
+              bodyColor: '#ffffff',
+              padding: 10,
+              cornerRadius: 8,
+              callbacks: {
+                label: (ctx) => ` ${ctx.parsed.y} ${ctx.parsed.y === 1 ? 'examen enviado' : 'exámenes enviados'}`
+              }
+            }
           },
           scales: {
-            y: { beginAtZero: true, ticks: { stepSize: 1 } }
+            y: {
+              beginAtZero: true,
+              suggestedMax: suggestedMax,
+              ticks: {
+                stepSize: 1,
+                precision: 0
+              },
+              grid: {
+                drawBorder: false
+              }
+            },
+            x: {
+              grid: {
+                display: false
+              },
+              ticks: {
+                maxRotation: 30,
+                minRotation: 0,
+                autoSkip: true,
+                maxTicksLimit: 12
+              }
+            }
           }
         }
       });
@@ -3220,6 +3676,16 @@ document.addEventListener('DOMContentLoaded', () => {
         staffValues.push(uploaderCounts[name]);
       }
     }
+    if (uploaderCounts['Desconocido']) {
+      staffLabels.push('Otros / Sin dato');
+      staffValues.push(uploaderCounts['Desconocido']);
+    }
+
+    if (chartStaffTitle) {
+      chartStaffTitle.innerHTML = selectedClientId
+        ? `<i class="fa-solid fa-users-gear"></i> Personal que procesó a este cliente`
+        : `<i class="fa-solid fa-chart-pie"></i> Participación del Personal (Exámenes Subidos)`;
+    }
 
     const ctxStaff = document.getElementById('chart-staff-distribution');
     if (ctxStaff) {
@@ -3230,7 +3696,7 @@ document.addEventListener('DOMContentLoaded', () => {
           datasets: [{
             data: staffValues.length ? staffValues : [0],
             backgroundColor: [
-              '#38bdf8', '#c084fc', '#f472b6', '#f59e0b', '#10b981', '#ec4899', '#6366f1'
+              '#38bdf8', '#c084fc', '#f472b6', '#f59e0b', '#10b981', '#ec4899', '#6366f1', '#14b8a6'
             ],
             borderWidth: 1.5,
             borderColor: 'var(--panel-bg)'
@@ -3242,56 +3708,697 @@ document.addEventListener('DOMContentLoaded', () => {
           plugins: {
             legend: {
               position: 'right',
-              labels: { boxWidth: 12, padding: 12 }
+              labels: { boxWidth: 12, padding: 12, font: { size: 11 } }
             }
           }
         }
       });
     }
 
-    // === GRÁFICO 3: TOP 5 CLIENTES ===
-    const clientDataList = [];
-    for (const cid in clientCounts) {
-      const client = allClients.find(c => c.id_usuario === cid);
-      clientDataList.push({
-        name: client ? client.nombre : cid,
-        count: clientCounts[cid]
-      });
-    }
-    clientDataList.sort((a, b) => b.count - a.count);
-    const top5Clients = clientDataList.slice(0, 5);
-
-    const clientLabels = top5Clients.map(c => c.name);
-    const clientValues = top5Clients.map(c => c.count);
-
+    // === GRÁFICO 3: TOP CLIENTES (O EXÁMENES MÁS FRECUENTES DEL CLIENTE) ===
     const ctxClients = document.getElementById('chart-top-clients');
     if (ctxClients) {
-      chartTopClients = new Chart(ctxClients, {
-        type: 'bar',
-        data: {
-          labels: clientLabels.length ? clientLabels : ['Sin Datos'],
-          datasets: [{
-            label: 'Exámenes Subidos',
-            data: clientValues.length ? clientValues : [0],
-            backgroundColor: 'rgba(236, 72, 153, 0.45)',
-            borderColor: '#f472b6',
-            borderWidth: 1.5,
-            borderRadius: 6
-          }]
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          plugins: {
-            legend: { display: false }
-          },
-          scales: {
-            y: { beginAtZero: true, ticks: { stepSize: 1 } }
-          }
+      if (selectedClientId) {
+        // Modo cliente individual: mostrar los nombres de exámenes más frecuentes solicitados
+        if (chartTopTitle) {
+          chartTopTitle.innerHTML = `<i class="fa-solid fa-vial"></i> Exámenes más solicitados por ${selectedClientName}`;
         }
-      });
+        const examNameCounts = {};
+        filteredStatsResults.forEach(r => {
+          const ex = r.nombre_examen || 'Sin nombre';
+          examNameCounts[ex] = (examNameCounts[ex] || 0) + 1;
+        });
+        const examList = Object.entries(examNameCounts).map(([name, count]) => ({ name, count }));
+        examList.sort((a, b) => b.count - a.count);
+        const top5Exams = examList.slice(0, 5);
+
+        chartTopClients = new Chart(ctxClients, {
+          type: 'bar',
+          data: {
+            labels: top5Exams.length ? top5Exams.map(e => e.name) : ['Sin Datos'],
+            datasets: [{
+              label: 'Cantidad',
+              data: top5Exams.length ? top5Exams.map(e => e.count) : [0],
+              backgroundColor: 'rgba(168, 85, 247, 0.45)',
+              borderColor: '#c084fc',
+              borderWidth: 1.5,
+              borderRadius: 6
+            }]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+              legend: { display: false }
+            },
+            scales: {
+              y: { beginAtZero: true, ticks: { stepSize: 1 } },
+              x: { ticks: { font: { size: 10 }, maxRotation: 30, minRotation: 0 } }
+            }
+          }
+        });
+      } else {
+        // Modo global: Top 5 Clientes con mayor demanda
+        if (chartTopTitle) {
+          chartTopTitle.innerHTML = `<i class="fa-solid fa-ranking-star"></i> Top Clientes con Mayor Demanda`;
+        }
+        const clientDataList = [];
+        for (const cid in clientCounts) {
+          const client = allClients.find(c => c.id_usuario === cid);
+          clientDataList.push({
+            name: client ? client.nombre : cid,
+            count: clientCounts[cid]
+          });
+        }
+        clientDataList.sort((a, b) => b.count - a.count);
+        const top5Clients = clientDataList.slice(0, 5);
+
+        chartTopClients = new Chart(ctxClients, {
+          type: 'bar',
+          data: {
+            labels: top5Clients.length ? top5Clients.map(c => c.name) : ['Sin Datos'],
+            datasets: [{
+              label: 'Exámenes Subidos',
+              data: top5Clients.length ? top5Clients.map(c => c.count) : [0],
+              backgroundColor: 'rgba(236, 72, 153, 0.45)',
+              borderColor: '#f472b6',
+              borderWidth: 1.5,
+              borderRadius: 6
+            }]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+              legend: { display: false }
+            },
+            scales: {
+              y: { beginAtZero: true, ticks: { stepSize: 1 } },
+              x: { ticks: { font: { size: 10 }, maxRotation: 25, minRotation: 0 } }
+            }
+          }
+        });
+      }
+    }
+
+    // === TABLA DE ÚLTIMOS EXÁMENES DEL SEGMENTO FILTRADO ===
+    if (statsRecentTableBody) {
+      if (filteredStatsResults.length === 0) {
+        statsRecentTableBody.innerHTML = `
+          <tr>
+            <td colspan="5" style="text-align: center; color: var(--text-muted); padding: 1.5rem 0;">
+              No se encontraron exámenes para los criterios de filtro seleccionados.
+            </td>
+          </tr>
+        `;
+        if (statsRecentCountBadge) statsRecentCountBadge.innerText = '0 registros encontrados';
+      } else {
+        // Ordenar los más recientes primero y tomar hasta 8
+        const sortedRecent = [...filteredStatsResults].reverse().slice(0, 8);
+        if (statsRecentCountBadge) {
+          statsRecentCountBadge.innerText = `Mostrando ${sortedRecent.length} de ${filteredStatsResults.length} resultados`;
+        }
+        statsRecentTableBody.innerHTML = sortedRecent.map(res => `
+          <tr style="border-bottom: 1px solid var(--border-light);">
+            <td style="padding: 10px 14px; font-weight: 500; color: var(--text-main); font-size: 0.85rem; max-width: 140px; text-overflow: ellipsis; overflow: hidden; white-space: nowrap;" title="${res.nombre_cliente}">
+              ${res.nombre_cliente}
+            </td>
+            <td style="padding: 10px 14px; color: var(--text-main); font-weight: 600; font-size: 0.85rem; max-width: 220px; text-overflow: ellipsis; overflow: hidden; white-space: nowrap;" title="${res.nombre_examen}">
+              <i class="fa-solid fa-file-pdf" style="color: var(--error); margin-right: 6px;"></i> ${res.nombre_examen}
+            </td>
+            <td style="padding: 10px 14px; color: var(--text-muted); font-size: 0.78rem;">
+              ${SirioAuth.formatDate(res.fecha_subida)}
+            </td>
+            <td style="padding: 10px 14px; color: var(--text-main); font-size: 0.82rem;">
+              <i class="fa-solid fa-user-shield" style="color: var(--color-primary); margin-right: 4px; font-size: 0.75rem;"></i>
+              ${res.admin_nombre || res.admin_id || '<span style="color:var(--text-muted);">Sin dato</span>'}
+            </td>
+            <td style="padding: 10px 14px; text-align: center;">
+              <a href="${getPdfUrl(res.nombre_archivo)}" target="_blank" rel="noopener noreferrer" class="btn btn-secondary btn-icon" style="padding: 3px 7px;" title="Ver PDF">
+                <i class="fa-solid fa-eye" style="font-size: 0.8rem;"></i>
+              </a>
+            </td>
+          </tr>
+        `).join('');
+      }
     }
   }
+
+  // ==========================================================================
+  // MÓDULO DE INGRESO DE PACIENTES PARA ADMINISTRADORES (SIEMPRE ACTIVO)
+  // ==========================================================================
+  const EXAMS_COMUNES = [
+    'Perfil Prequirúrgico 1 (Hemograma + ALT + Creatinina)',
+    'Citoquímico de orina (Estudio fisicoquímico - microscópico e incluye coloración GRAM)',
+    'Coprológico (Directo + Lugol + Técnica de flotación)',
+    'Raspado de piel + Examen con luz de wood',
+    'Cultivo 1 Oído (Bacteriológico con antibiograma + Micológico)',
+    'Cultivo 2 Oídos (Bacteriológico con antibiograma + Micológico)',
+    'Cultivo de otras muestras (Bacteriológico con Antibiograma)(Aerotolerantes)',
+    'Hemograma automatizado (Extendido de sangre periférica + Proteínas plasmáticas + Reticulocitos)',
+    'Progesterona específica canina',
+    'Citología tumoral/TVT/PAAF (TVT Tumor Venéreo Transmisible - PAAF Punción Aspirada por Aguja Fina)',
+    'Coprológico seriado (3 muestras) Muestra #1',
+    'Coprológico seriado (3 muestras) Muestra #2',
+    'Coprológico seriado (3 muestras) Muestra #3',
+    'Biopsia Análisis histopatológico de 3 fragmentos de tejido por animal',
+    'Perfil Prequirúrgico 1 (HLG + ALT + CRE) JORNADA (Convenio previo con el laboratorio)'
+  ];
+
+  const EXAMS_CULTIVOS = [
+    'Cultivo bacteriológico + micológico + antibiograma (cualquier muestra)',
+    'Cultivo micológico (Hongos) de cualquier muestra',
+    'Hemocultivo + antibiograma',
+    'Urocultivo (Bacteriológico con antibiograma) + Citoquímico de Orina',
+    'Urocultivo (Bacteriológico + antibiograma)',
+    'Coprocultivo (Bacteriológico + antibiograma)',
+    'Coprocultivo (Bacteriológico - antibiograma) + Coprológico',
+    'Cultivo Micobacterias',
+    'Antibiograma Adicional',
+    'Cultivo anaerobios estrictos',
+    'Cultivo bacteriológico + antibiograma MIC (Concentración Inhibitoria Mínima) Cualquier muestra',
+    'Cultivo de secreciones (Bacteriológico + antibiograma)',
+    'Cultivo de piel (Bacteriológico + antibiograma)'
+  ];
+
+  const EXAMS_TOXICOLOGIA = [
+    'Tamizaje de intoxicación por warfarínicos',
+    'Antidepresivos tricíclicos - TCA',
+    'Anfetamina-AMP',
+    'Barbitúricos - BAR',
+    'Benzodiazepinas - BZO',
+    'Cocaína-COC',
+    'Feniciclidina - PCP',
+    'Marihuana-THC',
+    'Metadona-MTD',
+    'Metanfetamina-MET',
+    'Metilendioximetanfetamina-MDMA',
+    'Morfina-MOP',
+    'Opiato -OPI',
+    'Toxicología completa COC-AMP-THC-MTD-MET-MOP-OPI-MDMA-PCP-BAR-BZO-TCA'
+  ];
+
+  const EXAMS_PERFILES = [
+    'PREQUIRÚRGICO 2 (Hemograma + ALT  Creatinina + TP + TPT) (Comunicarse y programar con el laboratorio)',
+    'TP y TPT (Coordinar con el laboratorio la hora de recolección)',
+    'DIAGNÓSTICO PRIMARIO 1 (Hemograma + ALT + Creatinina y Citoquímico o Coprológico o Raspado de piel)',
+    'DIAGNÓSTICO PRIMARIO 2 (Hemograma + ALT + Creatinina y 2 exámenes (Coprológico + Raspado de piel o Coprológico + Citoquímico de orina o Raspado de piel + Citoquímico de orina))',
+    'DIAGNÓSTICO PRIMARIO 3 (Hemograma + ALT + FA + Creatinina + Urea + BUN)',
+    'CONVULSIVO 1 (Hemograma + ALT + Albúmina + AST + BilT+D + BUN /Urea  Creatinina + FA + GGT + Prot diferenciadas + Glucosa)',
+    'DERMATOLÓGICO 1 (Raspado de piel + Test de wood + Cultivo bacteriológico con antibiograma + Cultivo micológico)',
+    'DERMATOLÓGICO 2 (Hemograma + Raspado de piel + Cultivo bacteriológico con antibiograma + Cultivo micológico + T4 Libre + Colesterol total)',
+    'DIABÉTICO 1 (Glucosa en sangre + Glucosa en orina (Cuantitativa) Sugerido para control de diabetes)',
+    'DIABÉTICO 2 (Glucosa en sangre + Glucosa en orina (cuantitativa) + Citoquímico de orina)',
+    'DIABÉTICO 3 (Citoquímico de orina + Glucosa semicuantitativa + Glucosa en sangre + Hemoglobina glicada (HBA1C))',
+    'DIABÉTICO 4 (Citoquímico de orina + Glucosa semicuantitativa + Glucosa en sangre + Fructosamina + Hemoglobina glicada (HBA1C))',
+    'DIABÉTICO 5 (Citoquímico de orina + Glucosa semicuantitativa + Fructosamina + Insulina Sugerido para felinos)',
+    'DIABÉTICO 6 (Citoquímico de orina + Glucosa en orina (cuantitativa) + Glucosa en sangre + Fructosamina + Hemoglobina glicada (HBA1C))',
+    'GASTROINTESTINAL 1 (Coprológico + Parvovirus)',
+    'GASTROINTESTINAL 2 (Coprológico + Parvovirus + Coronavirus canino)',
+    'GASTROINTESTINAL 3 (Coprograma + Parvovirus + Coronavirus canino)',
+    'GASTROINTESTINAL 4 (Hemograma + Coprograma + Parvovirus + Coronavirus canino)',
+    'GASTROINTESTINAL 5 (Análisis completo para diarrea persistente Hemograma + Coprograma + Coloración Ziehl Neelsen/Kinyoun + Coprocultivo + Parvovirus + Coronavirus canino)',
+    'GERIÁTRICO 1 (Hemograma + ALT + AST + FA + Colesterol Total + Creatinina + Glucosa + Urea + BUN + T4L + Citoquímico de orina)',
+    'GERIÁTRICO 2 (Hemograma + ALT + AST + FA + Colesterol Total + Creatinina + Glucosa + Urea + BUN + T4L + T4T específica + Citoquímico de orina)',
+    'HEPÁTICO 1 (ALT + AST + FA + BIL T + BIL D + GGT)',
+    'HEPÁTICO 2 (ALT + AST + FA + BIL T + BIL D + Proteínas diferenciadas + GGT)',
+    'HEPÁTICO 3 (ALT + AST + FA + BIL T + BIL D + Proteínas diferenciadas + GGT + Bun + Urea)',
+    'LIPÍDICO 1 (Colesterol total + triglicéridos + HDL + LDL + VLDL)',
+    'PANCREÁTICO 1 (Lipasa pancreática específica (canina o felina) + Detección semicuantitativa de grasa neutra y ácidos grasos en heces)',
+    'PANCREÁTICO 2 (Amilasa + Glucosa en sangre + Lipasa pancreática específica (canina o felina))',
+    'PANCREÁTICO 3 (Amilasa + Glucosa en sangre + Lipasa pancreática específica (canina o felina) + Detección semicuantitativa de grasa neutra y ácidos grasos en heces)',
+    'RENAL 1 (Hemograma + BUN + Urea + Creatinina)',
+    'RENAL 2 (Hemograma + BUN + Urea + Creatinina + Fósforo)',
+    'RENAL 3 (Hemograma + BUN + Urea+ Creatinina + Fósforo + Citoquímico (UPC Semicuantitativa)',
+    'RENAL 4 (Hemograma + Creatinina + SDMA (Dimetil Arginina Simétrica))',
+    'RENAL 5 (Hemograma + Creatinina + SDMA (Dimetil arginina simétrica) + Urea + BUN + Citoquímico (UPC Semicuantitativa))',
+    'RENAL 6 (Citoquímico + BUN + Urea + Creatinina)',
+    'RENAL 7 (Citoquímico de orina + Índice UPC Cuantitativa)',
+    'RENAL 8 (Citoquímico de orina + BUN + Urea + Creatinina + Fósforo + Índice UPC Cuantitativa)',
+    'TIROIDEO 1 (T4L + Colesterol)',
+    'TIROIDEO 2 (T4L + Colesterol + Triglicéridos)',
+    'TIROIDEO 3 (T4L + T4T no específica + Colesterol +Triglicéridos)',
+    'TIROIDEO 4 (T4L + T4T no específica + TSH no específica)',
+    'TIROIDEO 5 (T4L + T4T no específica + TSH no específica + Colesterol + Triglicéridos)',
+    'TIROIDEO 6 (T4L + T4T específica + TSH específica canina)',
+    'TIROIDEO 7 (T4L + T4T específica + TSH específica + Colesterol + Triglicéridos)',
+    'ELECTROLÍTOS 1 (Ionograma 1 Sodio + Cloro + Potasio)',
+    'ELECTROLÍTOS 2 (Ionograma 2 Sodio + cloro + Potasio + Calcio ionizado + pH)',
+    'ELECTROLÍTOS  3 (Ionograma 3 Sodio + Cloro + Potasio + Ph + Calcio ionizado + Calcio sérico + Lactato + Creatinina)',
+    'ELECTROLÍTOS  4 (Ionograma 4 Sodio + Cloro + Potasio + Fósforo + pH + Calcio sérico + Calcio ionizado + Lactato + Hematocrito + Hemoglobina + Creatinina)',
+    'PCR Hemoparásitos Felino - Tiempo real (Anaplasma spp - Rickettsia spp - Ehrlichia spp - Mycoplasma spp - Hepatozoon spp - Toxoplasma gonsii - Bartonella spp)',
+    'PCR Hemoparásitos Canino - Tiempo real (Anaplasma spp - Ehrlichia spp - Mycoplasma Spp - Hepatozoon spp - Babesia spp - Toxoplasma gondii - Dirofilaria spp)',
+    'PCR Hemoparásitos Felino - Puno final Positivo o Negativo (Anaplasma sp, Cytauxzoon felis, Mycoplasma sp, Bartonella sp, Haemoplasmas)',
+    'PCR Hemoparásitos Canino - Puno final Positivo o Negativo (Anaplasma spp - Ehrlichia spp - Hepatozoon spp - Babesia sp)'
+  ];
+
+  const EXAMS_INDIVIDUALES = [
+    'Ácido Fólico/Vitamina B9', 'Ácido úrico', 'Ácidos Biliares (Una muestra)', 'Ácidos Biliares Pre - Post',
+    'Albúmina', 'Aldosterona', 'Alanina aminotransferasa (ALT/GPT)', 'Amilasa Pancreática',
+    'Análisis de cálculo urinario (Vejiga)', 'Análisis de cálculo vesiculares',
+    'Análisis de líquidos corporales (Examen físico - químico - bioquímico - citológico y microbiológico)',
+    'Análisis para diarrea persistente (Coprograma + Coloración Ziehl Neelsen/Kinyoun + Coprocultivo)',
+    'Anticuerpos Tiroglobulina (TgAb)', 'Aspartato aminotransferasa (AST)', 'Bilirrubina directa (BD)',
+    'Bilirrubina total (BT)', 'Brucella canis', 'BUN + Urea', 'Biopsia Análisis histopatológico de 1 fragmento adicional',
+    'Calcio ionizado', 'Calcio sérico', 'Citología vaginal canina (Ciclo estral)', 'Coloración GRAM (Infecciosa)',
+    'Cloro', 'Colesterol HDL', 'Colesterol total', 'Coloración Kinyoun', 'Coloración wright',
+    'Coloración Ziehl-Neelsen', 'Coprograma (Coprológico + azucares reductores + sangre oculta + pH + coloración Gram + coloración Wright)',
+    'Cortisol en suero (Específico canino)', 'Cortisol en suero 3 muestras (Específico canino)', 'Cortisol en suero (No específico)',
+    'Cortisol en suero 3 muestras (No específico)', 'Cortisol en orina', 'Coronavirus felino + Índice A/G + Prueba de rivalta Peritonitis infecciosa felina',
+    'Creatinina', 'Creatina Quinasa MB (CK-MB) (Fracción MB - específica del miocardio)', 'Creatina Quinasa Total (CK o CPK total)',
+    'Detección semicuantitativa de grasa neutra y ácidos grasos *Se recomienda para evaluar insuficiencia pancreática enzimática',
+    'Dímero D no específico', 'Dímero D específico canino', 'Espermograma (Examen físico - químico - morfológico - citológico - microbiológico)',
+    'Estradiol', 'Exámen directo (cualquier muestra)', 'Fenobarbital', 'Ferritina', 'Fosfatasa alcalina (FA)',
+    'Fósforo', 'Fructosamina', 'Gamma Glutamil Transferasa (GGT)', 'Glucosa', 'Glucosa en orina (Cuantitativa)',
+    'Hemoglobina glicada (HBA1C)', 'Hierro', 'Hormona Adrenocorticótropica (ACTH)', 'Hormona folículo estimulante (FSH)',
+    'Hormona de crecimiento (GH)', 'Hormona estimulante de tiroides específica canina (TSH)', 'Hormona estimulante de tiroides Inespecífica (TSH)',
+    'Hormona luteinizante (LH)', 'Insulina', 'Lactato Deshidrogenasa (LDH)', 'Lactato (Ácido lactico)',
+    'Lipasa pancreática especifica canina', 'Lipasa pancreática especifica felina',
+    'Leptospira canino Ac IgG contra 4 serovares Canicola - Icterohaemorrhagiae (Copenhague y RGA) - Pomona y Grippotyphosa',
+    'Magnesio', 'Distemper Canino', 'Parathormona', 'Parvovirus + Coronavirus Canino', 'Parvovirus + Coronavirus + Giardia Canino',
+    'Proteína C reactiva no específica (PCR cuantitativa)', 'Proteína C reactiva específica canina (PCR cuantitativa)',
+    'Plasma rico en plaquetas', 'Potasio', 'Prolactina', 'Proteínas diferenciadas (Albumina – Globulinas - Proteínas totales -I ndíce A/G)',
+    'Proteínas totales séricas', 'Pruebas cruzadas de compatibilidad (mayor y menor)', 'Prueba de Coombs específica canina (Prueba de antiglobulina directa)',
+    'Relación Proteína/Creatinina en orina (UPC)', 'Relación Cortisol/Creatinina en orina (UCCR)',
+    'Raspado de piel + Tricograma + Examen con luz de wood', 'Dimetilarginina Simétrica (SDMA) + Creatinina',
+    'Virus de Inmunodeficiencia Felina - Virus de la Leucemia (VIF - VLEU) Felino',
+    'Virus de Inmunodeficiencia Felina/Leucemia/Dirofilaria IDEXX Felino', 'SNAP 4DX IDEXX (Dirofilaria - Enfermedad de Lyme – Ehrlichia - Anaplasma)',
+    'Sodio', 'Somatomedina C', 'Suero autólogo', 'Testosterona libre', 'Testosterona total',
+    'Títulos de rabia (Fluorescent Antibody Virus Neutralization - FAVN Test)',
+    'Tiempo de Protrombina TP (Coordinar con el laboratorio la hora de recolección)',
+    'Tiempo Parcial de Tromboplastina TPT (Coordinar con el laboratorio la hora de recolección)', 'Tiroxina libre T4L',
+    'Tiroxina total específico canino o felino (T4T)', 'Tiroxina total inespecífica (T4T)', 'Toxoplasma IgG',
+    'Toxoplasma IgM', 'Tricograma + Examen con luz de wood', 'Triglicéridos', 'Triyodotironina total T3T',
+    'Tripsina inmunorreactiva Canina', 'Triple viral felina IgG Panleucopenia – Calicivirus - Herpesvirus (Vaccicheck)',
+    'Troponina I', 'Vitamina B12 cianocobalamina', 'Vitamina D25', 'Vitamina D 1.25 Dihidroxi (Calcitrol)'
+  ];
+
+  let selectedAdminIngresarExams = new Set();
+  let currentAdminIngresarCat = 'COMUNES';
+
+  // Poblar select de veterinarias/clientes para el admin
+  function populateAdminClientSelect() {
+    const select = document.getElementById('admin-ingresar-client-select');
+    if (!select) return;
+    const currentVal = select.value;
+    select.innerHTML = '<option value="" disabled selected>Seleccione la veterinaria o cliente...</option>';
+
+    const sortedClients = [...allClients].sort((a, b) => a.nombre.localeCompare(b.nombre));
+    sortedClients.forEach(c => {
+      const opt = document.createElement('option');
+      opt.value = c.id_usuario;
+      opt.setAttribute('data-name', c.nombre);
+      opt.setAttribute('data-email', c.correo || '');
+      opt.setAttribute('data-phone', c.telefono || '');
+      opt.setAttribute('data-address', c.direccion || '');
+      opt.textContent = `${c.nombre} (ID: ${c.id_usuario} - DNI: ${c.identificacion})`;
+      if (c.id_usuario === currentVal) opt.selected = true;
+      select.appendChild(opt);
+    });
+  }
+
+  // Renderizar la lista de exámenes según la categoría o búsqueda
+  function renderAdminIngresarExams() {
+    const listContainer = document.getElementById('admin-ingresar-exam-list');
+    const searchInput = document.getElementById('admin-search-ingresar-exam');
+    if (!listContainer) return;
+
+    const query = searchInput ? searchInput.value.toLowerCase().trim() : '';
+
+    let listToRender = [];
+    if (query) {
+      const all = [...EXAMS_COMUNES, ...EXAMS_PERFILES, ...EXAMS_CULTIVOS, ...EXAMS_TOXICOLOGIA, ...EXAMS_INDIVIDUALES];
+      listToRender = [...new Set(all)].filter(name => name.toLowerCase().includes(query));
+    } else {
+      if (currentAdminIngresarCat === 'COMUNES') listToRender = EXAMS_COMUNES;
+      else if (currentAdminIngresarCat === 'PERFILES') listToRender = EXAMS_PERFILES;
+      else if (currentAdminIngresarCat === 'CULTIVOS') listToRender = EXAMS_CULTIVOS;
+      else if (currentAdminIngresarCat === 'TOXICOLOGIA') listToRender = EXAMS_TOXICOLOGIA;
+      else if (currentAdminIngresarCat === 'INDIVIDUALES') listToRender = EXAMS_INDIVIDUALES;
+    }
+
+    if (listToRender.length === 0) {
+      listContainer.innerHTML = `<p style="padding: 1rem; color: var(--text-dark); text-align: center; font-size: 0.82rem; margin: 0;">Ningún examen coincide con la búsqueda.</p>`;
+      return;
+    }
+
+    listContainer.innerHTML = listToRender.map(examName => {
+      const isChecked = selectedAdminIngresarExams.has(examName);
+      return `
+        <label style="display: flex; align-items: center; justify-content: space-between; padding: 10px 14px; background: rgba(255,255,255,0.03); border-radius: 6px; border: 1px solid var(--border-light); cursor: pointer; transition: all 0.2s;" class="admin-ingresar-exam-row">
+          <span style="font-size: 0.85rem; color: var(--text-main); font-weight: 500; padding-right: 15px;">${examName}</span>
+          <input type="checkbox" class="admin-ingresar-exam-cb" data-name="${examName}" ${isChecked ? 'checked' : ''} style="width: 18px; height: 18px; cursor: pointer;">
+        </label>
+      `;
+    }).join('');
+
+    listContainer.querySelectorAll('.admin-ingresar-exam-cb').forEach(cb => {
+      cb.addEventListener('change', () => {
+        const name = cb.dataset.name;
+        if (cb.checked) {
+          selectedAdminIngresarExams.add(name);
+        } else {
+          selectedAdminIngresarExams.delete(name);
+        }
+        updateAdminIngresarSelectedPills();
+      });
+    });
+  }
+
+  function updateAdminIngresarSelectedPills() {
+    const container = document.getElementById('admin-ingresar-selected-exams-pills');
+    const countSpan = document.getElementById('admin-ingresar-selected-count');
+    if (!container) return;
+
+    countSpan.innerText = selectedAdminIngresarExams.size;
+
+    if (selectedAdminIngresarExams.size === 0) {
+      container.innerHTML = `<span style="font-size: 0.8rem; color: var(--text-dark);">Ningún examen seleccionado. Agregue exámenes arriba.</span>`;
+      return;
+    }
+
+    container.innerHTML = [...selectedAdminIngresarExams].map(examName => `
+      <span style="font-size: 0.76rem; font-weight: 600; color: var(--color-accent); background: rgba(14, 165, 233, 0.1); border: 1px solid rgba(14, 165, 233, 0.2); padding: 5px 12px; border-radius: 20px; display: inline-flex; align-items: center; gap: 6px;">
+        ${examName}
+        <i class="fa-solid fa-circle-xmark remove-admin-exam-btn" data-name="${examName}" style="cursor: pointer; opacity: 0.7;"></i>
+      </span>
+    `).join('');
+
+    container.querySelectorAll('.remove-admin-exam-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const name = btn.dataset.name;
+        selectedAdminIngresarExams.delete(name);
+        updateAdminIngresarSelectedPills();
+        renderAdminIngresarExams();
+      });
+    });
+  }
+
+  // Navegación por pasos
+  function changeAdminStep(from, to) {
+    if (to > from) {
+      if (from === 1) {
+        const clientSelect = document.getElementById('admin-ingresar-client-select');
+        const medico = document.getElementById('admin-ingresar-medico');
+        const propietario = document.getElementById('admin-ingresar-propietario');
+        const pacienteHc = document.getElementById('admin-ingresar-paciente-hc');
+        const especie = document.getElementById('admin-ingresar-especie');
+        const raza = document.getElementById('admin-ingresar-raza');
+        const edad = document.getElementById('admin-ingresar-edad');
+        const sexo = document.getElementById('admin-ingresar-sexo');
+
+        if (!clientSelect.value || !medico.checkValidity() || !propietario.checkValidity() || !pacienteHc.checkValidity() || !especie.checkValidity() || !raza.checkValidity() || !edad.checkValidity() || !sexo.checkValidity()) {
+          showGlobalAlert('Por favor seleccione la veterinaria y complete todos los campos obligatorios del Paso 1.', 'error');
+          document.getElementById('form-admin-ingreso-paciente').reportValidity();
+          return;
+        }
+      }
+
+      if (from === 2) {
+        const muestrasChecked = document.querySelectorAll('input[name="admin-ingresar-muestra"]:checked');
+        if (muestrasChecked.length === 0) {
+          showGlobalAlert('Debe seleccionar al menos un tipo de muestra.', 'error');
+          return;
+        }
+
+        const otros = document.getElementById('admin-ingresar-otros').value.trim();
+        if (selectedAdminIngresarExams.size === 0 && otros === '') {
+          showGlobalAlert('Debe seleccionar al menos un examen de la lista o indicar otro.', 'error');
+          return;
+        }
+
+        const quien = document.getElementById('admin-ingresar-quien');
+        if (!quien.checkValidity()) {
+          showGlobalAlert('Por favor, indique quién diligencia o recibe el formulario.', 'error');
+          quien.focus();
+          return;
+        }
+      }
+    }
+
+    document.querySelectorAll('#tab-admin-ingresar .step-panel').forEach(p => p.style.display = 'none');
+    document.getElementById(`admin-step-panel-${to}`).style.display = 'block';
+
+    for (let i = 1; i <= 3; i++) {
+      const ind = document.getElementById(`admin-step-ind-${i}`);
+      if (!ind) continue;
+      if (i === to) {
+        ind.classList.add('active');
+        ind.querySelector('.step-num').style.background = 'var(--color-accent)';
+        ind.querySelector('.step-num').style.color = 'white';
+        ind.querySelector('span').style.color = 'var(--text-main)';
+      } else if (i < to) {
+        ind.classList.remove('active');
+        ind.querySelector('.step-num').style.background = 'var(--color-primary)';
+        ind.querySelector('.step-num').style.color = 'white';
+        ind.querySelector('span').style.color = 'var(--text-muted)';
+      } else {
+        ind.classList.remove('active');
+        ind.querySelector('.step-num').style.background = 'var(--border-light)';
+        ind.querySelector('.step-num').style.color = 'var(--text-muted)';
+        ind.querySelector('span').style.color = 'var(--text-muted)';
+      }
+    }
+
+    const progressLineFill = document.getElementById('admin-progress-line-fill');
+    if (progressLineFill) {
+      const widthPercent = ((to - 1) / 2) * 100;
+      progressLineFill.style.width = `${widthPercent}%`;
+    }
+  }
+
+  // Event Listeners de navegación por pasos
+  const adminBtnStep1Next = document.getElementById('admin-btn-step-1-next');
+  if (adminBtnStep1Next) adminBtnStep1Next.addEventListener('click', () => changeAdminStep(1, 2));
+
+  const adminBtnStep2Prev = document.getElementById('admin-btn-step-2-prev');
+  if (adminBtnStep2Prev) adminBtnStep2Prev.addEventListener('click', () => changeAdminStep(2, 1));
+
+  const adminBtnStep2Next = document.getElementById('admin-btn-step-2-next');
+  if (adminBtnStep2Next) adminBtnStep2Next.addEventListener('click', () => changeAdminStep(2, 3));
+
+  const adminBtnStep3Prev = document.getElementById('admin-btn-step-3-prev');
+  if (adminBtnStep3Prev) adminBtnStep3Prev.addEventListener('click', () => changeAdminStep(3, 2));
+
+  // Clicks directos en los indicadores de paso
+  for (let i = 1; i <= 3; i++) {
+    const ind = document.getElementById(`admin-step-ind-${i}`);
+    if (ind) {
+      ind.addEventListener('click', () => changeAdminStep(1, i));
+    }
+  }
+
+  // Categorías de exámenes
+  const adminCatBtns = document.querySelectorAll('#admin-ingresar-exam-cats button');
+  adminCatBtns.forEach(btn => {
+    btn.addEventListener('click', () => {
+      adminCatBtns.forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      currentAdminIngresarCat = btn.dataset.cat;
+      const searchInput = document.getElementById('admin-search-ingresar-exam');
+      if (searchInput) searchInput.value = '';
+      renderAdminIngresarExams();
+    });
+  });
+
+  const adminSearchExam = document.getElementById('admin-search-ingresar-exam');
+  if (adminSearchExam) adminSearchExam.addEventListener('input', renderAdminIngresarExams);
+
+  // Datos especiales condicionales
+  const adminDatosEspSelect = document.getElementById('admin-ingresar-datos-especiales-tipo');
+  const adminCondBiopsia = document.getElementById('admin-condicional-biopsia');
+  const adminCondPcr = document.getElementById('admin-condicional-pcr');
+
+  if (adminDatosEspSelect) {
+    adminDatosEspSelect.addEventListener('change', () => {
+      const val = adminDatosEspSelect.value;
+      if (val === 'Biopsia') {
+        adminCondBiopsia.style.display = 'block';
+        adminCondPcr.style.display = 'none';
+      } else if (val === 'PCR') {
+        adminCondBiopsia.style.display = 'none';
+        adminCondPcr.style.display = 'block';
+      } else {
+        adminCondBiopsia.style.display = 'none';
+        adminCondPcr.style.display = 'none';
+      }
+    });
+  }
+
+  // Dirección habitual toggle
+  const adminDirHabitual = document.getElementById('admin-ingresar-dir-habitual');
+  const adminCustomDelGrid = document.getElementById('admin-ingresar-custom-delivery-grid');
+  if (adminDirHabitual) {
+    adminDirHabitual.addEventListener('change', () => {
+      adminCustomDelGrid.style.display = adminDirHabitual.checked ? 'none' : 'grid';
+      if (adminDirHabitual.checked) {
+        document.getElementById('admin-ingresar-direccion').value = '';
+        document.getElementById('admin-ingresar-telefono').value = '';
+      }
+    });
+  }
+
+  // Envío del Formulario de Ingreso Admin
+  const btnAdminSubmit = document.getElementById('btn-admin-submit-ingreso');
+  if (btnAdminSubmit) {
+    btnAdminSubmit.addEventListener('click', async () => {
+      const clientSelect = document.getElementById('admin-ingresar-client-select');
+      const selectedOption = clientSelect.options[clientSelect.selectedIndex];
+      if (!clientSelect.value || !selectedOption) {
+        showGlobalAlert('Debe seleccionar la veterinaria o clínica cliente.', 'error');
+        changeAdminStep(3, 1);
+        return;
+      }
+
+      const idCliente = clientSelect.value;
+      const nombreVeterinaria = selectedOption.getAttribute('data-name') || selectedOption.textContent;
+      const correoVeterinaria = selectedOption.getAttribute('data-email') || '';
+
+      const tipoEsp = document.getElementById('admin-ingresar-datos-especiales-tipo').value;
+      if (tipoEsp === 'Biopsia') {
+        const muestra = document.getElementById('admin-biopsia-tipo-muestra').value;
+        const aspecto = document.getElementById('admin-biopsia-aspecto').value;
+        const consistencia = document.getElementById('admin-biopsia-consistencia').value;
+        const ubicacion = document.getElementById('admin-biopsia-ubicacion').value.trim();
+        const tiempo = document.getElementById('admin-biopsia-tiempo').value.trim();
+
+        if (!muestra || !aspecto || !consistencia || !ubicacion || !tiempo) {
+          showGlobalAlert('Por favor complete todos los datos obligatorios para la Biopsia.', 'error');
+          return;
+        }
+      } else if (tipoEsp === 'PCR') {
+        const pcrTipo = document.getElementById('admin-pcr-tipo').value;
+        const pcrSintomatico = document.getElementById('admin-pcr-sintomatico').value;
+        if (!pcrTipo || !pcrSintomatico) {
+          showGlobalAlert('Por favor complete el tipo de PCR y si el paciente es sintomático.', 'error');
+          return;
+        }
+      }
+
+      SirioAuth.showLoading('Registrando paciente en el sistema...');
+
+      const muestrasChecked = [];
+      document.querySelectorAll('input[name="admin-ingresar-muestra"]:checked').forEach(cb => {
+        muestrasChecked.push(cb.value);
+      });
+
+      let detalleEspecial = '';
+      if (tipoEsp === 'Biopsia') {
+        detalleEspecial = JSON.stringify({
+          tipo_muestra: document.getElementById('admin-biopsia-tipo-muestra').value,
+          aspecto: document.getElementById('admin-biopsia-aspecto').value,
+          consistencia: document.getElementById('admin-biopsia-consistencia').value,
+          ubicacion: document.getElementById('admin-biopsia-ubicacion').value.trim(),
+          tiempo_evolucion: document.getElementById('admin-biopsia-tiempo').value.trim(),
+          detalles_adicionales: document.getElementById('admin-biopsia-detalles-adicionales').value.trim()
+        });
+      } else if (tipoEsp === 'PCR') {
+        const sintomas = [];
+        document.querySelectorAll('input[name="admin-pcr-sintomas"]:checked').forEach(cb => {
+          sintomas.push(cb.value);
+        });
+        detalleEspecial = JSON.stringify({
+          tipo_pcr: document.getElementById('admin-pcr-tipo').value,
+          estado_paciente: document.getElementById('admin-pcr-sintomatico').value,
+          sintomas: sintomas,
+          observaciones_pcr: document.getElementById('admin-pcr-observaciones').value.trim()
+        });
+      }
+
+      const examenesComunes = [...selectedAdminIngresarExams].filter(name => EXAMS_COMUNES.includes(name));
+      const examenesIndividuales = [...selectedAdminIngresarExams].filter(name => EXAMS_INDIVIDUALES.includes(name));
+      const examenesCultivos = [...selectedAdminIngresarExams].filter(name => EXAMS_CULTIVOS.includes(name));
+      const examenesPerfiles = [...selectedAdminIngresarExams].filter(name => EXAMS_PERFILES.includes(name));
+      const examenesToxicologia = [...selectedAdminIngresarExams].filter(name => EXAMS_TOXICOLOGIA.includes(name));
+
+      const payload = {
+        id_usuario: idCliente,
+        email: correoVeterinaria || '',
+        veterinaria: nombreVeterinaria,
+        medico: document.getElementById('admin-ingresar-medico').value.trim(),
+        propietario: document.getElementById('admin-ingresar-propietario').value.trim(),
+        paciente_nombre: document.getElementById('admin-ingresar-paciente-hc').value.trim(),
+        especie: document.getElementById('admin-ingresar-especie').value,
+        raza: document.getElementById('admin-ingresar-raza').value,
+        edad: document.getElementById('admin-ingresar-edad').value,
+        sexo: document.getElementById('admin-ingresar-sexo').value,
+        esterilizado: tipoEsp === 'PCR' ? (document.getElementById('admin-ingresar-esterilizado') ? document.getElementById('admin-ingresar-esterilizado').value : '') : '',
+        es_control: tipoEsp === 'PCR' ? (document.getElementById('admin-ingresar-es-control') ? document.getElementById('admin-ingresar-es-control').value : '') : '',
+        tipo_muestra: muestrasChecked.join(', '),
+        examenes_solicitados: [...selectedAdminIngresarExams].join(', '),
+        examenes_comunes: examenesComunes.join(', '),
+        examenes_individuales: examenesIndividuales.join(', '),
+        examenes_cultivos: examenesCultivos.join(', '),
+        examenes_perfiles: examenesPerfiles.join(', '),
+        examenes_toxicologia: examenesToxicologia.join(', '),
+        otros_examenes: document.getElementById('admin-ingresar-otros').value.trim(),
+        observaciones: document.getElementById('admin-ingresar-observaciones').value.trim(),
+        direccion_recoleccion: document.getElementById('admin-ingresar-dir-habitual').checked ? 'DIRECCIÓN REGISTRADA' : document.getElementById('admin-ingresar-direccion').value.trim(),
+        contacto_recoleccion: document.getElementById('admin-ingresar-dir-habitual').checked ? 'TELÉFONO REGISTRADO' : document.getElementById('admin-ingresar-telefono').value.trim(),
+        quien_diligencia: document.getElementById('admin-ingresar-quien').value.trim(),
+        datos_especiales_tipo: tipoEsp,
+        datos_especiales_detalle: detalleEspecial
+      };
+
+      try {
+        const res = await fetch(`${SirioAuth.API_BASE}/api/admin/ingresar-paciente`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        const data = await res.json();
+        SirioAuth.hideLoading();
+
+        if (data.success) {
+          showGlobalAlert('Paciente registrado exitosamente en el sistema.', 'success');
+
+          // Generar comprobante impreso
+          const regData = {
+            fecha: data.fecha || new Date().toLocaleString('es-CO'),
+            codigo_registro: data.codigo_registro || "2180001",
+            correo_centro: correoVeterinaria || 'N/A',
+            centro_veterinario: nombreVeterinaria || 'N/A',
+            medico: payload.medico,
+            propietario: payload.propietario,
+            paciente_nombre: payload.paciente_nombre,
+            especie: payload.especie,
+            raza: payload.raza,
+            edad: payload.edad,
+            sexo: payload.sexo,
+            muestra: payload.tipo_muestra || 'Ninguna',
+            examenes_solicitados: payload.examenes_solicitados || 'Ninguno',
+            otros_examenes: payload.otros_examenes || '',
+            observaciones: payload.observaciones || '',
+            direccion_recoleccion: payload.direccion_recoleccion,
+            contacto_recoleccion: payload.contacto_recoleccion,
+            quien_diligencia: payload.quien_diligencia,
+            datos_especiales_tipo: payload.datos_especiales_tipo,
+            datos_especiales_detalle: payload.datos_especiales_detalle
+          };
+
+          if (typeof SirioComprobantes !== 'undefined') {
+            SirioComprobantes.printIngresoPaciente(regData);
+          }
+
+          // Resetear formulario
+          document.getElementById('form-admin-ingreso-paciente').reset();
+          selectedAdminIngresarExams.clear();
+          updateAdminIngresarSelectedPills();
+          renderAdminIngresarExams();
+          changeAdminStep(3, 1);
+        } else {
+          showGlobalAlert(data.message || 'Error al ingresar paciente.', 'error');
+        }
+      } catch (err) {
+        SirioAuth.hideLoading();
+        console.error('Error al ingresar paciente admin:', err);
+        showGlobalAlert('Error de red al intentar registrar paciente.', 'error');
+      }
+    });
+  }
+
+  // Inicializar render de exámenes para el admin
+  renderAdminIngresarExams();
 
   // Mostrar botón de métricas si corresponde
   const navTabStats = document.getElementById('nav-tab-stats');

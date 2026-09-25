@@ -1526,8 +1526,15 @@ document.addEventListener('DOMContentLoaded', () => {
         });
       }
 
+      const examenesComunes = [...selectedIngresarExams].filter(name => EXAMS_COMUNES.includes(name));
+      const examenesIndividuales = [...selectedIngresarExams].filter(name => EXAMS_INDIVIDUALES.includes(name));
+      const examenesCultivos = [...selectedIngresarExams].filter(name => EXAMS_CULTIVOS.includes(name));
+      const examenesPerfiles = [...selectedIngresarExams].filter(name => EXAMS_PERFILES.includes(name));
+      const examenesToxicologia = [...selectedIngresarExams].filter(name => EXAMS_TOXICOLOGIA.includes(name));
+
       const payload = {
         id_usuario: currentUser.id_usuario,
+        email: currentUser.correo || currentUser.email || '',
         veterinaria: currentUser.nombre,
         medico: document.getElementById('ingresar-medico').value.trim(),
         propietario: document.getElementById('ingresar-propietario').value.trim(),
@@ -1536,8 +1543,15 @@ document.addEventListener('DOMContentLoaded', () => {
         raza: document.getElementById('ingresar-raza').value,
         edad: document.getElementById('ingresar-edad').value,
         sexo: document.getElementById('ingresar-sexo').value,
+        esterilizado: tipoEsp === 'PCR' ? (document.getElementById('ingresar-esterilizado') ? document.getElementById('ingresar-esterilizado').value : '') : '',
+        es_control: tipoEsp === 'PCR' ? (document.getElementById('ingresar-es-control') ? document.getElementById('ingresar-es-control').value : '') : '',
         tipo_muestra: muestrasChecked.join(', '),
         examenes_solicitados: [...selectedIngresarExams].join(', '),
+        examenes_comunes: examenesComunes.join(', '),
+        examenes_individuales: examenesIndividuales.join(', '),
+        examenes_cultivos: examenesCultivos.join(', '),
+        examenes_perfiles: examenesPerfiles.join(', '),
+        examenes_toxicologia: examenesToxicologia.join(', '),
         otros_examenes: document.getElementById('ingresar-otros').value.trim(),
         observaciones: document.getElementById('ingresar-observaciones').value.trim(),
         direccion_recoleccion: document.getElementById('ingresar-dir-habitual').checked ? 'DIRECCIÓN REGISTRADA' : document.getElementById('ingresar-direccion').value.trim(),

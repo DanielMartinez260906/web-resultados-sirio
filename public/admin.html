@@ -73,6 +73,10 @@
           <i class="fa-solid fa-share-nodes"></i>
           <span>Enviar Resultados</span>
         </button>
+        <button class="nav-tab" data-tab="tab-admin-ingresar">
+          <i class="fa-solid fa-file-signature"></i>
+          <span>Ingresar Paciente</span>
+        </button>
         <button class="nav-tab" data-tab="tab-clients">
           <i class="fa-solid fa-address-book"></i>
           <span>Clientes y Perfiles</span>
@@ -129,12 +133,70 @@
               <div class="search-container" style="margin-bottom: 0; flex: 1; min-width: 200px;">
                 <i class="fa-solid fa-magnifying-glass"></i>
                 <input type="text" id="search-all-results"
-                       placeholder="Buscar por cliente o nombre de examen...">
+                       placeholder="Búsqueda rápida global (cliente, examen, uploader)...">
               </div>
+              <button id="toggle-history-filters-btn" type="button" class="btn btn-secondary" style="height: 42px; border-radius: 8px; font-size: 0.85rem; padding: 0 1rem; gap: 6px; align-items: center; display: inline-flex;">
+                <i class="fa-solid fa-sliders"></i>
+                <span>Filtros Avanzados</span>
+              </button>
               <button id="delete-selected-results-btn" class="btn btn-danger" style="display: none; height: 42px; border-radius: 8px; font-size: 0.85rem; padding: 0 1rem; gap: 6px; align-items: center;">
                 <i class="fa-solid fa-trash-can"></i>
                 <span>Eliminar Seleccionados</span>
               </button>
+            </div>
+
+            <!-- Barra de Filtros Específicos por Columna -->
+            <div id="history-advanced-filters-panel" class="history-filters-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 0.75rem; padding: 1rem; background: rgba(255, 255, 255, 0.02); border: 1px solid var(--border-light); border-radius: 10px;">
+              <!-- Filtro: Cliente -->
+              <div>
+                <label style="display: block; font-size: 0.75rem; color: var(--text-muted); font-weight: 600; margin-bottom: 4px;">
+                  <i class="fa-solid fa-user" style="color: var(--color-primary); margin-right: 4px;"></i> Cliente
+                </label>
+                <select id="history-filter-client" class="form-control" style="font-size: 0.82rem; padding: 7px 10px; width: 100%;">
+                  <option value="">Todos los clientes</option>
+                </select>
+              </div>
+
+              <!-- Filtro: Examen / PDF -->
+              <div>
+                <label style="display: block; font-size: 0.75rem; color: var(--text-muted); font-weight: 600; margin-bottom: 4px;">
+                  <i class="fa-solid fa-file-pdf" style="color: var(--error); margin-right: 4px;"></i> Examen / PDF
+                </label>
+                <input type="text" id="history-filter-exam" class="form-control" placeholder="Nombre de examen..." style="font-size: 0.82rem; padding: 7px 10px; width: 100%;">
+              </div>
+
+              <!-- Filtro: Fecha Desde -->
+              <div>
+                <label style="display: block; font-size: 0.75rem; color: var(--text-muted); font-weight: 600; margin-bottom: 4px;">
+                  <i class="fa-solid fa-calendar-days" style="color: #38bdf8; margin-right: 4px;"></i> Fecha Desde
+                </label>
+                <input type="date" id="history-filter-date-from" class="form-control" style="font-size: 0.82rem; padding: 7px 10px; width: 100%;">
+              </div>
+
+              <!-- Filtro: Fecha Hasta -->
+              <div>
+                <label style="display: block; font-size: 0.75rem; color: var(--text-muted); font-weight: 600; margin-bottom: 4px;">
+                  <i class="fa-solid fa-calendar-check" style="color: #38bdf8; margin-right: 4px;"></i> Fecha Hasta
+                </label>
+                <input type="date" id="history-filter-date-to" class="form-control" style="font-size: 0.82rem; padding: 7px 10px; width: 100%;">
+              </div>
+
+              <!-- Filtro: Enviado Por -->
+              <div>
+                <label style="display: block; font-size: 0.75rem; color: var(--text-muted); font-weight: 600; margin-bottom: 4px;">
+                  <i class="fa-solid fa-user-shield" style="color: #c084fc; margin-right: 4px;"></i> Enviado por
+                </label>
+                <select id="history-filter-uploader" class="form-control" style="font-size: 0.82rem; padding: 7px 10px; width: 100%;">
+                  <option value="">Todos los colaboradores</option>
+                </select>
+              </div>
+
+              <!-- Botón Limpiar Filtros -->
+              <div style="display: flex; align-items: flex-end;">
+                <button type="button" id="history-clear-filters-btn" class="btn btn-secondary" style="width: 100%; height: 36px; font-size: 0.8rem; padding: 0 10px; display: flex; align-items: center; justify-content: center; gap: 6px;">
+                  <i class="fa-solid fa-arrow-rotate-left"></i> Limpiar Filtros
+                </button>
+              </div>
             </div>
 
             <!-- Tabla responsive -->
@@ -754,80 +816,219 @@
     <!-- Pestaña: Estadísticas del Sistema (Uso Exclusivo Jefas/Programadores) -->
     <div id="tab-stats" class="tab-content" style="display: none;">
       <div class="panel-card" style="margin-bottom: 1.5rem; border-color: rgba(14, 165, 233, 0.25); padding: 1.5rem;">
-        <h3 class="panel-card-title" style="color: var(--color-accent); display: flex; align-items: center; gap: 10px;">
-          <i class="fa-solid fa-chart-line"></i> Métricas e Informes del Sistema
-        </h3>
-        <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 1.5rem;">
-          Sección exclusiva para Jefes de Laboratorio y Programadores. Consulta las estadísticas del flujo de trabajo, colaboradores y clientes estrella del laboratorio.
-        </p>
+        <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 1rem; margin-bottom: 1.25rem;">
+          <div>
+            <h3 class="panel-card-title" style="color: var(--color-accent); display: flex; align-items: center; gap: 10px; margin-bottom: 4px;">
+              <i class="fa-solid fa-chart-line"></i> Métricas e Informes Interactivos del Sistema
+            </h3>
+            <p style="font-size: 0.8rem; color: var(--text-muted); margin: 0;">
+              Analiza el volumen de exámenes, productividad del personal y comportamiento de cada cliente en tiempo real.
+            </p>
+          </div>
+          
+          <button id="refresh-stats-btn" class="btn btn-secondary" style="font-size: 0.8rem; padding: 7px 12px; gap: 6px; display: inline-flex; align-items: center;">
+            <i class="fa-solid fa-arrows-rotate"></i> Actualizar Métricas
+          </button>
+        </div>
 
-        <!-- Grid de Resumenes Rápidos -->
-        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1rem; margin-bottom: 2rem;">
-          <div style="background: rgba(255, 255, 255, 0.02); padding: 16px; border-radius: 10px; border: 1.5px solid var(--border-light); display: flex; align-items: center; gap: 12px;">
-            <div style="width: 45px; height: 45px; border-radius: 50%; background: rgba(56, 189, 248, 0.12); display: flex; align-items: center; justify-content: center; color: #38bdf8; font-size: 1.25rem;">
+        <!-- Barra de Controles y Filtros Interactivos de Estadísticas -->
+        <div class="stats-controls-panel" style="background: rgba(255, 255, 255, 0.02); border: 1px solid var(--border-light); border-radius: 12px; padding: 1rem 1.25rem; margin-bottom: 1.5rem;">
+          <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 0.75rem; margin-bottom: 0.75rem;">
+            <span style="font-size: 0.78rem; font-weight: 700; text-transform: uppercase; color: var(--color-primary); letter-spacing: 0.5px; display: flex; align-items: center; gap: 6px;">
+              <i class="fa-solid fa-filter"></i> Filtros de Análisis
+            </span>
+            <div id="stats-active-filter-badge" style="display: none; background: rgba(56, 189, 248, 0.12); color: #38bdf8; border: 1px solid rgba(56, 189, 248, 0.3); font-size: 0.72rem; padding: 2px 8px; border-radius: 20px; font-weight: 600;">
+              Filtrado activo
+            </div>
+          </div>
+
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem;">
+            <!-- Selector de Cliente para Auditoría Detallada -->
+            <div>
+              <label for="stats-filter-client" style="display: block; font-size: 0.75rem; color: var(--text-muted); font-weight: 600; margin-bottom: 4px;">
+                <i class="fa-solid fa-user-tag" style="color: var(--color-accent); margin-right: 4px;"></i> Filtrar por Cliente
+              </label>
+              <select id="stats-filter-client" class="form-control" style="font-size: 0.85rem; padding: 8px 10px; width: 100%; font-weight: 500;">
+                <option value="">📊 Todos los Clientes (Visión Global)</option>
+              </select>
+            </div>
+
+            <!-- Selector de Período Rápido -->
+            <div>
+              <label for="stats-filter-period" style="display: block; font-size: 0.75rem; color: var(--text-muted); font-weight: 600; margin-bottom: 4px;">
+                <i class="fa-solid fa-clock-rotate-left" style="color: #38bdf8; margin-right: 4px;"></i> Rango de Tiempo
+              </label>
+              <select id="stats-filter-period" class="form-control" style="font-size: 0.85rem; padding: 8px 10px; width: 100%;">
+                <option value="all">Histórico Completo</option>
+                <option value="this_month">Este Mes</option>
+                <option value="last_3_months">Últimos 3 Meses</option>
+                <option value="this_year">Este Año</option>
+                <option value="custom">Rango Personalizado...</option>
+              </select>
+            </div>
+
+            <!-- Fechas Personalizadas (Ocultas por defecto) -->
+            <div id="stats-custom-dates" style="display: none; grid-column: span 2; display: none; gap: 0.75rem; align-items: flex-end;">
+              <div style="flex: 1;">
+                <label style="display: block; font-size: 0.72rem; color: var(--text-muted); margin-bottom: 4px;">Desde:</label>
+                <input type="date" id="stats-filter-date-from" class="form-control" style="font-size: 0.82rem; padding: 6px 10px; width: 100%;">
+              </div>
+              <div style="flex: 1;">
+                <label style="display: block; font-size: 0.72rem; color: var(--text-muted); margin-bottom: 4px;">Hasta:</label>
+                <input type="date" id="stats-filter-date-to" class="form-control" style="font-size: 0.82rem; padding: 6px 10px; width: 100%;">
+              </div>
+            </div>
+
+            <!-- Botón de Reset -->
+            <div style="display: flex; align-items: flex-end;">
+              <button type="button" id="stats-reset-filters-btn" class="btn btn-secondary" style="width: 100%; height: 38px; font-size: 0.8rem; padding: 0 10px; display: flex; align-items: center; justify-content: center; gap: 6px;">
+                <i class="fa-solid fa-filter-circle-xmark"></i> Reestablecer Filtros
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Banner de Cliente Seleccionado (Aparece al filtrar por un cliente en específico) -->
+        <div id="stats-client-focus-banner" style="display: none; background: linear-gradient(135deg, rgba(14, 165, 233, 0.12), rgba(168, 85, 247, 0.08)); border: 1.5px solid rgba(56, 189, 248, 0.35); border-radius: 12px; padding: 1rem 1.25rem; margin-bottom: 1.5rem;">
+          <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+            <div>
+              <div style="display: flex; align-items: center; gap: 8px;">
+                <span class="badge" style="background: var(--color-primary); color: #fff; font-size: 0.7rem; font-weight: 700; padding: 2px 8px; border-radius: 4px; text-transform: uppercase;">
+                  Detalle de Cliente
+                </span>
+                <span id="stats-client-focus-id" style="color: var(--text-muted); font-size: 0.75rem; font-family: monospace;"></span>
+              </div>
+              <h4 id="stats-client-focus-name" style="margin: 6px 0 0 0; font-size: 1.15rem; color: var(--text-main); font-weight: 700;"></h4>
+            </div>
+            <div style="display: flex; gap: 1.5rem; flex-wrap: wrap;">
+              <div style="text-align: right;">
+                <span style="font-size: 0.72rem; color: var(--text-muted); display: block; text-transform: uppercase;">Exámenes Enviados</span>
+                <span id="stats-client-focus-count" style="font-size: 1.25rem; font-weight: 800; color: #38bdf8;">0</span>
+              </div>
+              <div style="text-align: right;">
+                <span style="font-size: 0.72rem; color: var(--text-muted); display: block; text-transform: uppercase;">Participación Total</span>
+                <span id="stats-client-focus-share" style="font-size: 1.25rem; font-weight: 800; color: #c084fc;">0%</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Grid de Tarjetas KPI Resumen -->
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-bottom: 1.5rem;">
+          <!-- KPI 1: Total Exámenes en el filtro -->
+          <div style="background: rgba(255, 255, 255, 0.02); padding: 16px; border-radius: 10px; border: 1.5px solid var(--border-light); display: flex; align-items: center; gap: 12px; transition: transform 0.2s ease;">
+            <div style="width: 45px; height: 45px; border-radius: 50%; background: rgba(56, 189, 248, 0.12); display: flex; align-items: center; justify-content: center; color: #38bdf8; font-size: 1.25rem; flex-shrink: 0;">
               <i class="fa-solid fa-server"></i>
             </div>
-            <div>
-              <span style="font-size: 0.72rem; color: var(--text-muted); display: block; text-transform: uppercase; font-weight: 600;">Total Exámenes</span>
+            <div style="min-width: 0;">
+              <span id="stats-kpi-total-label" style="font-size: 0.72rem; color: var(--text-muted); display: block; text-transform: uppercase; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">Total Exámenes</span>
               <span id="stats-total-results" style="font-size: 1.35rem; font-weight: 700; color: var(--text-main);">0</span>
             </div>
           </div>
 
-          <div style="background: rgba(255, 255, 255, 0.02); padding: 16px; border-radius: 10px; border: 1.5px solid var(--border-light); display: flex; align-items: center; gap: 12px;">
-            <div style="width: 45px; height: 45px; border-radius: 50%; background: rgba(236, 72, 153, 0.12); display: flex; align-items: center; justify-content: center; color: #f472b6; font-size: 1.25rem;">
-              <i class="fa-solid fa-trophy"></i>
+          <!-- KPI 2: Cliente Estrella o Último Envío -->
+          <div style="background: rgba(255, 255, 255, 0.02); padding: 16px; border-radius: 10px; border: 1.5px solid var(--border-light); display: flex; align-items: center; gap: 12px; transition: transform 0.2s ease;">
+            <div id="stats-kpi2-icon-wrap" style="width: 45px; height: 45px; border-radius: 50%; background: rgba(236, 72, 153, 0.12); display: flex; align-items: center; justify-content: center; color: #f472b6; font-size: 1.25rem; flex-shrink: 0;">
+              <i id="stats-kpi2-icon" class="fa-solid fa-trophy"></i>
             </div>
-            <div>
-              <span style="font-size: 0.72rem; color: var(--text-muted); display: block; text-transform: uppercase; font-weight: 600;">Cliente Estrella</span>
-              <span id="stats-top-client" style="font-size: 0.82rem; font-weight: 700; color: var(--text-main); display: block; margin-top: 2px; text-overflow: ellipsis; overflow: hidden; white-space: nowrap; max-width: 160px;" title="Cargando...">Cargando...</span>
+            <div style="min-width: 0;">
+              <span id="stats-kpi2-label" style="font-size: 0.72rem; color: var(--text-muted); display: block; text-transform: uppercase; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">Cliente Estrella</span>
+              <span id="stats-top-client" style="font-size: 0.82rem; font-weight: 700; color: var(--text-main); display: block; margin-top: 2px; text-overflow: ellipsis; overflow: hidden; white-space: nowrap; max-width: 170px;" title="Cargando...">Cargando...</span>
             </div>
           </div>
 
-          <div style="background: rgba(255, 255, 255, 0.02); padding: 16px; border-radius: 10px; border: 1.5px solid var(--border-light); display: flex; align-items: center; gap: 12px;">
-            <div style="width: 45px; height: 45px; border-radius: 50%; background: rgba(168, 85, 247, 0.12); display: flex; align-items: center; justify-content: center; color: #c084fc; font-size: 1.25rem;">
+          <!-- KPI 3: Colaborador Activo -->
+          <div style="background: rgba(255, 255, 255, 0.02); padding: 16px; border-radius: 10px; border: 1.5px solid var(--border-light); display: flex; align-items: center; gap: 12px; transition: transform 0.2s ease;">
+            <div style="width: 45px; height: 45px; border-radius: 50%; background: rgba(168, 85, 247, 0.12); display: flex; align-items: center; justify-content: center; color: #c084fc; font-size: 1.25rem; flex-shrink: 0;">
               <i class="fa-solid fa-user-tie"></i>
             </div>
-            <div>
-              <span style="font-size: 0.72rem; color: var(--text-muted); display: block; text-transform: uppercase; font-weight: 600;">Colaborador Activo</span>
-              <span id="stats-top-uploader" style="font-size: 0.82rem; font-weight: 700; color: var(--text-main); display: block; margin-top: 2px; text-overflow: ellipsis; overflow: hidden; white-space: nowrap; max-width: 160px;" title="Cargando...">Cargando...</span>
+            <div style="min-width: 0;">
+              <span id="stats-kpi3-label" style="font-size: 0.72rem; color: var(--text-muted); display: block; text-transform: uppercase; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">Colaborador Activo</span>
+              <span id="stats-top-uploader" style="font-size: 0.82rem; font-weight: 700; color: var(--text-main); display: block; margin-top: 2px; text-overflow: ellipsis; overflow: hidden; white-space: nowrap; max-width: 170px;" title="Cargando...">Cargando...</span>
             </div>
           </div>
 
-
+          <!-- KPI 4: Promedio / Actividad -->
+          <div style="background: rgba(255, 255, 255, 0.02); padding: 16px; border-radius: 10px; border: 1.5px solid var(--border-light); display: flex; align-items: center; gap: 12px; transition: transform 0.2s ease;">
+            <div style="width: 45px; height: 45px; border-radius: 50%; background: rgba(16, 185, 129, 0.12); display: flex; align-items: center; justify-content: center; color: #10b981; font-size: 1.25rem; flex-shrink: 0;">
+              <i class="fa-solid fa-chart-simple"></i>
+            </div>
+            <div style="min-width: 0;">
+              <span id="stats-kpi4-label" style="font-size: 0.72rem; color: var(--text-muted); display: block; text-transform: uppercase; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">Actividad / Día</span>
+              <span id="stats-kpi4-value" style="font-size: 1.15rem; font-weight: 700; color: var(--text-main); display: block; margin-top: 2px;">0</span>
+            </div>
+          </div>
         </div>
 
         <!-- Grid de Gráficos -->
-        <div style="display: grid; grid-template-columns: 1fr; gap: 1.5rem; margin-bottom: 2rem;">
-          <!-- Gráfico 1: Tendencia Mensual -->
+        <div style="display: grid; grid-template-columns: 1fr; gap: 1.5rem; margin-bottom: 1.5rem;">
+          <!-- Gráfico 1: Tendencia Temporal -->
           <div style="background: rgba(255, 255, 255, 0.015); border: 1px solid var(--border-light); border-radius: 12px; padding: 20px;">
-            <h4 style="margin: 0 0 15px 0; font-size: 0.9rem; font-weight: 600; color: var(--color-accent); display: flex; align-items: center; gap: 8px;">
-              <i class="fa-solid fa-chart-area"></i> Flujo Histórico de Exámenes Enviados
-            </h4>
-            <div style="position: relative; height: 260px; width: 100%;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; flex-wrap: wrap; gap: 8px;">
+              <h4 id="chart-trend-title" style="margin: 0; font-size: 0.9rem; font-weight: 600; color: var(--color-accent); display: flex; align-items: center; gap: 8px;">
+                <i class="fa-solid fa-chart-area"></i> Flujo Histórico de Exámenes Enviados
+              </h4>
+              <span id="chart-trend-subtitle" style="font-size: 0.75rem; color: var(--text-muted);">
+                Evolución mensual
+              </span>
+            </div>
+            <div style="position: relative; height: 270px; width: 100%;">
               <canvas id="chart-monthly-trend"></canvas>
             </div>
           </div>
         </div>
 
-        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 1.5rem;">
-          <!-- Gráfico 2: Colaboradores -->
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 1.5rem; margin-bottom: 1.5rem;">
+          <!-- Gráfico 2: Colaboradores / Procesamiento -->
           <div style="background: rgba(255, 255, 255, 0.015); border: 1px solid var(--border-light); border-radius: 12px; padding: 20px;">
-            <h4 style="margin: 0 0 15px 0; font-size: 0.9rem; font-weight: 600; color: var(--color-accent); display: flex; align-items: center; gap: 8px;">
+            <h4 id="chart-staff-title" style="margin: 0 0 15px 0; font-size: 0.9rem; font-weight: 600; color: var(--color-accent); display: flex; align-items: center; gap: 8px;">
               <i class="fa-solid fa-chart-pie"></i> Participación del Personal (Exámenes Subidos)
             </h4>
-            <div style="position: relative; height: 240px; width: 100%; display: flex; justify-content: center;">
+            <div style="position: relative; height: 250px; width: 100%; display: flex; justify-content: center;">
               <canvas id="chart-staff-distribution"></canvas>
             </div>
           </div>
 
-          <!-- Gráfico 3: Clientes Top -->
+          <!-- Gráfico 3: Clientes Top o Distribución de Exámenes del Cliente -->
           <div style="background: rgba(255, 255, 255, 0.015); border: 1px solid var(--border-light); border-radius: 12px; padding: 20px;">
-            <h4 style="margin: 0 0 15px 0; font-size: 0.9rem; font-weight: 600; color: var(--color-accent); display: flex; align-items: center; gap: 8px;">
-              <i class="fa-solid fa-ranking-star"></i> Top 5 Clientes con Mayor Demanda
+            <h4 id="chart-top-title" style="margin: 0 0 15px 0; font-size: 0.9rem; font-weight: 600; color: var(--color-accent); display: flex; align-items: center; gap: 8px;">
+              <i class="fa-solid fa-ranking-star"></i> Top Clientes con Mayor Demanda
             </h4>
-            <div style="position: relative; height: 240px; width: 100%;">
+            <div style="position: relative; height: 250px; width: 100%;">
               <canvas id="chart-top-clients"></canvas>
             </div>
+          </div>
+        </div>
+
+        <!-- Tabla de Últimos Exámenes Filtrados en Estadísticas -->
+        <div id="stats-recent-table-section" style="background: rgba(255, 255, 255, 0.015); border: 1px solid var(--border-light); border-radius: 12px; padding: 20px;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; flex-wrap: wrap; gap: 8px;">
+            <h4 style="margin: 0; font-size: 0.9rem; font-weight: 600; color: var(--color-accent); display: flex; align-items: center; gap: 8px;">
+              <i class="fa-solid fa-list-check"></i> Últimos Exámenes del Segmento Seleccionado
+            </h4>
+            <span id="stats-recent-count-badge" style="font-size: 0.72rem; color: var(--text-muted); background: rgba(255, 255, 255, 0.05); padding: 3px 8px; border-radius: 12px; border: 1px solid var(--border-light);">
+              Mostrando hasta 8 registros
+            </span>
+          </div>
+          <div class="results-table-wrapper" style="max-height: 300px; overflow-y: auto;">
+            <table class="results-table">
+              <thead>
+                <tr>
+                  <th>Cliente</th>
+                  <th>Examen</th>
+                  <th>Fecha</th>
+                  <th>Enviado por</th>
+                  <th style="text-align: center;">PDF</th>
+                </tr>
+              </thead>
+              <tbody id="stats-recent-table-body">
+                <tr>
+                  <td colspan="5" style="text-align: center; color: var(--text-muted); padding: 1.5rem 0;">
+                    Selecciona filtros o actualiza para ver los resultados recientes.
+                  </td>
+                </tr>
+              </tbody>
+            </table>
           </div>
         </div>
       </div>
@@ -1323,6 +1524,482 @@
     </div>
   </div>
 
+  <!-- ══════════════════════════════════════════════════════════════════
+       PESTAÑA: INGRESO DE PACIENTES (VISTA ADMINISTRADORES)
+  ════════════════════════════════════════════════════════════════════ -->
+  <div id="tab-admin-ingresar" class="tab-content" style="display: none;">
+    <div id="admin-ingreso-pacientes-main-content" style="display: block;">
+      <!-- Banner con el Logo de SIRIO y Modo Administrativo -->
+      <div class="panel-card" style="margin-bottom: 1.5rem; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1.5rem; padding: 1.25rem 2rem; background: linear-gradient(135deg, rgba(14, 165, 233, 0.08) 0%, rgba(168, 85, 247, 0.04) 100%); border-left: 5px solid var(--color-accent);">
+        <div style="display: flex; align-items: center; gap: 1.25rem;">
+          <img src="logo.png" alt="SIRIO Logo" style="height: 52px; object-fit: contain;">
+          <div>
+            <h2 style="font-size: 1.35rem; font-weight: 700; color: var(--color-accent); margin: 0; display: flex; align-items: center; gap: 8px;">
+              <i class="fa-solid fa-file-signature"></i> Ingreso de Pacientes (Panel Administrativo)
+            </h2>
+            <p style="font-size: 0.8rem; color: var(--text-muted); margin: 4px 0 0 0;">
+              Formulario de recepción, radicación de muestras y comprobante de ingreso permanente para el personal del laboratorio.
+            </p>
+          </div>
+        </div>
+        <div style="display: flex; align-items: center; gap: 8px; background: rgba(16, 185, 129, 0.12); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.3); padding: 6px 14px; border-radius: 20px; font-size: 0.78rem; font-weight: 700;">
+          <i class="fa-solid fa-circle-check"></i> Modo Activo Permanente
+        </div>
+      </div>
+
+      <!-- Indicador de Pasos -->
+      <div class="panel-card" style="margin-bottom: 1.5rem; padding: 1.25rem;">
+        <div style="display: flex; justify-content: space-around; align-items: center; position: relative;">
+          <div style="position: absolute; top: 22px; left: 10%; right: 10%; height: 2px; background: var(--border-light); z-index: 1;" id="admin-progress-line">
+            <div id="admin-progress-line-fill" style="width: 0%; height: 100%; background: var(--color-accent); transition: width 0.3s;"></div>
+          </div>
+          
+          <div class="step-indicator active" id="admin-step-ind-1" data-step="1" style="z-index: 2; text-align: center; cursor: pointer;">
+            <div class="step-num" style="width: 44px; height: 44px; border-radius: 50%; background: var(--color-accent); color: white; display: flex; align-items: center; justify-content: center; font-weight: 700; margin: 0 auto 6px auto; border: 3px solid var(--panel-bg); transition: all 0.3s;">1</div>
+            <span style="font-size: 0.72rem; font-weight: 600; color: var(--text-main);">Paciente y Propietario</span>
+          </div>
+
+          <div class="step-indicator" id="admin-step-ind-2" data-step="2" style="z-index: 2; text-align: center; cursor: pointer;">
+            <div class="step-num" style="width: 44px; height: 44px; border-radius: 50%; background: var(--border-light); color: var(--text-muted); display: flex; align-items: center; justify-content: center; font-weight: 700; margin: 0 auto 6px auto; border: 3px solid var(--panel-bg); transition: all 0.3s;">2</div>
+            <span style="font-size: 0.72rem; font-weight: 600; color: var(--text-muted);">Muestras y Exámenes</span>
+          </div>
+
+          <div class="step-indicator" id="admin-step-ind-3" data-step="3" style="z-index: 2; text-align: center; cursor: pointer;">
+            <div class="step-num" style="width: 44px; height: 44px; border-radius: 50%; background: var(--border-light); color: var(--text-muted); display: flex; align-items: center; justify-content: center; font-weight: 700; margin: 0 auto 6px auto; border: 3px solid var(--panel-bg); transition: all 0.3s;">3</div>
+            <span style="font-size: 0.72rem; font-weight: 600; color: var(--text-muted);">Detalles Especiales</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Contenedor de Formularios por Pasos -->
+      <form id="form-admin-ingreso-paciente" onsubmit="return false;">
+        
+        <!-- PASO 1: Identificación y Cliente -->
+        <div class="panel-card step-panel" id="admin-step-panel-1" style="padding: 2rem;">
+          <h3 style="font-size: 1.05rem; font-weight: 600; color: var(--color-accent); margin-bottom: 1.5rem; display: flex; align-items: center; gap: 8px;">
+            <i class="fa-solid fa-paw"></i> Paso 1: Datos de la Veterinaria, Médico y Paciente
+          </h3>
+
+          <div class="form-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.5rem; margin-bottom: 1.5rem;">
+            <!-- Selector Dinámico de Cliente / Veterinaria para el Admin -->
+            <div class="form-group" style="grid-column: 1 / -1;">
+              <label style="font-weight: 700; color: var(--color-primary);">Centro Veterinario / Veterinaria Asociada *</label>
+              <select id="admin-ingresar-client-select" class="form-control" required style="height: 46px; font-weight: 600; font-size: 0.92rem;">
+                <option value="" disabled selected>Seleccione la veterinaria o cliente...</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label style="font-weight: 600;">Médico Veterinario Solicitante *</label>
+              <input type="text" id="admin-ingresar-medico" class="form-control" placeholder="Nombre completo del médico veterinario" required>
+            </div>
+            <div class="form-group">
+              <label style="font-weight: 600;">Propietario de la Mascota *</label>
+              <input type="text" id="admin-ingresar-propietario" class="form-control" placeholder="Nombre del propietario" required>
+            </div>
+            <div class="form-group">
+              <label style="font-weight: 600;">Nombre del Paciente y N° Historia Clínica *</label>
+              <input type="text" id="admin-ingresar-paciente-hc" class="form-control" placeholder="Ej: Toby - HC: 12345" required>
+            </div>
+            <div class="form-group">
+              <label style="font-weight: 600;">Especie *</label>
+              <select id="admin-ingresar-especie" class="form-control" required style="height: 46px;">
+                <option value="" disabled selected>Seleccione la especie</option>
+                <option value="Canino">Canino</option>
+                <option value="Felino">Felino</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label style="font-weight: 600;">Raza *</label>
+              <select id="admin-ingresar-raza" class="form-control" required style="height: 46px;">
+                <option value="" disabled selected>Seleccione la raza</option>
+                <option value="Criollo">Criollo</option>
+                <option value="Mestizo">Mestizo</option>
+                <option value="Cruce">Cruce</option>
+                <option value="No indica">No indica</option>
+                <option value="Afgano">Afgano</option>
+                <option value="Akita">Akita</option>
+                <option value="Alaska Malamute">Alaska Malamute</option>
+                <option value="American Bully">American Bully</option>
+                <option value="Angora">Angora</option>
+                <option value="Australian Shepherd">Australian Shepherd</option>
+                <option value="Azul Ruso">Azul Ruso</option>
+                <option value="Basset hound">Basset hound</option>
+                <option value="Balinés">Balinés</option>
+                <option value="Beagle">Beagle</option>
+                <option value="Bernes de la Montaña">Bernes de la Montaña</option>
+                <option value="Bengalí">Bengalí</option>
+                <option value="Border Collie">Border Collie</option>
+                <option value="Boston Terrier">Boston Terrier</option>
+                <option value="Bull Terrier">Bull Terrier</option>
+                <option value="Bulldog Francés">Bulldog Francés</option>
+                <option value="Bulldog Inglés">Bulldog Inglés</option>
+                <option value="Boxer">Boxer</option>
+                <option value="Caniche">Caniche</option>
+                <option value="Cavalier">Cavalier</option>
+                <option value="Chihuahua">Chihuahua</option>
+                <option value="Chow chow">Chow chow</option>
+                <option value="Cocker">Cocker</option>
+                <option value="Dachshund (Teckel)">Dachshund (Teckel)</option>
+                <option value="Dalmata">Dalmata</option>
+                <option value="Doberman">Doberman</option>
+                <option value="Dogo de Burdeos">Dogo de Burdeos</option>
+                <option value="Golden Retriever">Golden Retriever</option>
+                <option value="Golden doodle">Golden doodle</option>
+                <option value="Husky">Husky</option>
+                <option value="Jack Russell terrier">Jack Russell terrier</option>
+                <option value="Labrador">Labrador</option>
+                <option value="Maltés">Maltés</option>
+                <option value="Maine Coon">Maine Coon</option>
+                <option value="Maltipoo">Maltipoo</option>
+                <option value="Pastor Alemán">Pastor Alemán</option>
+                <option value="Pastor Belga Malinois">Pastor Belga Malinois</option>
+                <option value="Persa">Persa</option>
+                <option value="Pinscher">Pinscher</option>
+                <option value="Pitbull">Pitbull</option>
+                <option value="Pomerania">Pomerania</option>
+                <option value="Poodle (French poodle)">Poodle (French poodle)</option>
+                <option value="Pug">Pug</option>
+                <option value="Ragdoll">Ragdoll</option>
+                <option value="Rottweiler">Rottweiler</option>
+                <option value="Schnauzer">Schnauzer</option>
+                <option value="Shih Tzu">Shih Tzu</option>
+                <option value="Siames">Siames</option>
+                <option value="Yorkshire">Yorkshire</option>
+                <option value="OTRO">OTRO (Especificar abajo en Observaciones)</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label style="font-weight: 600;">Edad *</label>
+              <select id="admin-ingresar-edad" class="form-control" required style="height: 46px;">
+                <option value="" disabled selected>Seleccione la edad</option>
+                <option value="1 MES">1 Mes</option>
+                <option value="2 MESES">2 Meses</option>
+                <option value="3 MESES">3 Meses</option>
+                <option value="4 MESES">4 Meses</option>
+                <option value="5 MESES">5 Meses</option>
+                <option value="6 MESES">6 Meses</option>
+                <option value="7 MESES">7 Meses</option>
+                <option value="8 MESES">8 Meses</option>
+                <option value="9 MESES">9 Meses</option>
+                <option value="10 MESES">10 Meses</option>
+                <option value="11 MESES">11 Meses</option>
+                <option value="1 AÑO">1 Año</option>
+                <option value="2 AÑOS">2 Años</option>
+                <option value="3 AÑOS">3 Años</option>
+                <option value="4 AÑOS">4 Años</option>
+                <option value="5 AÑOS">5 Años</option>
+                <option value="6 AÑOS">6 Años</option>
+                <option value="7 AÑOS">7 Años</option>
+                <option value="8 AÑOS">8 Años</option>
+                <option value="9 AÑOS">9 Años</option>
+                <option value="10 AÑOS">10 Años</option>
+                <option value="11 AÑOS">11 Años</option>
+                <option value="12 AÑOS">12 Años</option>
+                <option value="13 AÑOS">13 Años</option>
+                <option value="14 AÑOS">14 Años</option>
+                <option value="15 AÑOS">15 Años</option>
+                <option value="16 AÑOS">16 Años</option>
+                <option value="17 AÑOS">17 Años</option>
+                <option value="18 AÑOS">18 Años</option>
+                <option value="19 AÑOS">19 Años</option>
+                <option value="20 AÑOS">20 Años</option>
+                <option value="NO INDICA">No indica</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label style="font-weight: 600;">Sexo *</label>
+              <select id="admin-ingresar-sexo" class="form-control" required style="height: 46px;">
+                <option value="" disabled selected>Seleccione el sexo</option>
+                <option value="Macho">Macho</option>
+                <option value="Hembra">Hembra</option>
+              </select>
+            </div>
+          </div>
+
+          <div style="text-align: right;">
+            <button type="button" class="btn btn-primary" id="admin-btn-step-1-next" style="gap: 8px;">
+              Siguiente Paso <i class="fa-solid fa-arrow-right"></i>
+            </button>
+          </div>
+        </div>
+
+        <!-- PASO 2: Muestras y Exámenes -->
+        <div class="panel-card step-panel" id="admin-step-panel-2" style="padding: 2rem; display: none;">
+          <h3 style="font-size: 1.05rem; font-weight: 600; color: var(--color-accent); margin-bottom: 1.5rem; display: flex; align-items: center; gap: 8px;">
+            <i class="fa-solid fa-microscope"></i> Paso 2: Selección de Exámenes y Muestra
+          </h3>
+
+          <!-- Tipo de Muestra -->
+          <div class="form-group" style="margin-bottom: 1.5rem;">
+            <label style="font-weight: 700; margin-bottom: 0.5rem; display: block;">Tipo de muestra enviada (Seleccione todas las que apliquen) *</label>
+            <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 0.75rem;">
+              <label class="checkbox-label" style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                <input type="checkbox" name="admin-ingresar-muestra" value="Sangre" style="width: 18px; height: 18px;"> Sangre
+              </label>
+              <label class="checkbox-label" style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                <input type="checkbox" name="admin-ingresar-muestra" value="Orina" style="width: 18px; height: 18px;"> Orina
+              </label>
+              <label class="checkbox-label" style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                <input type="checkbox" name="admin-ingresar-muestra" value="Materia Fecal" style="width: 18px; height: 18px;"> Materia Fecal
+              </label>
+              <label class="checkbox-label" style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                <input type="checkbox" name="admin-ingresar-muestra" value="Secreción 1 oído" style="width: 18px; height: 18px;"> Secreción 1 oído
+              </label>
+              <label class="checkbox-label" style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                <input type="checkbox" name="admin-ingresar-muestra" value="Secreción 2 Oídos (OD-OI)" style="width: 18px; height: 18px;"> Secreción 2 Oídos (OD-OI)
+              </label>
+              <label class="checkbox-label" style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                <input type="checkbox" name="admin-ingresar-muestra" value="Secreción de piel" style="width: 18px; height: 18px;"> Secreción de piel
+              </label>
+              <label class="checkbox-label" style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                <input type="checkbox" name="admin-ingresar-muestra" value="Pelos y escamas" style="width: 18px; height: 18px;"> Pelos y escamas
+              </label>
+            </div>
+          </div>
+
+          <div style="border-top: 1px solid var(--border-light); margin: 1.5rem 0; padding-top: 1.5rem;">
+            <label style="font-weight: 700; margin-bottom: 0.75rem; display: block;">Exámenes Solicitados *</label>
+            
+            <!-- Buscador rápido de exámenes -->
+            <div style="position: relative; margin-bottom: 1.5rem;">
+              <input type="text" id="admin-search-ingresar-exam" class="form-control" placeholder="Buscar examen por nombre... (ej: Hemograma, Perfil, Cultivo)" style="padding-left: 45px; height: 46px;">
+              <i class="fa-solid fa-magnifying-glass" style="position: absolute; left: 16px; top: 50%; transform: translateY(-50%); color: var(--text-dark); opacity: 0.6; font-size: 1.1rem;"></i>
+            </div>
+
+            <!-- Listas Dinámicas por pestañas de categorías -->
+            <div class="view-toggle" id="admin-ingresar-exam-cats" style="display: flex; gap: 6px; overflow-x: auto; padding-bottom: 8px; scrollbar-width: thin; -webkit-overflow-scrolling: touch; margin-bottom: 1rem;">
+              <button type="button" class="btn btn-secondary active" data-cat="COMUNES">Comunes</button>
+              <button type="button" class="btn btn-secondary" data-cat="PERFILES">Perfiles</button>
+              <button type="button" class="btn btn-secondary" data-cat="INDIVIDUALES">Individuales A-Z</button>
+              <button type="button" class="btn btn-secondary" data-cat="CULTIVOS">Cultivos</button>
+              <button type="button" class="btn btn-secondary" data-cat="TOXICOLOGIA">Toxicología</button>
+            </div>
+
+            <!-- Contenedor de Exámenes -->
+            <div id="admin-ingresar-exam-list" style="max-height: 250px; overflow-y: auto; padding: 10px; background: rgba(0,0,0,0.2); border-radius: 8px; border: 1px solid var(--border-light); margin-bottom: 1.5rem; display: flex; flex-direction: column; gap: 8px;">
+              <!-- Se carga por JS -->
+            </div>
+
+            <!-- Resumen de Exámenes Seleccionados -->
+            <div style="background: rgba(14, 165, 233, 0.04); border: 1.5px dashed rgba(14, 165, 233, 0.25); padding: 1rem; border-radius: 8px; margin-bottom: 1.5rem;">
+              <h4 style="margin: 0 0 0.5rem 0; font-size: 0.85rem; color: var(--color-accent); font-weight: 700; text-transform: uppercase;">Exámenes Agregados (<span id="admin-ingresar-selected-count">0</span>)</h4>
+              <div id="admin-ingresar-selected-exams-pills" style="display: flex; flex-wrap: wrap; gap: 8px;">
+                <span style="font-size: 0.8rem; color: var(--text-dark);">Ningún examen seleccionado. Agregue exámenes arriba.</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label style="font-weight: 600;">Otros Exámenes (Si no se encuentran arriba)</label>
+            <input type="text" id="admin-ingresar-otros" class="form-control" placeholder="Escriba otros exámenes separados por coma">
+          </div>
+
+          <div class="form-group">
+            <label style="font-weight: 600;">Observaciones Clínicas / Datos de Interés</label>
+            <textarea id="admin-ingresar-observaciones" class="form-control" rows="3" placeholder="Sintomatología, antecedentes, sospecha diagnóstica..."></textarea>
+          </div>
+
+          <!-- Dirección y Contacto de Recogida -->
+          <div style="border-top: 1px solid var(--border-light); margin: 1.5rem 0; padding-top: 1.5rem;">
+            <h4 style="font-size: 0.95rem; font-weight: 700; color: var(--color-accent); margin-bottom: 1rem;">
+              <i class="fa-solid fa-truck-ramp-box"></i> Programación de la Recolección
+            </h4>
+            
+            <div style="margin-bottom: 1rem; display: flex; align-items: center; gap: 8px;">
+              <input type="checkbox" id="admin-ingresar-dir-habitual" checked style="width: 18px; height: 18px; cursor: pointer;">
+              <label for="admin-ingresar-dir-habitual" style="font-weight: 600; cursor: pointer; margin: 0;">Recoger en la dirección registrada de la veterinaria</label>
+            </div>
+
+            <div class="form-grid" id="admin-ingresar-custom-delivery-grid" style="display: none; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.5rem; margin-bottom: 1.5rem;">
+              <div class="form-group">
+                <label style="font-weight: 600;">Dirección y Barrio de Recolección (Punto Alterno)</label>
+                <input type="text" id="admin-ingresar-direccion" class="form-control" placeholder="Indicar dirección exacta y barrio">
+              </div>
+              <div class="form-group">
+                <label style="font-weight: 600;">Número de Contacto del Punto Alterno</label>
+                <input type="text" id="admin-ingresar-telefono" class="form-control" placeholder="Teléfono o Celular para coordinar">
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label style="font-weight: 600;">Nombre de quién diligencia o recibe este ingreso *</label>
+              <input type="text" id="admin-ingresar-quien" class="form-control" placeholder="Nombre completo del recepcionista / admin" required>
+            </div>
+          </div>
+
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+            <button type="button" class="btn btn-secondary" id="admin-btn-step-2-prev" style="gap: 8px;">
+              <i class="fa-solid fa-arrow-left"></i> Anterior
+            </button>
+            <button type="button" class="btn btn-primary" id="admin-btn-step-2-next" style="gap: 8px;">
+              Siguiente Paso <i class="fa-solid fa-arrow-right"></i>
+            </button>
+          </div>
+        </div>
+
+        <!-- PASO 3: Datos Especiales -->
+        <div class="panel-card step-panel" id="admin-step-panel-3" style="padding: 2rem; display: none;">
+          <h3 style="font-size: 1.05rem; font-weight: 600; color: var(--color-accent); margin-bottom: 1.5rem; display: flex; align-items: center; gap: 8px;">
+            <i class="fa-solid fa-vial-circle-check"></i> Paso 3: Histopatología, Citología o PCR
+          </h3>
+
+          <div class="form-group" style="margin-bottom: 1.5rem;">
+            <label style="font-weight: 700; margin-bottom: 0.5rem; display: block;">¿Ha solicitado alguna Histopatología (Biopsia), Citología tumoral, PAAF o PCR? *</label>
+            <select id="admin-ingresar-datos-especiales-tipo" class="form-control" style="height: 46px;">
+              <option value="No" selected>No, ninguno de estos exámenes aplica</option>
+              <option value="Biopsia">Sí (Biopsia / Citología tumoral / PAAF)</option>
+              <option value="PCR">Sí (PCR - Reacción en Cadena de la Polimerasa)</option>
+            </select>
+          </div>
+
+          <!-- Campos condicionales para BIOPSIA -->
+          <div id="admin-condicional-biopsia" style="display: none; border-top: 1.5px dashed var(--border-light); padding-top: 1.5rem; margin-top: 1.5rem;">
+            <h4 style="font-size: 0.95rem; font-weight: 700; color: var(--color-accent); margin-bottom: 1rem;">
+              <i class="fa-solid fa-stethoscope"></i> Información Adicional para Patología y Citología
+            </h4>
+            <div class="form-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.5rem;">
+              <div class="form-group">
+                <label style="font-weight: 600;">Tipo de muestra</label>
+                <select id="admin-biopsia-tipo-muestra" class="form-control">
+                  <option value="" disabled selected>Seleccione tipo de muestra</option>
+                  <option value="Punción">Punción</option>
+                  <option value="Aspirado">Aspirado</option>
+                  <option value="Impronta">Impronta</option>
+                  <option value="Hisopado">Hisopado</option>
+                  <option value="Tejido">Tejido</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label style="font-weight: 600;">Aspecto de la lesión</label>
+                <select id="admin-biopsia-aspecto" class="form-control">
+                  <option value="" disabled selected>Seleccione aspecto</option>
+                  <option value="Cerrada">Cerrada</option>
+                  <option value="Ulcerada">Ulcerada</option>
+                  <option value="Alopécica">Alopécica</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label style="font-weight: 600;">Consistencia</label>
+                <select id="admin-biopsia-consistencia" class="form-control">
+                  <option value="" disabled selected>Seleccione consistencia</option>
+                  <option value="Blanda">Blanda</option>
+                  <option value="Dura">Dura</option>
+                  <option value="Semidura">Semidura</option>
+                  <option value="Líquida">Líquida</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label style="font-weight: 600;">Ubicación anatómica de la lesión</label>
+                <input type="text" id="admin-biopsia-ubicacion" class="form-control" placeholder="Ej: Miembro anterior izquierdo">
+              </div>
+              <div class="form-group">
+                <label style="font-weight: 600;">Tiempo de evolución de la lesión</label>
+                <input type="text" id="admin-biopsia-tiempo" class="form-control" placeholder="Ej: 3 meses">
+              </div>
+            </div>
+            <div class="form-group" style="margin-top: 1.2rem;">
+              <label style="font-weight: 600;">Datos adicionales respecto a esta lesión</label>
+              <textarea id="admin-biopsia-detalles-adicionales" class="form-control" rows="2" placeholder="Velocidad de crecimiento, sintomatología de dolor, ganglios linfáticos afectados..."></textarea>
+            </div>
+          </div>
+
+          <!-- Campos condicionales para PCR -->
+          <div id="admin-condicional-pcr" style="display: none; border-top: 1.5px dashed var(--border-light); padding-top: 1.5rem; margin-top: 1.5rem;">
+            <h4 style="font-size: 0.95rem; font-weight: 700; color: var(--color-accent); margin-bottom: 1rem;">
+              <i class="fa-solid fa-dna"></i> Información Adicional para Diagnósticos de PCR
+            </h4>
+            <div class="form-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.5rem; margin-bottom: 1rem;">
+              <div class="form-group">
+                <label style="font-weight: 600;">Selecciona el tipo de PCR</label>
+                <select id="admin-pcr-tipo" class="form-control">
+                  <option value="" disabled selected>Seleccione tipo de PCR</option>
+                  <option value="PCR Punto Final (Positivo o negativo)">PCR Punto Final (Positivo o negativo)</option>
+                  <option value="PCR Tiempo Real (Copias/ul)">PCR Tiempo Real (Copias/ul)</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label style="font-weight: 600;">¿El paciente es sintomático o asintomático?</label>
+                <select id="admin-pcr-sintomatico" class="form-control">
+                  <option value="" disabled selected>Seleccione respuesta</option>
+                  <option value="Sintomático">Sintomático</option>
+                  <option value="Asintomático">Asintomático</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label style="font-weight: 600;">¿El paciente se encuentra esterilizado(a) / castrado?</label>
+                <select id="admin-ingresar-esterilizado" class="form-control">
+                  <option value="" disabled selected>Seleccione opción</option>
+                  <option value="Sí">Sí</option>
+                  <option value="No">No</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label style="font-weight: 600;">¿Es un control?</label>
+                <select id="admin-ingresar-es-control" class="form-control">
+                  <option value="" disabled selected>Seleccione opción</option>
+                  <option value="Sí">Sí</option>
+                  <option value="No">No</option>
+                </select>
+              </div>
+            </div>
+            
+            <div class="form-group">
+              <label style="font-weight: 700; margin-bottom: 0.5rem; display: block;">Sintomatología clínica presente (Marque todas las que apliquen)</label>
+              <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 0.5rem;">
+                <label class="checkbox-label" style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 0.82rem;">
+                  <input type="checkbox" name="admin-pcr-sintomas" value="Anemia" style="width: 16px; height: 16px;"> Anemia
+                </label>
+                <label class="checkbox-label" style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 0.82rem;">
+                  <input type="checkbox" name="admin-pcr-sintomas" value="Mucosas palidas" style="width: 16px; height: 16px;"> Mucosas pálidas
+                </label>
+                <label class="checkbox-label" style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 0.82rem;">
+                  <input type="checkbox" name="admin-pcr-sintomas" value="Mucosas ictéricas" style="width: 16px; height: 16px;"> Mucosas ictéricas
+                </label>
+                <label class="checkbox-label" style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 0.82rem;">
+                  <input type="checkbox" name="admin-pcr-sintomas" value="Fiebre" style="width: 16px; height: 16px;"> Fiebre
+                </label>
+                <label class="checkbox-label" style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 0.82rem;">
+                  <input type="checkbox" name="admin-pcr-sintomas" value="Linfadenopatia generalizada" style="width: 16px; height: 16px;"> Linfadenopatía generalizada
+                </label>
+                <label class="checkbox-label" style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 0.82rem;">
+                  <input type="checkbox" name="admin-pcr-sintomas" value="Hepatomegalia" style="width: 16px; height: 16px;"> Hepatomegalia
+                </label>
+                <label class="checkbox-label" style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 0.82rem;">
+                  <input type="checkbox" name="admin-pcr-sintomas" value="Esplenomegalia" style="width: 16px; height: 16px;"> Esplenomegalia
+                </label>
+                <label class="checkbox-label" style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 0.82rem;">
+                  <input type="checkbox" name="admin-pcr-sintomas" value="Anorexia" style="width: 16px; height: 16px;"> Anorexia
+                </label>
+                <label class="checkbox-label" style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 0.82rem;">
+                  <input type="checkbox" name="admin-pcr-sintomas" value="Trombocitopenia" style="width: 16px; height: 16px;"> Trombocitopenia
+                </label>
+                <label class="checkbox-label" style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 0.82rem;">
+                  <input type="checkbox" name="admin-pcr-sintomas" value="Decaimiento" style="width: 16px; height: 16px;"> Decaimiento
+                </label>
+              </div>
+            </div>
+
+            <div class="form-group" style="margin-top: 1rem;">
+              <label style="font-weight: 600;">PCR a Solicitar y Observaciones adicionales</label>
+              <textarea id="admin-pcr-observaciones" class="form-control" rows="2" placeholder="Describa el PCR específico o agregue detalles del cuadro sintomático"></textarea>
+            </div>
+          </div>
+
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 2rem;">
+            <button type="button" class="btn btn-secondary" id="admin-btn-step-3-prev" style="gap: 8px;">
+              <i class="fa-solid fa-arrow-left"></i> Anterior
+            </button>
+            <button type="button" class="btn btn-primary" id="btn-admin-submit-ingreso" style="gap: 8px; background: var(--color-accent);">
+              <i class="fa-solid fa-circle-check"></i> Registrar Ingreso y Generar Comprobante
+            </button>
+          </div>
+        </div>
+
+      </form>
+    </div>
+  </div>
+
   <!-- ── Modal Cambio Rápido de Cuenta (Solo Personal/Admin) ────────────── -->
   <div id="modal-switch-account" class="modal-overlay" style="display: none;">
     <div class="modal-card" style="max-width: 480px; border: 1px solid var(--border-focus); box-shadow: 0 20px 40px rgba(0,0,0,0.6);">
@@ -1425,6 +2102,7 @@
 
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script src="js/auth.js"></script>
+  <script src="js/comprobantes.js"></script>
   <script src="js/admin.js"></script>
   <script src="js/pwa-install.js"></script>
   <script src="js/themes.js"></script>
