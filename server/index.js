@@ -841,6 +841,52 @@ app.get('/api/admin/results', async (req, res) => {
   }
 });
 
+// API: Obtener exámenes retenidos por morosidad de un cliente específico (Solo Admins)
+app.get('/api/admin/retained-results', async (req, res) => {
+  const { id_usuario } = req.query;
+  if (!id_usuario) {
+    return res.status(400).json({ success: false, message: 'El ID de usuario es requerido.' });
+  }
+  try {
+    const result = await db.getRetainedResults(id_usuario);
+    res.json(result);
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
+// API: Liberar resultados retenidos específicos de un cliente (Solo Admins)
+app.post('/api/admin/release-specific-results', async (req, res) => {
+  const { id_usuario, id_resultados } = req.body;
+  if (!id_usuario || !id_resultados || !Array.isArray(id_resultados) || id_resultados.length === 0) {
+    return res.status(400).json({ success: false, message: 'ID de usuario y lista de resultados son requeridos.' });
+  }
+
+  try {
+    const result = await db.releaseSpecificResults(id_usuario, id_resultados);
+    if (result.success && result.released > 0) {
+      // Notificar al cliente vía Push y SSE
+      notifyUser(id_usuario, {
+        title: 'Resultados Liberados 🧪',
+        body: result.released === 1
+          ? 'Se ha liberado un resultado de laboratorio para su consulta.'
+          : `Se han liberado ${result.released} resultados de laboratorio para su consulta.`,
+        icon: '/logo.png',
+        data: { url: '/client.html' }
+      });
+
+      sendSSEEvent(id_usuario, 'new_result', {
+        success: true,
+        message: 'Nuevos resultados liberados',
+        count: result.released
+      });
+    }
+    res.json(result);
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
 // API: Eliminar Examen PDF (Solo Admins)
 app.post('/api/admin/delete-result', async (req, res) => {
   const { id_resultado } = req.body;

@@ -463,6 +463,31 @@ function handleMockAction(action, data) {
       };
     }
 
+    case 'getRetainedResults': {
+      const clientId = data.id_usuario;
+      const retainedResults = db.Resultados.filter(r => r.id_usuario === clientId && r.retenido);
+      retainedResults.sort((a, b) => new Date(b.fecha_subida) - new Date(a.fecha_subida));
+      return { success: true, results: retainedResults };
+    }
+
+    case 'releaseSpecificResults': {
+      const clientId = data.id_usuario;
+      const ids = Array.isArray(data.id_resultados) ? data.id_resultados : [data.id_resultados];
+      let count = 0;
+      db.Resultados.forEach(r => {
+        if (r.id_usuario === clientId && ids.includes(r.id_resultado) && r.retenido) {
+          r.retenido = false;
+          count++;
+        }
+      });
+      writeMockDB(db);
+      return {
+        success: true,
+        message: count > 0 ? `${count} resultado(s) liberado(s) correctamente.` : 'No se encontraron resultados retenidos con los IDs indicados.',
+        released: count
+      };
+    }
+
     case 'releaseRetainedResults': {
       const clientId = data.id_usuario;
       let count = 0;
@@ -967,6 +992,8 @@ module.exports = {
   },
   addResult: (resultData) => callSheetsAPI('addResult', resultData),
   getClientResults: (id_usuario) => callSheetsAPI('getClientResults', { id_usuario }),
+  getRetainedResults: (id_usuario) => callSheetsAPI('getRetainedResults', { id_usuario }),
+  releaseSpecificResults: (id_usuario, id_resultados) => callSheetsAPI('releaseSpecificResults', { id_usuario, id_resultados }),
   releaseRetainedResults: (id_usuario) => callSheetsAPI('releaseRetainedResults', { id_usuario }),
   deleteResult: (id_resultado) => callSheetsAPI('deleteResult', { id_resultado }),
   deleteResultsBulk: (ids) => callSheetsAPI('deleteResultsBulk', { ids }),

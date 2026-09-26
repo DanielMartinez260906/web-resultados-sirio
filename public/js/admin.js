@@ -536,6 +536,296 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
+  // Delegación de eventos para eliminar desde el historial del cliente activo
+  clientHistoryContainer.addEventListener('click', async (e) => {
+    const deleteBtn = e.target.closest('.delete-result-btn');
+    if (!deleteBtn) return;
+    
+    const idResultado = deleteBtn.dataset.id;
+    if (!idResultado) return;
+    
+    const confirmDelete = confirm('¿Está seguro de que desea eliminar este resultado del cliente?');
+    if (!confirmDelete) return;
+    
+    SirioAuth.showLoading('Eliminando examen...');
+    try {
+      const response = await fetch(`${SirioAuth.API_BASE}/api/admin/delete-result`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id_resultado: idResultado })
+      });
+      const result = await response.json();
+      SirioAuth.hideLoading();
+      if (result.success) {
+        showGlobalAlert('Examen eliminado correctamente.', 'success');
+        if (selectedClient) loadClientHistory(selectedClient.id_usuario);
+        loadGeneralOverview();
+      } else {
+        showGlobalAlert(result.message || 'Error al eliminar el examen.', 'error');
+      }
+    } catch (error) {
+      SirioAuth.hideLoading();
+      console.error('Error al eliminar resultado:', error);
+      showGlobalAlert('Error de red al intentar eliminar el examen.', 'error');
+    }
+  });
+
+  // ==========================================================================
+  // GESTIÓN DE RESULTADOS RETENIDOS (ENVIAR RESULTADOS Y DIRECTORIO)
+  // ==========================================================================
+  let activeClientRetainedList = [];
+  let dirClientRetainedList = [];
+
+  // 1. Cargar y renderizar retenidos en la pestaña Enviar Resultados
+  async function loadActiveClientRetained(clientId) {
+    const retainedSection = document.getElementById('active-client-retained-section');
+    const retainedContainer = document.getElementById('client-retained-container');
+    const countBadge = document.getElementById('retained-count-badge');
+    const releaseBtn = document.getElementById('release-selected-btn');
+
+    if (!retainedSection || !retainedContainer) return;
+
+    try {
+      const response = await fetch(`${SirioAuth.API_BASE}/api/admin/retained-results?id_usuario=${clientId}`);
+      const data = await response.json();
+
+      if (data.success && data.results && data.results.length > 0) {
+        activeClientRetainedList = data.results;
+        retainedSection.style.display = 'block';
+        if (countBadge) countBadge.innerText = data.results.length;
+        renderRetainedCards(data.results, retainedContainer, 'upload-retained-checkbox');
+        updateReleaseButtonState('upload-retained-checkbox', releaseBtn);
+      } else {
+        activeClientRetainedList = [];
+        if (countBadge) countBadge.innerText = '0';
+        // Si el cliente no tiene retenidos pero es moroso, podemos ocultar o mostrar vacío
+        if (selectedClient && selectedClient.moroso) {
+          retainedSection.style.display = 'block';
+          retainedContainer.innerHTML = '<p style="text-align: center; color: var(--text-dark); padding: 1rem 0; font-size: 0.85rem;">No hay resultados retenidos pendientes.</p>';
+        } else {
+          retainedSection.style.display = 'none';
+        }
+        if (releaseBtn) releaseBtn.disabled = true;
+      }
+    } catch (err) {
+      console.error('Error al cargar retenidos:', err);
+      retainedContainer.innerHTML = '<p style="color: var(--error); text-align: center; padding: 0.5rem; font-size: 0.85rem;">Error al cargar retenidos.</p>';
+    }
+  }
+
+  // 2. Cargar y renderizar retenidos en el Directorio
+  async function loadDirClientRetained(clientId) {
+    const dirRetainedSection = document.getElementById('dir-client-retained-section');
+    const dirRetainedContainer = document.getElementById('dir-client-retained-container');
+    const dirCountBadge = document.getElementById('dir-retained-count-badge');
+    const dirReleaseBtn = document.getElementById('dir-release-selected-btn');
+
+    if (!dirRetainedSection || !dirRetainedContainer) return;
+
+    try {
+      const response = await fetch(`${SirioAuth.API_BASE}/api/admin/retained-results?id_usuario=${clientId}`);
+      const data = await response.json();
+
+      if (data.success && data.results && data.results.length > 0) {
+        dirClientRetainedList = data.results;
+        dirRetainedSection.style.display = 'block';
+        if (dirCountBadge) dirCountBadge.innerText = data.results.length;
+        renderRetainedCards(data.results, dirRetainedContainer, 'dir-retained-checkbox');
+        updateReleaseButtonState('dir-retained-checkbox', dirReleaseBtn);
+      } else {
+        dirClientRetainedList = [];
+        if (dirCountBadge) dirCountBadge.innerText = '0';
+        if (selectedDirClient && selectedDirClient.moroso) {
+          dirRetainedSection.style.display = 'block';
+          dirRetainedContainer.innerHTML = '<p style="text-align: center; color: var(--text-dark); padding: 1rem 0; font-size: 0.85rem;">No hay resultados retenidos pendientes.</p>';
+        } else {
+          dirRetainedSection.style.display = 'none';
+        }
+        if (dirReleaseBtn) dirReleaseBtn.disabled = true;
+      }
+    } catch (err) {
+      console.error('Error al cargar retenidos en directorio:', err);
+      dirRetainedContainer.innerHTML = '<p style="color: var(--error); text-align: center; padding: 0.5rem; font-size: 0.85rem;">Error al cargar retenidos.</p>';
+    }
+  }
+
+  // Renderizar tarjetas de resultados retenidos
+  function renderRetainedCards(results, container, checkboxClass) {
+    container.innerHTML = '';
+    results.forEach(res => {
+      const card = document.createElement('div');
+      card.className = 'client-item';
+      card.style.cssText = 'cursor: default; border-left: 3px solid #fbbf24; background: rgba(245, 158, 11, 0.05); padding: 10px 14px; margin-bottom: 6px; display: flex; align-items: center; justify-content: space-between; gap: 10px; border-radius: 6px; border: 1px solid rgba(245, 158, 11, 0.2);';
+      
+      card.innerHTML = `
+        <div style="display: flex; align-items: center; gap: 12px; flex: 1; min-width: 0;">
+          <input type="checkbox" class="${checkboxClass}" data-id="${res.id_resultado}" style="width: 18px; height: 18px; cursor: pointer; accent-color: #10b981;">
+          <div style="flex: 1; min-width: 0;">
+            <h4 style="font-size: 0.88rem; font-weight: 600; text-overflow: ellipsis; overflow: hidden; white-space: nowrap; margin: 0; color: #fbbf24;" title="${res.nombre_examen}">
+              <i class="fa-solid fa-file-pdf" style="color: #fbbf24; margin-right: 6px;"></i> ${res.nombre_examen}
+            </h4>
+            <p style="font-size: 0.72rem; margin: 2px 0 0 0; color: var(--text-muted);">
+              <i class="fa-solid fa-clock"></i> Subido: ${SirioAuth.formatDate(res.fecha_subida)}
+            </p>
+          </div>
+        </div>
+        <div style="display: flex; gap: 6px; align-items: center; flex-shrink: 0;">
+          <a href="${getPdfUrl(res.nombre_archivo)}" target="_blank" rel="noopener noreferrer" class="btn btn-secondary btn-icon" style="padding: 4px 8px; font-size: 0.8rem;" title="Previsualizar PDF">
+            <i class="fa-solid fa-eye"></i>
+          </a>
+          <button type="button" class="btn btn-primary release-single-btn" data-id="${res.id_resultado}" style="padding: 4px 10px; font-size: 0.75rem; background: #10b981; border-color: #10b981; gap: 4px;" title="Liberar sólo este resultado">
+            <i class="fa-solid fa-unlock"></i> Liberar
+          </button>
+        </div>
+      `;
+      container.appendChild(card);
+    });
+  }
+
+  // Actualizar estado del botón de liberación por lote
+  function updateReleaseButtonState(checkboxClass, buttonEl) {
+    if (!buttonEl) return;
+    const checked = document.querySelectorAll(`.${checkboxClass}:checked`);
+    buttonEl.disabled = checked.length === 0;
+    if (checked.length > 0) {
+      buttonEl.innerHTML = `<i class="fa-solid fa-unlock"></i> Liberar y Enviar (${checked.length})`;
+    } else {
+      buttonEl.innerHTML = `<i class="fa-solid fa-unlock"></i> Liberar y Enviar Seleccionados`;
+    }
+  }
+
+  // Ejecutar liberación de IDs específicos
+  async function executeReleaseSpecificResults(clientId, resultIds, context = 'upload') {
+    if (!clientId || !resultIds || resultIds.length === 0) return;
+
+    const count = resultIds.length;
+    const confirmMsg = count === 1
+      ? '¿Deseas liberar este resultado seleccionado para que el cliente pueda verlo y descargarlo inmediatamente?'
+      : `¿Deseas liberar los ${count} resultados seleccionados para que el cliente pueda verlos y descargarlos inmediatamente?`;
+
+    if (!confirm(confirmMsg)) return;
+
+    SirioAuth.showLoading(`Liberando ${count} resultado(s)...`);
+
+    try {
+      const response = await fetch(`${SirioAuth.API_BASE}/api/admin/release-specific-results`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          id_usuario: clientId,
+          id_resultados: resultIds
+        })
+      });
+
+      const data = await response.json();
+      SirioAuth.hideLoading();
+
+      if (data.success) {
+        showGlobalAlert(data.message || `${count} resultado(s) liberado(s) exitosamente.`, 'success');
+        
+        // Refrescar ambas vistas según aplique
+        if (selectedClient && selectedClient.id_usuario === clientId) {
+          loadActiveClientRetained(clientId);
+          loadClientHistory(clientId);
+        }
+        if (selectedDirClient && selectedDirClient.id_usuario === clientId) {
+          loadDirClientRetained(clientId);
+        }
+        loadGeneralOverview();
+      } else {
+        showGlobalAlert(data.message || 'Error al liberar resultados seleccionados.', 'error');
+      }
+    } catch (err) {
+      SirioAuth.hideLoading();
+      console.error('Error al liberar resultados:', err);
+      showGlobalAlert('Error de conexión al liberar resultados.', 'error');
+    }
+  }
+
+  // Event Listeners para la sección Retenidos de Enviar Resultados
+  const selectAllRetainedBtn = document.getElementById('select-all-retained-btn');
+  const releaseSelectedBtn = document.getElementById('release-selected-btn');
+  const clientRetainedContainer = document.getElementById('client-retained-container');
+
+  if (selectAllRetainedBtn) {
+    selectAllRetainedBtn.addEventListener('click', () => {
+      const checkboxes = document.querySelectorAll('.upload-retained-checkbox');
+      const allChecked = Array.from(checkboxes).every(cb => cb.checked);
+      checkboxes.forEach(cb => cb.checked = !allChecked);
+      selectAllRetainedBtn.innerHTML = !allChecked
+        ? '<i class="fa-regular fa-square"></i> Deseleccionar Todos'
+        : '<i class="fa-regular fa-square-check"></i> Seleccionar Todos';
+      updateReleaseButtonState('upload-retained-checkbox', releaseSelectedBtn);
+    });
+  }
+
+  if (clientRetainedContainer) {
+    clientRetainedContainer.addEventListener('change', (e) => {
+      if (e.target.classList.contains('upload-retained-checkbox')) {
+        updateReleaseButtonState('upload-retained-checkbox', releaseSelectedBtn);
+      }
+    });
+
+    clientRetainedContainer.addEventListener('click', (e) => {
+      const btn = e.target.closest('.release-single-btn');
+      if (btn && selectedClient) {
+        const idRes = btn.dataset.id;
+        executeReleaseSpecificResults(selectedClient.id_usuario, [idRes], 'upload');
+      }
+    });
+  }
+
+  if (releaseSelectedBtn) {
+    releaseSelectedBtn.addEventListener('click', () => {
+      if (!selectedClient) return;
+      const checked = document.querySelectorAll('.upload-retained-checkbox:checked');
+      const ids = Array.from(checked).map(cb => cb.dataset.id);
+      executeReleaseSpecificResults(selectedClient.id_usuario, ids, 'upload');
+    });
+  }
+
+  // Event Listeners para la sección Retenidos en Directorio
+  const dirSelectAllRetainedBtn = document.getElementById('dir-select-all-retained-btn');
+  const dirReleaseSelectedBtn = document.getElementById('dir-release-selected-btn');
+  const dirClientRetainedContainer = document.getElementById('dir-client-retained-container');
+
+  if (dirSelectAllRetainedBtn) {
+    dirSelectAllRetainedBtn.addEventListener('click', () => {
+      const checkboxes = document.querySelectorAll('.dir-retained-checkbox');
+      const allChecked = Array.from(checkboxes).every(cb => cb.checked);
+      checkboxes.forEach(cb => cb.checked = !allChecked);
+      dirSelectAllRetainedBtn.innerHTML = !allChecked
+        ? '<i class="fa-regular fa-square"></i> Deseleccionar Todos'
+        : '<i class="fa-regular fa-square-check"></i> Seleccionar Todos';
+      updateReleaseButtonState('dir-retained-checkbox', dirReleaseSelectedBtn);
+    });
+  }
+
+  if (dirClientRetainedContainer) {
+    dirClientRetainedContainer.addEventListener('change', (e) => {
+      if (e.target.classList.contains('dir-retained-checkbox')) {
+        updateReleaseButtonState('dir-retained-checkbox', dirReleaseSelectedBtn);
+      }
+    });
+
+    dirClientRetainedContainer.addEventListener('click', (e) => {
+      const btn = e.target.closest('.release-single-btn');
+      if (btn && selectedDirClient) {
+        const idRes = btn.dataset.id;
+        executeReleaseSpecificResults(selectedDirClient.id_usuario, [idRes], 'directory');
+      }
+    });
+  }
+
+  if (dirReleaseSelectedBtn) {
+    dirReleaseSelectedBtn.addEventListener('click', () => {
+      if (!selectedDirClient) return;
+      const checked = document.querySelectorAll('.dir-retained-checkbox:checked');
+      const ids = Array.from(checked).map(cb => cb.dataset.id);
+      executeReleaseSpecificResults(selectedDirClient.id_usuario, ids, 'directory');
+    });
+  }
+
   // Cargar historial de exámenes del cliente activo
   async function loadClientHistory(clientId) {
     clientHistoryContainer.innerHTML = `
@@ -558,6 +848,9 @@ document.addEventListener('DOMContentLoaded', () => {
       console.error('Error al cargar historial:', error);
       clientHistoryContainer.innerHTML = '<p style="color: var(--error); text-align: center; padding: 1rem;">Error de conexion al cargar historial.</p>';
     }
+
+    // Cargar también los resultados retenidos del cliente
+    loadActiveClientRetained(clientId);
   }
 
   // ==========================================================================
@@ -1068,49 +1361,6 @@ document.addEventListener('DOMContentLoaded', () => {
       SirioAuth.hideLoading();
       console.error('Error al publicar exámenes:', error);
       showGlobalAlert('Error de conexion al subir los archivos PDF al servidor.', 'error');
-    }
-  });
-
-  // ==========================================================================
-  // DELEGACIÓN DE EVENTOS PARA ELIMINAR EXÁMENES
-  // ==========================================================================
-  clientHistoryContainer.addEventListener('click', async (e) => {
-    const deleteBtn = e.target.closest('.delete-result-btn');
-    if (!deleteBtn) return;
-    
-    const idResultado = deleteBtn.dataset.id;
-    if (!idResultado) return;
-    
-    const confirmDelete = confirm('¿Esta seguro de que desea eliminar este resultado? Se borrara de la base de datos de Google Sheets y se eliminara el archivo PDF permanentemente.');
-    if (!confirmDelete) return;
-    
-    SirioAuth.showLoading('Eliminando examen del portal...');
-    
-    try {
-      const response = await fetch(`${SirioAuth.API_BASE}/api/admin/delete-result`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ id_resultado: idResultado })
-      });
-      
-      const result = await response.json();
-      SirioAuth.hideLoading();
-      
-      if (result.success) {
-        showGlobalAlert('Examen eliminado correctamente del portal.', 'success');
-        // Recargar historial del cliente activo
-        if (selectedClient) {
-          loadClientHistory(selectedClient.id_usuario);
-        }
-      } else {
-        showGlobalAlert(result.message || 'Error al eliminar el examen.', 'error');
-      }
-    } catch (error) {
-      SirioAuth.hideLoading();
-      console.error('Error al eliminar resultado:', error);
-      showGlobalAlert('Error de red al intentar eliminar el examen.', 'error');
     }
   });
 
@@ -1626,6 +1876,9 @@ document.addEventListener('DOMContentLoaded', () => {
     if (document.getElementById('edit-dir-plan')) document.getElementById('edit-dir-plan').value = client.plan || 'Básico';
     if (document.getElementById('edit-dir-credits')) document.getElementById('edit-dir-credits').value = client.sirio_credits !== undefined ? client.sirio_credits : 0;
     if (document.getElementById('edit-dir-password')) document.getElementById('edit-dir-password').value = '';
+
+    // Cargar resultados retenidos del cliente en el Directorio
+    loadDirClientRetained(client.id_usuario);
   }
 
   // Botón para alternar visibilidad de contraseña en directorio

@@ -422,6 +422,30 @@
                 </form>
               </div>
 
+              <!-- Sección de Resultados Retenidos (Visible si es moroso o tiene retenidos) -->
+              <div id="active-client-retained-section" style="display: none; border: 1.5px solid rgba(245, 158, 11, 0.4); background: rgba(245, 158, 11, 0.04); border-radius: 10px; padding: 1.25rem;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem; flex-wrap: wrap; gap: 10px;">
+                  <h4 style="font-size: 0.98rem; font-weight: 700; color: #fbbf24; margin: 0; display: flex; align-items: center; gap: 8px;">
+                    <i class="fa-solid fa-lock"></i> Resultados Retenidos por Morosidad
+                    <span id="retained-count-badge" class="badge" style="background: rgba(245, 158, 11, 0.2); color: #fbbf24; border: 1px solid rgba(245, 158, 11, 0.4); font-size: 0.75rem;">0</span>
+                  </h4>
+                  <div style="display: flex; gap: 8px;">
+                    <button type="button" id="select-all-retained-btn" class="btn btn-secondary" style="font-size: 0.75rem; padding: 5px 10px;">
+                      <i class="fa-regular fa-square-check"></i> Seleccionar Todos
+                    </button>
+                    <button type="button" id="release-selected-btn" class="btn btn-primary" style="font-size: 0.75rem; padding: 5px 12px; background: #10b981; border-color: #10b981;" disabled>
+                      <i class="fa-solid fa-unlock"></i> Liberar y Enviar Seleccionados
+                    </button>
+                  </div>
+                </div>
+                <p style="font-size: 0.78rem; color: var(--text-muted); margin-bottom: 0.75rem;">
+                  Selecciona los resultados de pacientes específicos que ya fueron abonados/pagados para que el cliente pueda consultarlos inmediatamente.
+                </p>
+                <div class="client-list" id="client-retained-container" style="max-height: 220px; overflow-y: auto; display: flex; flex-direction: column; gap: 6px;">
+                  <p style="text-align: center; color: var(--text-dark); padding: 1rem 0;">No hay resultados retenidos actualmente.</p>
+                </div>
+              </div>
+
               <!-- Historial del Cliente -->
               <div style="border-top: 1px solid var(--border-light); padding-top: 1.5rem;">
                 <h4 style="font-size: 1rem; font-weight: 600; margin-bottom: 1rem;">
@@ -571,6 +595,30 @@
               </button>
             </div>
             
+            <!-- Sección de Resultados Retenidos en Directorio -->
+            <div id="dir-client-retained-section" style="display: none; margin-bottom: 1.25rem; border: 1.5px solid rgba(245, 158, 11, 0.4); background: rgba(245, 158, 11, 0.04); border-radius: 10px; padding: 1.25rem;">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem; flex-wrap: wrap; gap: 10px;">
+                <h4 style="font-size: 0.98rem; font-weight: 700; color: #fbbf24; margin: 0; display: flex; align-items: center; gap: 8px;">
+                  <i class="fa-solid fa-lock"></i> Resultados Retenidos por Morosidad
+                  <span id="dir-retained-count-badge" class="badge" style="background: rgba(245, 158, 11, 0.2); color: #fbbf24; border: 1px solid rgba(245, 158, 11, 0.4); font-size: 0.75rem;">0</span>
+                </h4>
+                <div style="display: flex; gap: 8px;">
+                  <button type="button" id="dir-select-all-retained-btn" class="btn btn-secondary" style="font-size: 0.75rem; padding: 5px 10px;">
+                    <i class="fa-regular fa-square-check"></i> Seleccionar Todos
+                  </button>
+                  <button type="button" id="dir-release-selected-btn" class="btn btn-primary" style="font-size: 0.75rem; padding: 5px 12px; background: #10b981; border-color: #10b981;" disabled>
+                    <i class="fa-solid fa-unlock"></i> Liberar y Enviar Seleccionados
+                  </button>
+                </div>
+              </div>
+              <p style="font-size: 0.78rem; color: var(--text-muted); margin-bottom: 0.75rem;">
+                Selecciona los exámenes específicos que el cliente podrá ver de inmediato aunque continúe registrado en mora.
+              </p>
+              <div class="client-list" id="dir-client-retained-container" style="max-height: 220px; overflow-y: auto; display: flex; flex-direction: column; gap: 6px;">
+                <p style="text-align: center; color: var(--text-dark); padding: 1rem 0;">No hay resultados retenidos actualmente.</p>
+              </div>
+            </div>
+
             <button id="dir-edit-client-btn" class="btn btn-accent" style="width: 100%; gap: 8px; justify-content: center;">
               <i class="fa-solid fa-user-pen"></i> Editar Información de Cliente
             </button>

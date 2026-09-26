@@ -86,6 +86,8 @@ function doPost(e) {
     else if (action === "savePortafolioPrecios") { response = savePortafolioPrecios(doc, data); }
     else if (action === "addPortafolioExamen") { response = addPortafolioExamen(doc, data); }
     else if (action === "deletePortafolioExamen") { response = deletePortafolioExamen(doc, data); }
+    else if (action === "getRetainedResults") { response = getRetainedResults(doc, data); }
+    else if (action === "releaseSpecificResults") { response = releaseSpecificResults(doc, data); }
     else if (action === "releaseRetainedResults") { response = releaseRetainedResults(doc, data); }
     else if (action === "saveSubscription") { response = saveSubscription(doc, data); }
     else if (action === "deleteSubscription") { response = deleteSubscription(doc, data); }
@@ -788,7 +790,93 @@ function getClientResults(doc, data) {
 }
 
 // ============================================================
-// LIBERAR RESULTADOS RETENIDOS DE UN CLIENTE
+// OBTENER RESULTADOS RETENIDOS DE UN CLIENTE (Para Admin)
+// ============================================================
+function getRetainedResults(doc, data) {
+  var sheet = doc.getSheetByName("Resultados");
+  var rows = sheet.getDataRange().getValues();
+  var headers = rows[0];
+  var colMap = buildColMap(headers);
+
+  var idCliente = data.id_usuario;
+  var idxIdRes = colMap["id_resultado"];
+  var idxIdUser = colMap["id_usuario"];
+  var idxExamen = colMap["nombre_examen"];
+  var idxArchivo = colMap["nombre_archivo"];
+  var idxFecha = colMap["fecha_subida"];
+  var idxRetenido = colMap["retenido"];
+  var results = [];
+
+  if (idxRetenido === undefined || idxIdUser === undefined) {
+    return { success: true, results: [] };
+  }
+
+  for (var i = 1; i < rows.length; i++) {
+    var row = rows[i];
+    if (row[idxIdUser].toString().trim() !== idCliente.toString().trim()) continue;
+
+    if (row[idxRetenido] && row[idxRetenido].toString().trim() === "true") {
+      var nombreExamen = idxExamen !== undefined && row[idxExamen] ? row[idxExamen].toString().trim() : "";
+      var nombreArchivo = idxArchivo !== undefined && row[idxArchivo] ? row[idxArchivo].toString().trim() : "";
+      var fechaSubida = idxFecha !== undefined ? cellToISOString(row[idxFecha]) : "";
+
+      if (!nombreExamen && nombreArchivo) nombreExamen = nombreArchivo;
+
+      results.push({
+        id_resultado: idxIdRes !== undefined ? row[idxIdRes].toString() : "",
+        nombre_examen: nombreExamen,
+        nombre_archivo: nombreArchivo,
+        fecha_subida: fechaSubida
+      });
+    }
+  }
+
+  return {
+    success: true,
+    results: results
+  };
+}
+
+// ============================================================
+// LIBERAR RESULTADOS ESPECÍFICOS DE UN CLIENTE
+// ============================================================
+function releaseSpecificResults(doc, data) {
+  var sheet = doc.getSheetByName("Resultados");
+  var rows = sheet.getDataRange().getValues();
+  var headers = rows[0];
+  var colMap = buildColMap(headers);
+
+  var idCliente = data.id_usuario;
+  var targetIds = Array.isArray(data.id_resultados) ? data.id_resultados.map(function(id) { return id.toString().trim(); }) : [data.id_resultados.toString().trim()];
+  var idxIdRes = colMap["id_resultado"];
+  var idxIdUser = colMap["id_usuario"];
+  var idxRetenido = colMap["retenido"];
+  var count = 0;
+
+  if (idxRetenido === undefined || idxIdUser === undefined || idxIdRes === undefined) {
+    return { success: true, message: "No hay columnas necesarias. Sin cambios.", released: 0 };
+  }
+
+  for (var i = 1; i < rows.length; i++) {
+    var row = rows[i];
+    var currentResId = row[idxIdRes] ? row[idxIdRes].toString().trim() : "";
+    if (row[idxIdUser].toString().trim() === idCliente.toString().trim() &&
+        targetIds.indexOf(currentResId) !== -1 &&
+        row[idxRetenido] && row[idxRetenido].toString().trim() === "true") {
+      sheet.getRange(i + 1, idxRetenido + 1).setValue("false");
+      count++;
+    }
+  }
+
+  return {
+    success: true,
+    message: count > 0 ? count + " resultado(s) liberado(s) correctamente." : "No se liberó ningún resultado.",
+    released: count
+  };
+}
+
+// ============================================================
+// LIBERAR TODOS LOS RESULTADOS RETENIDOS DE UN CLIENTE
 // ============================================================
 function releaseRetainedResults(doc, data) {
   var sheet = doc.getSheetByName("Resultados");
