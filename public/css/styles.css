@@ -2679,4 +2679,61 @@ body.light-theme #stats-recent-count-badge {
   }
 }
 
+/* ── Badges de Estado Activo e Inactivo ───────────────────────── */
+.user-status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.65rem;
+  padding: 1.5px 6px;
+  border-radius: 4px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  line-height: 1.3;
+}
+
+.user-status-badge.status-active {
+  background: rgba(16, 185, 129, 0.15);
+  color: #10b981;
+  border: 1px solid rgba(16, 185, 129, 0.35);
+  animation: pulse 2s infinite;
+}
+
+.user-status-badge.status-inactive {
+  background: rgba(245, 158, 11, 0.15);
+  color: #fbbf24;
+  border: 1px solid rgba(245, 158, 11, 0.35);
+}
+
+/* ── Controles de Filtros y Orden de Listas ───────────────────── */
+.client-filter-bar {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  margin-bottom: 0.75rem;
+}
+
+.client-filter-select {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--border-light);
+  color: var(--text-main);
+  border-radius: 8px;
+  padding: 5px 8px;
+  font-size: 0.78rem;
+  outline: none;
+  cursor: pointer;
+  transition: var(--transition-smooth);
+}
+
+.client-filter-select:focus {
+  border-color: var(--color-primary);
+}
+
+body.light-theme .client-filter-select {
+  background: #ffffff;
+  border-color: rgba(15, 23, 42, 0.12);
+  color: var(--text-main);
+}
+
 

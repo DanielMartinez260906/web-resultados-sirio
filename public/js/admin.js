@@ -68,6 +68,15 @@ document.addEventListener('DOMContentLoaded', () => {
   let activeDirectory = 'clients'; // 'clients' o 'staff'
   let activeUserIds = [];
 
+  // Variables de estado de filtros y presencia
+  let activeSessionsMap = {}; // { [id_usuario]: { lastSeen, rol, isActive } }
+  let sendClientsSort = 'az';
+  let sendClientsStatusFilter = 'all';
+  let dirClientsSort = 'az';
+  let dirClientsStatusFilter = 'all';
+  let dirStaffSort = 'az';
+  let dirStaffStatusFilter = 'all';
+
   // Heartbeat para registrar nuestra propia presencia como administrador
   function startPresenceHeartbeat(userId, role) {
     if (!userId) return;
@@ -87,13 +96,32 @@ document.addEventListener('DOMContentLoaded', () => {
   }
   startPresenceHeartbeat(currentUser.id_usuario, currentUser.rol);
 
+  // Helper para formatear última conexión
+  function formatLastSeen(userId, lastSeenDate) {
+    let ts = null;
+    if (activeSessionsMap[userId] && activeSessionsMap[userId].lastSeen) {
+      ts = activeSessionsMap[userId].lastSeen;
+    } else if (lastSeenDate) {
+      ts = new Date(lastSeenDate).getTime();
+    }
+    if (!ts) return 'Sin conexión registrada';
+    const dateObj = new Date(ts);
+    if (isNaN(dateObj.getTime())) return 'Sin conexión registrada';
+    return SirioAuth.formatDate(dateObj);
+  }
+
   // Polling para traer sesiones activas de la API del servidor
   async function fetchActiveSessions() {
     try {
       const response = await fetch(`${SirioAuth.API_BASE}/api/admin/active-sessions`);
       const data = await response.json();
-      if (data.success && data.activeUsers) {
-        activeUserIds = data.activeUsers.map(u => u.id_usuario);
+      if (data.success) {
+        if (data.activeUsers) {
+          activeUserIds = data.activeUsers.map(u => u.id_usuario);
+        }
+        if (data.sessions) {
+          activeSessionsMap = data.sessions;
+        }
         updateActiveIndicators();
       }
     } catch (err) {
@@ -102,24 +130,30 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   function updateActiveIndicators() {
-    // 1. Tarjetas de clientes y personal en el directorio
+    // 1. Tarjetas de clientes y personal en el directorio y enviar resultados
     document.querySelectorAll('.client-item').forEach(el => {
       const id = el.getAttribute('data-id');
-      const badge = el.querySelector('.active-status-badge');
+      const badge = el.querySelector('.user-status-badge') || el.querySelector('.active-status-badge');
       if (badge && id) {
-        if (activeUserIds.includes(id)) {
-          badge.style.display = 'inline-block';
-        } else {
-          badge.style.display = 'none';
-        }
+        const isActive = activeUserIds.includes(id);
+        badge.className = `user-status-badge ${isActive ? 'status-active' : 'status-inactive'}`;
+        badge.innerHTML = isActive
+          ? '<i class="fa-solid fa-circle" style="font-size: 0.45rem;"></i> Activo'
+          : '<i class="fa-solid fa-circle" style="font-size: 0.45rem;"></i> Inactivo';
+        badge.style.display = 'inline-flex';
       }
     });
 
     // 2. Detalle del cliente seleccionado
     const selectedClientBadge = document.getElementById('dir-client-active-badge');
     if (selectedClientBadge) {
-      if (selectedDirClient && activeUserIds.includes(selectedDirClient.id_usuario)) {
-        selectedClientBadge.style.display = 'inline-block';
+      if (selectedDirClient) {
+        const isActive = activeUserIds.includes(selectedDirClient.id_usuario);
+        selectedClientBadge.className = `badge user-status-badge ${isActive ? 'status-active' : 'status-inactive'}`;
+        selectedClientBadge.innerHTML = isActive
+          ? '<i class="fa-solid fa-circle" style="font-size: 0.45rem;"></i> ACTIVO AHORA'
+          : '<i class="fa-solid fa-circle" style="font-size: 0.45rem;"></i> INACTIVO';
+        selectedClientBadge.style.display = 'inline-flex';
       } else {
         selectedClientBadge.style.display = 'none';
       }
@@ -128,10 +162,26 @@ document.addEventListener('DOMContentLoaded', () => {
     // 3. Detalle del personal seleccionado
     const selectedStaffBadge = document.getElementById('dir-staff-active-badge');
     if (selectedStaffBadge) {
-      if (selectedStaff && activeUserIds.includes(selectedStaff.id_usuario)) {
-        selectedStaffBadge.style.display = 'inline-block';
+      if (selectedStaff) {
+        const isActive = activeUserIds.includes(selectedStaff.id_usuario);
+        selectedStaffBadge.className = `badge user-status-badge ${isActive ? 'status-active' : 'status-inactive'}`;
+        selectedStaffBadge.innerHTML = isActive
+          ? '<i class="fa-solid fa-circle" style="font-size: 0.45rem;"></i> ACTIVO AHORA'
+          : '<i class="fa-solid fa-circle" style="font-size: 0.45rem;"></i> INACTIVO';
+        selectedStaffBadge.style.display = 'inline-flex';
       } else {
         selectedStaffBadge.style.display = 'none';
+      }
+    }
+
+    // 4. Actualizar texto de última conexión si hay cliente seleccionado
+    const lastSeenEl = document.getElementById('dir-client-last-seen-val');
+    if (lastSeenEl && selectedDirClient) {
+      const isActive = activeUserIds.includes(selectedDirClient.id_usuario);
+      if (isActive) {
+        lastSeenEl.innerHTML = '<span style="color: #10b981; font-weight: 700;"><i class="fa-solid fa-circle"></i> Conectado ahora</span>';
+      } else {
+        lastSeenEl.innerText = formatLastSeen(selectedDirClient.id_usuario, selectedDirClient.last_seen);
       }
     }
   }
@@ -193,9 +243,11 @@ document.addEventListener('DOMContentLoaded', () => {
       const data = await response.json();
       
       if (data.success) {
-        allClients = data.clients;
-        renderClients(allClients);
-        renderDirClients(allClients);
+        allClients = data.clients || [];
+        // Orden alfabético por defecto (A-Z)
+        allClients.sort((a, b) => (a.nombre || '').localeCompare(b.nombre || '', 'es', { sensitivity: 'base' }));
+        applySendClientsFilterAndSort();
+        applyDirClientsFilterAndSort();
         populateHistoryFilters();
         populateStatsFilters();
         populateAdminClientSelect();
@@ -853,10 +905,50 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   // ==========================================================================
+  // FILTRADO Y ORDENAMIENTO DE CLIENTES (ENVIAR RESULTADOS)
+  // ==========================================================================
+  function applySendClientsFilterAndSort() {
+    let list = [...allClients];
+    const query = searchClientInput ? searchClientInput.value.toLowerCase().trim() : '';
+
+    // 1. Búsqueda por texto
+    if (query) {
+      list = list.filter(c =>
+        (c.nombre || '').toLowerCase().includes(query) ||
+        (c.identificacion || '').toString().toLowerCase().includes(query) ||
+        (c.id_usuario || '').toLowerCase().includes(query) ||
+        (c.usuario || '').toLowerCase().includes(query)
+      );
+    }
+
+    // 2. Filtro por estado
+    if (sendClientsStatusFilter === 'active') {
+      list = list.filter(c => activeUserIds.includes(c.id_usuario));
+    } else if (sendClientsStatusFilter === 'inactive') {
+      list = list.filter(c => !activeUserIds.includes(c.id_usuario));
+    } else if (sendClientsStatusFilter === 'debt') {
+      list = list.filter(c => c.moroso);
+    }
+
+    // 3. Ordenamiento
+    if (sendClientsSort === 'az') {
+      list.sort((a, b) => (a.nombre || '').localeCompare(b.nombre || '', 'es', { sensitivity: 'base' }));
+    } else if (sendClientsSort === 'za') {
+      list.sort((a, b) => (b.nombre || '').localeCompare(a.nombre || '', 'es', { sensitivity: 'base' }));
+    } else if (sendClientsSort === 'recent') {
+      list.sort((a, b) => new Date(b.fecha_registro || 0) - new Date(a.fecha_registro || 0));
+    } else if (sendClientsSort === 'oldest') {
+      list.sort((a, b) => new Date(a.fecha_registro || 0) - new Date(b.fecha_registro || 0));
+    }
+
+    renderClients(list);
+  }
+
+  // ==========================================================================
   // RENDERIZADO DE ELEMENTOS
   // ==========================================================================
 
-  // Renderizar la lista de clientes
+  // Renderizar la lista de clientes (Enviar Resultados)
   function renderClients(clients) {
     if (clients.length === 0) {
       clientsContainer.innerHTML = '<p style="text-align: center; color: var(--text-dark); padding: 2rem 0;">No se encontraron clientes.</p>';
@@ -869,11 +961,16 @@ document.addEventListener('DOMContentLoaded', () => {
       div.className = `client-item ${selectedClient && selectedClient.id_usuario === client.id_usuario ? 'active' : ''}`;
       div.dataset.id = client.id_usuario;
       
+      const isActive = activeUserIds.includes(client.id_usuario);
+
       div.innerHTML = `
         <div class="client-item-info" style="flex-grow: 1; min-width: 0; padding-right: 8px;">
-          <div style="display: flex; align-items: center; gap: 8px;">
+          <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
             <h4 style="text-overflow: ellipsis; overflow: hidden; white-space: nowrap; margin: 0;">${client.nombre}</h4>
             ${client.moroso ? '<span style="background: rgba(239, 68, 68, 0.15); color: #f87171; font-size: 0.6rem; padding: 1px 5px; border-radius: 3px; font-weight: 700; border: 1px solid rgba(239, 68, 68, 0.2); text-transform: uppercase; flex-shrink: 0;">MOROSO</span>' : ''}
+            <span class="user-status-badge ${isActive ? 'status-active' : 'status-inactive'}">
+              <i class="fa-solid fa-circle" style="font-size: 0.45rem;"></i> ${isActive ? 'Activo' : 'Inactivo'}
+            </span>
           </div>
           <p style="margin-top: 4px;"><i class="fa-solid fa-id-card"></i> ID/NIT: ${client.identificacion}</p>
         </div>
@@ -978,16 +1075,26 @@ document.addEventListener('DOMContentLoaded', () => {
 
   deselectClientBtn.addEventListener('click', deselectClient);
 
-  // Filtrar clientes en el buscador
-  searchClientInput.addEventListener('keyup', () => {
-    const query = searchClientInput.value.toLowerCase().trim();
-    const filtered = allClients.filter(c => 
-      c.nombre.toLowerCase().includes(query) || 
-      c.identificacion.toString().includes(query) ||
-      c.id_usuario.toLowerCase().includes(query)
-    );
-    renderClients(filtered);
-  });
+  // Filtrar y ordenar clientes en Enviar Resultados
+  if (searchClientInput) {
+    searchClientInput.addEventListener('input', applySendClientsFilterAndSort);
+  }
+
+  const sendSortClientsSelect = document.getElementById('send-sort-clients-select');
+  if (sendSortClientsSelect) {
+    sendSortClientsSelect.addEventListener('change', (e) => {
+      sendClientsSort = e.target.value;
+      applySendClientsFilterAndSort();
+    });
+  }
+
+  const sendFilterClientsStatus = document.getElementById('send-filter-clients-status');
+  if (sendFilterClientsStatus) {
+    sendFilterClientsStatus.addEventListener('change', (e) => {
+      sendClientsStatusFilter = e.target.value;
+      applySendClientsFilterAndSort();
+    });
+  }
 
   // ==========================================================================
   // SELECTOR DE ROL EN EL FORMULARIO DE REGISTRO
@@ -1761,6 +1868,46 @@ document.addEventListener('DOMContentLoaded', () => {
 
   selectedDirClient = null;
 
+  // ==========================================================================
+  // FILTRADO Y ORDENAMIENTO DE CLIENTES (DIRECTORIO)
+  // ==========================================================================
+  function applyDirClientsFilterAndSort() {
+    let list = [...allClients];
+    const query = searchDirClientInput ? searchDirClientInput.value.toLowerCase().trim() : '';
+
+    // 1. Búsqueda por texto
+    if (query) {
+      list = list.filter(c =>
+        (c.nombre || '').toLowerCase().includes(query) ||
+        (c.identificacion || '').toString().toLowerCase().includes(query) ||
+        (c.id_usuario || '').toLowerCase().includes(query) ||
+        (c.usuario || '').toLowerCase().includes(query)
+      );
+    }
+
+    // 2. Filtro por estado
+    if (dirClientsStatusFilter === 'active') {
+      list = list.filter(c => activeUserIds.includes(c.id_usuario));
+    } else if (dirClientsStatusFilter === 'inactive') {
+      list = list.filter(c => !activeUserIds.includes(c.id_usuario));
+    } else if (dirClientsStatusFilter === 'debt') {
+      list = list.filter(c => c.moroso);
+    }
+
+    // 3. Ordenamiento
+    if (dirClientsSort === 'az') {
+      list.sort((a, b) => (a.nombre || '').localeCompare(b.nombre || '', 'es', { sensitivity: 'base' }));
+    } else if (dirClientsSort === 'za') {
+      list.sort((a, b) => (b.nombre || '').localeCompare(a.nombre || '', 'es', { sensitivity: 'base' }));
+    } else if (dirClientsSort === 'recent') {
+      list.sort((a, b) => new Date(b.fecha_registro || 0) - new Date(a.fecha_registro || 0));
+    } else if (dirClientsSort === 'oldest') {
+      list.sort((a, b) => new Date(a.fecha_registro || 0) - new Date(b.fecha_registro || 0));
+    }
+
+    renderDirClients(list);
+  }
+
   // Renderizar la lista de clientes en el directorio
   function renderDirClients(clientsList) {
     if (!dirClientsContainer) return;
@@ -1786,7 +1933,9 @@ document.addEventListener('DOMContentLoaded', () => {
           <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
             <h4 style="margin: 0;">${client.nombre}</h4>
             ${client.moroso ? '<span style="background: rgba(239, 68, 68, 0.15); color: #f87171; font-size: 0.6rem; padding: 1px 5px; border-radius: 3px; font-weight: 700; border: 1px solid rgba(239, 68, 68, 0.2); text-transform: uppercase;">MOROSO</span>' : ''}
-            <span class="active-status-badge" style="display: ${isActive ? 'inline-block' : 'none'}; background: rgba(16, 185, 129, 0.15); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.3); font-size: 0.6rem; padding: 1px 5px; border-radius: 3px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.3px; animation: pulse 2s infinite;">Activo</span>
+            <span class="user-status-badge ${isActive ? 'status-active' : 'status-inactive'}">
+              <i class="fa-solid fa-circle" style="font-size: 0.45rem;"></i> ${isActive ? 'Activo' : 'Inactivo'}
+            </span>
           </div>
           <p style="margin-top: 4px;"><i class="fa-solid fa-passport"></i> DNI: ${client.identificacion}</p>
         </div>
@@ -1819,6 +1968,17 @@ document.addEventListener('DOMContentLoaded', () => {
     if (dirClientAddressVal) dirClientAddressVal.innerText = client.direccion || 'No registrada';
     if (dirClientEmailVal) dirClientEmailVal.innerText = client.correo || 'No registrado';
     if (dirClientPhoneVal) dirClientPhoneVal.innerText = client.telefono || 'No registrado';
+
+    // Última vez en línea (Conexión)
+    const lastSeenEl = document.getElementById('dir-client-last-seen-val');
+    if (lastSeenEl) {
+      const isActive = activeUserIds.includes(client.id_usuario);
+      if (isActive) {
+        lastSeenEl.innerHTML = '<span style="color: #10b981; font-weight: 700;"><i class="fa-solid fa-circle"></i> Conectado ahora</span>';
+      } else {
+        lastSeenEl.innerText = formatLastSeen(client.id_usuario, client.last_seen);
+      }
+    }
     
     const planVal = document.getElementById('dir-client-plan-val');
     const creditsVal = document.getElementById('dir-client-credits-val');
@@ -2058,16 +2218,24 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // Filtrar directorio de clientes
+  // Filtrar y ordenar directorio de clientes
   if (searchDirClientInput) {
-    searchDirClientInput.addEventListener('keyup', () => {
-      const query = searchDirClientInput.value.toLowerCase().trim();
-      const filtered = allClients.filter(c => 
-        c.nombre.toLowerCase().includes(query) || 
-        c.identificacion.toString().includes(query) ||
-        c.id_usuario.toLowerCase().includes(query)
-      );
-      renderDirClients(filtered);
+    searchDirClientInput.addEventListener('input', applyDirClientsFilterAndSort);
+  }
+
+  const dirSortClientsSelect = document.getElementById('dir-sort-clients-select');
+  if (dirSortClientsSelect) {
+    dirSortClientsSelect.addEventListener('change', (e) => {
+      dirClientsSort = e.target.value;
+      applyDirClientsFilterAndSort();
+    });
+  }
+
+  const dirFilterClientsStatus = document.getElementById('dir-filter-clients-status');
+  if (dirFilterClientsStatus) {
+    dirFilterClientsStatus.addEventListener('change', (e) => {
+      dirClientsStatusFilter = e.target.value;
+      applyDirClientsFilterAndSort();
     });
   }
 
@@ -2227,14 +2395,59 @@ document.addEventListener('DOMContentLoaded', () => {
   const searchDirStaffInput = document.getElementById('search-dir-staff');
   const dirStaffContainer = document.getElementById('dir-staff-container');
 
+  // ==========================================================================
+  // FILTRADO Y ORDENAMIENTO DE PERSONAL (DIRECTORIO)
+  // ==========================================================================
+  function applyDirStaffFilterAndSort() {
+    let list = [...allStaff];
+    const query = searchDirStaffInput ? searchDirStaffInput.value.toLowerCase().trim() : '';
+
+    // 1. Búsqueda por texto
+    if (query) {
+      list = list.filter(s =>
+        (s.nombre || '').toLowerCase().includes(query) ||
+        (s.usuario || '').toLowerCase().includes(query) ||
+        (s.identificacion || '').toString().toLowerCase().includes(query)
+      );
+    }
+
+    // 2. Filtro por estado
+    if (dirStaffStatusFilter === 'active') {
+      list = list.filter(s => activeUserIds.includes(s.id_usuario));
+    } else if (dirStaffStatusFilter === 'inactive') {
+      list = list.filter(s => !activeUserIds.includes(s.id_usuario));
+    }
+
+    // 3. Ordenamiento (por defecto A-Z)
+    if (dirStaffSort === 'az') {
+      list.sort((a, b) => (a.nombre || '').localeCompare(b.nombre || '', 'es', { sensitivity: 'base' }));
+    } else if (dirStaffSort === 'za') {
+      list.sort((a, b) => (b.nombre || '').localeCompare(a.nombre || '', 'es', { sensitivity: 'base' }));
+    } else if (dirStaffSort === 'hierarchy') {
+      const roleOrder = { 'jefas': 1, 'programadores': 2, 'admin': 3 };
+      list.sort((a, b) => {
+        const rA = roleOrder[a.rol] || 3;
+        const rB = roleOrder[b.rol] || 3;
+        if (rA !== rB) return rA - rB;
+        return (a.nombre || '').localeCompare(b.nombre || '', 'es', { sensitivity: 'base' });
+      });
+    } else if (dirStaffSort === 'sent') {
+      list.sort((a, b) => (b.total_enviados || 0) - (a.total_enviados || 0));
+    }
+
+    renderDirStaff(list);
+  }
+
   // Cargar personal del laboratorio
   async function loadStaff() {
     try {
       const response = await fetch(`${SirioAuth.API_BASE}/api/admin/staff`);
       const data = await response.json();
       if (data.success) {
-        allStaff = data.admins;
-        renderDirStaff(allStaff);
+        allStaff = data.admins || [];
+        // Orden alfabético por defecto (A-Z)
+        allStaff.sort((a, b) => (a.nombre || '').localeCompare(b.nombre || '', 'es', { sensitivity: 'base' }));
+        applyDirStaffFilterAndSort();
       } else {
         showGlobalAlert(data.message || 'Error al cargar el personal del laboratorio.', 'error');
       }
@@ -2254,19 +2467,7 @@ document.addEventListener('DOMContentLoaded', () => {
       return;
     }
     
-    // Ordenar: Jefas (1), Programadores (2), Admin (3) y secundariamente por orden alfabético
-    const sortedList = [...staffList].sort((a, b) => {
-      const roleOrder = { 'jefas': 1, 'programadores': 2, 'admin': 3 };
-      const roleA = roleOrder[a.rol] || 3;
-      const roleB = roleOrder[b.rol] || 3;
-      
-      if (roleA !== roleB) {
-        return roleA - roleB;
-      }
-      return a.nombre.localeCompare(b.nombre, 'es', { sensitivity: 'base' });
-    });
-    
-    sortedList.forEach(member => {
+    staffList.forEach(member => {
       const item = document.createElement('div');
       item.className = 'client-item';
       item.setAttribute('data-id', member.id_usuario);
@@ -2286,7 +2487,9 @@ document.addEventListener('DOMContentLoaded', () => {
         <div class="client-item-info">
           <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
             <h4 style="margin: 0;">${member.nombre}</h4>
-            <span class="active-status-badge" style="display: ${isActive ? 'inline-block' : 'none'}; background: rgba(16, 185, 129, 0.15); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.3); font-size: 0.6rem; padding: 1px 5px; border-radius: 3px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.3px; animation: pulse 2s infinite;">Activo</span>
+            <span class="user-status-badge ${isActive ? 'status-active' : 'status-inactive'}">
+              <i class="fa-solid fa-circle" style="font-size: 0.45rem;"></i> ${isActive ? 'Activo' : 'Inactivo'}
+            </span>
           </div>
           <p style="margin-top: 4px; display: flex; align-items: center; gap: 6px;">
             <i class="fa-solid fa-user-tag" style="color: var(--color-accent); font-size: 0.72rem;"></i>
@@ -2623,16 +2826,24 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // Filtrar directorio de personal
+  // Filtrar y ordenar directorio de personal
   if (searchDirStaffInput) {
-    searchDirStaffInput.addEventListener('keyup', () => {
-      const query = searchDirStaffInput.value.toLowerCase().trim();
-      const filtered = allStaff.filter(s => 
-        s.nombre.toLowerCase().includes(query) || 
-        s.usuario.toLowerCase().includes(query) ||
-        (s.identificacion || '').toString().includes(query)
-      );
-      renderDirStaff(filtered);
+    searchDirStaffInput.addEventListener('input', applyDirStaffFilterAndSort);
+  }
+
+  const dirSortStaffSelect = document.getElementById('dir-sort-staff-select');
+  if (dirSortStaffSelect) {
+    dirSortStaffSelect.addEventListener('change', (e) => {
+      dirStaffSort = e.target.value;
+      applyDirStaffFilterAndSort();
+    });
+  }
+
+  const dirFilterStaffStatus = document.getElementById('dir-filter-staff-status');
+  if (dirFilterStaffStatus) {
+    dirFilterStaffStatus.addEventListener('change', (e) => {
+      dirStaffStatusFilter = e.target.value;
+      applyDirStaffFilterAndSort();
     });
   }
 

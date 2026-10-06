@@ -117,24 +117,30 @@ app.post('/api/heartbeat', (req, res) => {
   res.json({ success: true });
 });
 
-// API: Obtener lista de usuarios activos para administradores
+// API: Obtener lista de usuarios activos para administradores (con última hora registrada)
 app.get('/api/admin/active-sessions', (req, res) => {
   const now = Date.now();
   const activeList = [];
+  const sessionsSummary = {};
   
   for (const id in activeSessions) {
+    const session = activeSessions[id];
+    sessionsSummary[id] = {
+      lastSeen: session.lastSeen,
+      rol: session.rol,
+      isActive: (now - session.lastSeen < 30000)
+    };
+
     // Si el usuario tuvo actividad en los últimos 30 segundos
-    if (now - activeSessions[id].lastSeen < 30000) {
+    if (now - session.lastSeen < 30000) {
       activeList.push({
         id_usuario: id,
-        rol: activeSessions[id].rol
+        rol: session.rol,
+        lastSeen: session.lastSeen
       });
-    } else {
-      // Limpiar registros antiguos para evitar consumo de memoria
-      delete activeSessions[id];
     }
   }
-  res.json({ success: true, activeUsers: activeList });
+  res.json({ success: true, activeUsers: activeList, sessions: sessionsSummary });
 });
 
 // Almacén de conexiones SSE activas por usuario

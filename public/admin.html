@@ -257,12 +257,12 @@
           Clínicas, veterinarios o propietarios que verán los exámenes.
         </p>
 
-        <form id="create-client-form">
+        <form id="create-client-form" autocomplete="off">
           <!-- Campo: Nombre -->
           <div class="form-group">
             <label for="new-client-name" id="reg-label-name">Nombre / Razón Social</label>
             <input type="text" id="new-client-name" class="form-control"
-                   placeholder="Ej: Clínica Vet. San Francisco" required>
+                   placeholder="Ej: Clínica Vet. San Francisco" autocomplete="off" required>
           </div>
 
           <!-- Campos exclusivos de Cliente -->
@@ -270,25 +270,25 @@
             <div class="form-group">
               <label for="new-client-id">Identificación / NIT / Cédula</label>
               <input type="text" id="new-client-id" class="form-control"
-                     placeholder="Ej: 900123456">
+                     placeholder="Ej: 900123456" autocomplete="off">
             </div>
 
             <div class="form-group">
               <label for="new-client-address">Dirección Física (Opcional)</label>
               <input type="text" id="new-client-address" class="form-control"
-                     placeholder="Ej: Calle 10 # 5-20, Envigado">
+                     placeholder="Ej: Calle 10 # 5-20, Envigado" autocomplete="off">
             </div>
 
             <div class="form-group">
               <label for="new-client-email">Correo Electrónico (Opcional)</label>
               <input type="email" id="new-client-email" class="form-control"
-                     placeholder="Ej: contacto@vetsanfrancisco.com">
+                     placeholder="Ej: contacto@vetsanfrancisco.com" autocomplete="off">
             </div>
 
             <div class="form-group">
               <label for="new-client-phone">Teléfono (Opcional)</label>
               <input type="text" id="new-client-phone" class="form-control"
-                     placeholder="Ej: +57 300 123 4567">
+                     placeholder="Ej: +57 300 123 4567" autocomplete="off">
             </div>
           </div>
 
@@ -296,7 +296,7 @@
           <div class="form-group">
             <label for="new-client-username" id="reg-label-username">Usuario de Acceso</label>
             <input type="text" id="new-client-username" class="form-control"
-                   placeholder="Ej: vetsanfrancisco" required>
+                   placeholder="Ej: vetsanfrancisco" autocomplete="off" required>
           </div>
 
           <!-- Campo: Contraseña -->
@@ -306,6 +306,7 @@
               <input type="text" id="new-client-password" class="form-control"
                      placeholder="Ej: sirio2026" required
                      maxlength="15"
+                     autocomplete="new-password"
                      style="padding-right: 50px;">
               <span id="pwd-char-count"
                     style="position: absolute; right: 12px; top: 50%; transform: translateY(-50%);
@@ -334,9 +335,25 @@
             <i class="fa-solid fa-users"></i> Clientes Registrados
           </h3>
 
-          <div class="search-container">
+          <div class="search-container" style="margin-bottom: 0.75rem;">
             <i class="fa-solid fa-magnifying-glass"></i>
-            <input type="text" id="search-client" placeholder="Buscar cliente por nombre o ID...">
+            <input type="text" id="search-client" placeholder="Buscar cliente por nombre o ID..." autocomplete="off">
+          </div>
+
+          <!-- Filtros de Orden y Estado -->
+          <div class="client-filter-bar">
+            <select id="send-sort-clients-select" class="client-filter-select" title="Ordenar lista">
+              <option value="az">A - Z (Nombre)</option>
+              <option value="za">Z - A (Nombre)</option>
+              <option value="recent">Fecha (Recientes)</option>
+              <option value="oldest">Fecha (Antiguos)</option>
+            </select>
+            <select id="send-filter-clients-status" class="client-filter-select" title="Filtrar por estado">
+              <option value="all">Todos</option>
+              <option value="active">🟢 Activos</option>
+              <option value="inactive">🟡 Inactivos</option>
+              <option value="debt">⚠️ Morosos</option>
+            </select>
           </div>
 
           <div class="client-list" id="clients-container">
@@ -483,12 +500,27 @@
 
           <!-- Sección: Directorio de Clientes -->
           <div id="dir-clients-section" style="display: flex; flex-direction: column; flex-grow: 1; min-height: 0;">
-            <h3 class="panel-card-title" style="margin-bottom: 1rem;">
+            <h3 class="panel-card-title" style="margin-bottom: 0.75rem;">
               <i class="fa-solid fa-address-book"></i> Directorio de Clientes
             </h3>
-            <div class="search-container" style="margin-bottom: 1rem;">
+            <div class="search-container" style="margin-bottom: 0.75rem;">
               <i class="fa-solid fa-magnifying-glass"></i>
-              <input type="text" id="search-dir-client" placeholder="Buscar cliente por nombre o DNI...">
+              <input type="text" id="search-dir-client" placeholder="Buscar cliente por nombre o DNI..." autocomplete="off">
+            </div>
+            <!-- Filtros de Orden y Estado -->
+            <div class="client-filter-bar">
+              <select id="dir-sort-clients-select" class="client-filter-select" title="Ordenar lista">
+                <option value="az">A - Z (Nombre)</option>
+                <option value="za">Z - A (Nombre)</option>
+                <option value="recent">Fecha (Recientes)</option>
+                <option value="oldest">Fecha (Antiguos)</option>
+              </select>
+              <select id="dir-filter-clients-status" class="client-filter-select" title="Filtrar por estado">
+                <option value="all">Todos</option>
+                <option value="active">🟢 Activos</option>
+                <option value="inactive">🟡 Inactivos</option>
+                <option value="debt">⚠️ Morosos</option>
+              </select>
             </div>
             <div class="client-list" id="dir-clients-container" style="flex-grow: 1; overflow-y: auto;">
               <!-- Cargar lista de clientes aquí -->
@@ -497,12 +529,26 @@
 
           <!-- Sección: Directorio del Personal -->
           <div id="dir-staff-section" style="display: none; flex-direction: column; flex-grow: 1; min-height: 0;">
-            <h3 class="panel-card-title" style="margin-bottom: 1rem;">
+            <h3 class="panel-card-title" style="margin-bottom: 0.75rem;">
               <i class="fa-solid fa-user-shield"></i> Personal del Laboratorio
             </h3>
-            <div class="search-container" style="margin-bottom: 1rem;">
+            <div class="search-container" style="margin-bottom: 0.75rem;">
               <i class="fa-solid fa-magnifying-glass"></i>
-              <input type="text" id="search-dir-staff" placeholder="Buscar personal por nombre o usuario...">
+              <input type="text" id="search-dir-staff" placeholder="Buscar personal por nombre o usuario..." autocomplete="off">
+            </div>
+            <!-- Filtros de Orden y Estado para Personal -->
+            <div class="client-filter-bar">
+              <select id="dir-sort-staff-select" class="client-filter-select" title="Ordenar lista">
+                <option value="az">A - Z (Nombre)</option>
+                <option value="za">Z - A (Nombre)</option>
+                <option value="hierarchy">Jerarquía (Rol)</option>
+                <option value="sent">Exámenes Enviados</option>
+              </select>
+              <select id="dir-filter-staff-status" class="client-filter-select" title="Filtrar por estado">
+                <option value="all">Todos</option>
+                <option value="active">🟢 Activos</option>
+                <option value="inactive">🟡 Inactivos</option>
+              </select>
             </div>
             <div class="client-list" id="dir-staff-container" style="flex-grow: 1; overflow-y: auto;">
               <!-- Cargar lista del personal aquí -->
@@ -558,6 +604,12 @@
               <div class="profile-detail-item" style="background: rgba(255, 255, 255, 0.02); padding: 12px; border-radius: 8px; border: 1px solid var(--border-light);">
                 <span style="font-size: 0.78rem; color: var(--text-muted); display: block; margin-bottom: 4px;">Fecha de Registro</span>
                 <span id="dir-client-date-val" style="font-weight: 600; color: var(--text-main);">...</span>
+              </div>
+              <div class="profile-detail-item" style="background: rgba(255, 255, 255, 0.02); padding: 12px; border-radius: 8px; border: 1px solid var(--border-light);">
+                <span style="font-size: 0.78rem; color: var(--text-muted); display: block; margin-bottom: 4px;">
+                  <i class="fa-solid fa-clock-rotate-left" style="color: var(--color-primary); margin-right: 4px;"></i> Última Vez en Línea (Conexión)
+                </span>
+                <span id="dir-client-last-seen-val" style="font-weight: 600; color: var(--text-main);">...</span>
               </div>
               <div class="profile-detail-item" style="background: rgba(255, 255, 255, 0.02); padding: 12px; border-radius: 8px; border: 1px solid var(--border-light);">
                 <span style="font-size: 0.78rem; color: var(--text-muted); display: block; margin-bottom: 4px;">Dirección</span>
@@ -627,24 +679,24 @@
             </button>
             
             <!-- Formulario de edición (inicialmente oculto) -->
-            <form id="dir-edit-client-form" style="display: none; margin-top: 1.5rem; border-top: 1px solid var(--border-light); padding-top: 1.5rem;">
+            <form id="dir-edit-client-form" autocomplete="off" style="display: none; margin-top: 1.5rem; border-top: 1px solid var(--border-light); padding-top: 1.5rem;">
               <h4 style="margin-bottom: 1rem; color: var(--color-accent);"><i class="fa-solid fa-pen-to-square"></i> Modificar Datos del Cliente</h4>
               
               <div class="form-group">
                 <label for="edit-dir-name">Nombre / Razón Social</label>
-                <input type="text" id="edit-dir-name" class="form-control" required>
+                <input type="text" id="edit-dir-name" class="form-control" autocomplete="off" required>
               </div>
               <div class="form-group">
                 <label for="edit-dir-address">Dirección</label>
-                <input type="text" id="edit-dir-address" class="form-control">
+                <input type="text" id="edit-dir-address" class="form-control" autocomplete="off">
               </div>
               <div class="form-group">
                 <label for="edit-dir-email">Correo Electrónico</label>
-                <input type="email" id="edit-dir-email" class="form-control">
+                <input type="email" id="edit-dir-email" class="form-control" autocomplete="off">
               </div>
               <div class="form-group">
                 <label for="edit-dir-phone">Teléfono</label>
-                <input type="text" id="edit-dir-phone" class="form-control">
+                <input type="text" id="edit-dir-phone" class="form-control" autocomplete="off">
               </div>
               <div class="form-group">
                 <label for="edit-dir-plan">Plan / Rol de Pago</label>
@@ -661,7 +713,7 @@
               </div>
               <div class="form-group">
                 <label for="edit-dir-password">Contraseña (Dejar vacío para conservar actual)</label>
-                <input type="text" id="edit-dir-password" class="form-control" placeholder="Escribir nueva contraseña si desea cambiarla...">
+                <input type="password" id="edit-dir-password" class="form-control" autocomplete="new-password" placeholder="Escribir nueva contraseña si desea cambiarla...">
               </div>
               
               <div style="display: flex; gap: 10px; margin-top: 1rem;">
@@ -725,20 +777,20 @@
             </button>
             
             <!-- Formulario de edición de personal (inicialmente oculto) -->
-            <form id="dir-edit-staff-form" style="display: none; margin-top: 1.5rem; border-top: 1px solid var(--border-light); padding-top: 1.5rem;">
+            <form id="dir-edit-staff-form" autocomplete="off" style="display: none; margin-top: 1.5rem; border-top: 1px solid var(--border-light); padding-top: 1.5rem;">
               <h4 style="margin-bottom: 1rem; color: var(--color-accent);"><i class="fa-solid fa-pen-to-square"></i> Modificar Datos de Personal</h4>
               
               <div class="form-group">
                 <label for="edit-dir-staff-name">Nombre Completo</label>
-                <input type="text" id="edit-dir-staff-name" class="form-control" required>
+                <input type="text" id="edit-dir-staff-name" class="form-control" autocomplete="off" required>
               </div>
               <div class="form-group">
                 <label for="edit-dir-staff-id">Identificación</label>
-                <input type="text" id="edit-dir-staff-id" class="form-control" required>
+                <input type="text" id="edit-dir-staff-id" class="form-control" autocomplete="off" required>
               </div>
               <div class="form-group">
                 <label for="edit-dir-staff-password">Nueva Contraseña (Dejar vacío para conservar actual)</label>
-                <input type="text" id="edit-dir-staff-password" class="form-control" placeholder="Escribir nueva contraseña si desea cambiarla...">
+                <input type="password" id="edit-dir-staff-password" class="form-control" autocomplete="new-password" placeholder="Escribir nueva contraseña si desea cambiarla...">
               </div>
               
               <div style="display: flex; gap: 10px; margin-top: 1rem;">
