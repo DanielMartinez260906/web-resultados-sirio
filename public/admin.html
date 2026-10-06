@@ -107,6 +107,167 @@
         </button>
       </nav>
       <button class="scroll-arrow right" aria-label="Desplazar a la derecha"><i class="fa-solid fa-chevron-right"></i></button>
+      
+      <!-- Botón de Acceso Rápido / Vista en Cuadrícula de Pestañas -->
+      <button id="admin-quick-tabs-btn" class="quick-tabs-trigger" title="Ver todas las pestañas y accesos rápidos (Ctrl + K)">
+        <i class="fa-solid fa-grid-2" style="display: none;"></i>
+        <i class="fa-solid fa-table-cells-large"></i>
+        <span class="quick-tabs-btn-text">Todas las pestañas</span>
+      </button>
+    </div>
+
+    <!-- Modal / Hub de Acceso Rápido a Pestañas -->
+    <div id="quick-tabs-modal" class="quick-tabs-overlay" style="display: none;">
+      <div class="quick-tabs-card">
+        <div class="quick-tabs-header">
+          <div style="display: flex; align-items: center; gap: 10px;">
+            <div class="quick-tabs-icon-badge">
+              <i class="fa-solid fa-compass"></i>
+            </div>
+            <div>
+              <h3 style="margin: 0; font-size: 1.15rem; font-weight: 700; color: var(--text-main);">Panel de Navegación Rápida</h3>
+              <p style="margin: 2px 0 0 0; font-size: 0.8rem; color: var(--text-muted);">Accede instantáneamente a cualquier módulo o sección</p>
+            </div>
+          </div>
+          <button type="button" id="close-quick-tabs-btn" class="quick-tabs-close-btn" aria-label="Cerrar menú">
+            <i class="fa-solid fa-xmark"></i>
+          </button>
+        </div>
+
+        <div class="quick-tabs-search-wrapper">
+          <i class="fa-solid fa-magnifying-glass"></i>
+          <input type="text" id="quick-tabs-search-input" placeholder="Buscar módulo (ej: pacientes, historial, morosos, config, soporte...)" autocomplete="off">
+          <span class="quick-tabs-shortcut-hint">ESC para cerrar</span>
+        </div>
+
+        <div class="quick-tabs-grid" id="quick-tabs-grid-container">
+          <!-- Tarjetas generadas dinámicamente o con soporte interactivo -->
+          <div class="quick-tab-item" data-tab="tab-history">
+            <div class="quick-tab-item-icon" style="color: #38bdf8; background: rgba(56, 189, 248, 0.12);">
+              <i class="fa-solid fa-folder-tree"></i>
+            </div>
+            <div class="quick-tab-item-content">
+              <h4>Historial de Exámenes</h4>
+              <p>Consulta, descarga y administra todos los PDFs publicados.</p>
+            </div>
+            <i class="fa-solid fa-chevron-right quick-tab-arrow"></i>
+          </div>
+
+          <div class="quick-tab-item" data-tab="tab-register">
+            <div class="quick-tab-item-icon" style="color: #34d399; background: rgba(52, 211, 153, 0.12);">
+              <i class="fa-solid fa-user-plus"></i>
+            </div>
+            <div class="quick-tab-item-content">
+              <h4>Registrar Usuario</h4>
+              <p>Crear cuentas para clínicas, veterinarios o personal.</p>
+            </div>
+            <i class="fa-solid fa-chevron-right quick-tab-arrow"></i>
+          </div>
+
+          <div class="quick-tab-item" data-tab="tab-send">
+            <div class="quick-tab-item-icon" style="color: #60a5fa; background: rgba(96, 165, 250, 0.12);">
+              <i class="fa-solid fa-share-nodes"></i>
+            </div>
+            <div class="quick-tab-item-content">
+              <h4>Enviar Resultados</h4>
+              <p>Subir y publicar exámenes PDF y gestionar retenciones.</p>
+            </div>
+            <i class="fa-solid fa-chevron-right quick-tab-arrow"></i>
+          </div>
+
+          <div class="quick-tab-item" data-tab="tab-admin-ingresar">
+            <div class="quick-tab-item-icon" style="color: #f59e0b; background: rgba(245, 158, 11, 0.12);">
+              <i class="fa-solid fa-file-signature"></i>
+            </div>
+            <div class="quick-tab-item-content">
+              <h4>Ingresar Paciente</h4>
+              <p>Diligenciar orden médica y registrar muestras veterinarias.</p>
+            </div>
+            <i class="fa-solid fa-chevron-right quick-tab-arrow"></i>
+          </div>
+
+          <div class="quick-tab-item" data-tab="tab-clients">
+            <div class="quick-tab-item-icon" style="color: #a78bfa; background: rgba(167, 139, 250, 0.12);">
+              <i class="fa-solid fa-address-book"></i>
+            </div>
+            <div class="quick-tab-item-content">
+              <h4>Clientes y Perfiles</h4>
+              <p>Directorio de clientes, créditos, contraseñas y personal.</p>
+            </div>
+            <i class="fa-solid fa-chevron-right quick-tab-arrow"></i>
+          </div>
+
+          <div class="quick-tab-item" data-tab="tab-config">
+            <div class="quick-tab-item-icon" style="color: #ec4899; background: rgba(236, 72, 153, 0.12);">
+              <i class="fa-solid fa-gears"></i>
+            </div>
+            <div class="quick-tab-item-content">
+              <h4>Configuración</h4>
+              <p>Ajustes de SirIA, parámetros del sistema y seguridad.</p>
+            </div>
+            <i class="fa-solid fa-chevron-right quick-tab-arrow"></i>
+          </div>
+
+          <div class="quick-tab-item" data-tab="tab-portafolio-admin">
+            <div class="quick-tab-item-icon" style="color: #2dd4bf; background: rgba(45, 212, 191, 0.12);">
+              <i class="fa-solid fa-book-medical"></i>
+            </div>
+            <div class="quick-tab-item-content">
+              <h4>Portafolio</h4>
+              <p>Administrar pruebas, áreas, precios y descripciones.</p>
+            </div>
+            <i class="fa-solid fa-chevron-right quick-tab-arrow"></i>
+          </div>
+
+          <div class="quick-tab-item" data-tab="tab-stats" id="quick-tab-item-stats" style="display: none;">
+            <div class="quick-tab-item-icon" style="color: #f43f5e; background: rgba(244, 63, 94, 0.12);">
+              <i class="fa-solid fa-chart-line"></i>
+            </div>
+            <div class="quick-tab-item-content">
+              <h4>Estadísticas</h4>
+              <p>Métricas de exámenes, rendimiento y actividad mensual.</p>
+            </div>
+            <i class="fa-solid fa-chevron-right quick-tab-arrow"></i>
+          </div>
+
+          <div class="quick-tab-item" data-tab="tab-soporte">
+            <div class="quick-tab-item-icon" style="color: #06b6d4; background: rgba(6, 182, 212, 0.12);">
+              <i class="fa-solid fa-headset"></i>
+            </div>
+            <div class="quick-tab-item-content">
+              <h4>Mensajes de Soporte</h4>
+              <p>Consultas, solicitudes y mensajes enviados por clientes.</p>
+            </div>
+            <i class="fa-solid fa-chevron-right quick-tab-arrow"></i>
+          </div>
+
+          <div class="quick-tab-item" data-tab="tab-alertas">
+            <div class="quick-tab-item-icon" style="color: #eab308; background: rgba(234, 179, 8, 0.12);">
+              <i class="fa-solid fa-bell-exclamation"></i>
+            </div>
+            <div class="quick-tab-item-content">
+              <h4>Alertas a Clientes</h4>
+              <p>Crear avisos y comunicados globales o por cliente.</p>
+            </div>
+            <i class="fa-solid fa-chevron-right quick-tab-arrow"></i>
+          </div>
+
+          <div class="quick-tab-item" data-tab="tab-danger">
+            <div class="quick-tab-item-icon" style="color: #ef4444; background: rgba(239, 68, 68, 0.12);">
+              <i class="fa-solid fa-triangle-exclamation"></i>
+            </div>
+            <div class="quick-tab-item-content">
+              <h4>Zona de Peligro</h4>
+              <p>Eliminación masiva protegida y purga del sistema.</p>
+            </div>
+            <i class="fa-solid fa-chevron-right quick-tab-arrow"></i>
+          </div>
+        </div>
+
+        <div class="quick-tabs-footer">
+          <span><i class="fa-solid fa-lightbulb" style="color: #fbbf24; margin-right: 4px;"></i> <strong>Tip:</strong> Puedes usar <code>Ctrl + K</code> o <code>Ctrl + Space</code> desde cualquier lugar para abrir este menú rápidamente.</span>
+        </div>
+      </div>
     </div>
 
     <!-- ── Contenidos de las Pestañas ────────────────────────────────── -->

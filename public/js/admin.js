@@ -1686,6 +1686,8 @@ document.addEventListener('DOMContentLoaded', () => {
       if (!tabButton.classList.contains('active')) {
         tabButton.click();
       }
+      // Asegurar que el slider de pestañas desplace suavemente hacia la pestaña seleccionada
+      tabButton.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
     }
   }
 
@@ -1845,6 +1847,141 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     });
   }
+
+  // ==========================================================================
+  // PANEL DE NAVEGACIÓN RÁPIDA (HUB DE PESTAÑAS)
+  // ==========================================================================
+  const adminQuickTabsBtn = document.getElementById('admin-quick-tabs-btn');
+  const quickTabsModal = document.getElementById('quick-tabs-modal');
+  const closeQuickTabsBtn = document.getElementById('close-quick-tabs-btn');
+  const quickTabsSearchInput = document.getElementById('quick-tabs-search-input');
+  const quickTabsGridContainer = document.getElementById('quick-tabs-grid-container');
+  const quickTabItemStats = document.getElementById('quick-tab-item-stats');
+
+  // Mostrar u ocultar pestaña de estadísticas en el Hub según rol
+  if (quickTabItemStats) {
+    const hasSpecialRole = currentUser && (currentUser.rol === 'jefas' || currentUser.rol === 'programadores');
+    quickTabItemStats.style.display = hasSpecialRole ? 'flex' : 'none';
+  }
+
+  function openQuickTabsModal() {
+    if (!quickTabsModal) return;
+    
+    // Resaltar la pestaña actualmente activa en la cuadrícula
+    const currentActiveTab = sessionStorage.getItem('sirio_active_tab_admin') || 'tab-history';
+    document.querySelectorAll('.quick-tab-item').forEach(item => {
+      if (item.dataset.tab === currentActiveTab) {
+        item.classList.add('active-tab-highlight');
+      } else {
+        item.classList.remove('active-tab-highlight');
+      }
+      item.style.display = 'flex'; // Resetear búsqueda
+    });
+
+    if (quickTabsSearchInput) {
+      quickTabsSearchInput.value = '';
+    }
+
+    quickTabsModal.style.display = 'flex';
+    setTimeout(() => {
+      if (quickTabsSearchInput) quickTabsSearchInput.focus();
+    }, 80);
+  }
+
+  function closeQuickTabsModal() {
+    if (quickTabsModal) {
+      quickTabsModal.style.display = 'none';
+    }
+  }
+
+  if (adminQuickTabsBtn) {
+    adminQuickTabsBtn.addEventListener('click', openQuickTabsModal);
+  }
+
+  if (closeQuickTabsBtn) {
+    closeQuickTabsBtn.addEventListener('click', closeQuickTabsModal);
+  }
+
+  // Cerrar al hacer clic fuera de la tarjeta
+  if (quickTabsModal) {
+    quickTabsModal.addEventListener('click', (e) => {
+      if (e.target === quickTabsModal) {
+        closeQuickTabsModal();
+      }
+    });
+  }
+
+  // Navegar al hacer clic en cualquier tarjeta del Hub
+  if (quickTabsGridContainer) {
+    quickTabsGridContainer.addEventListener('click', (e) => {
+      const item = e.target.closest('.quick-tab-item');
+      if (!item) return;
+      const targetTab = item.dataset.tab;
+      if (targetTab) {
+        closeQuickTabsModal();
+        switchTab(targetTab);
+      }
+    });
+  }
+
+  // Búsqueda interactiva en tiempo real dentro del Hub
+  if (quickTabsSearchInput) {
+    quickTabsSearchInput.addEventListener('input', (e) => {
+      const query = e.target.value.toLowerCase().trim();
+      const items = document.querySelectorAll('.quick-tab-item');
+      
+      items.forEach(item => {
+        // No mostrar estadísticas si el usuario no tiene permisos
+        if (item.id === 'quick-tab-item-stats' && !(currentUser && (currentUser.rol === 'jefas' || currentUser.rol === 'programadores'))) {
+          item.style.display = 'none';
+          return;
+        }
+
+        const title = (item.querySelector('h4') ? item.querySelector('h4').textContent : '').toLowerCase();
+        const desc = (item.querySelector('p') ? item.querySelector('p').textContent : '').toLowerCase();
+        const tabKey = (item.dataset.tab || '').toLowerCase();
+
+        if (!query || title.includes(query) || desc.includes(query) || tabKey.includes(query)) {
+          item.style.display = 'flex';
+        } else {
+          item.style.display = 'none';
+        }
+      });
+    });
+
+    // Atajo Enter para abrir el primer elemento visible
+    quickTabsSearchInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        const visibleItems = Array.from(document.querySelectorAll('.quick-tab-item')).filter(el => el.style.display !== 'none');
+        if (visibleItems.length > 0) {
+          const targetTab = visibleItems[0].dataset.tab;
+          if (targetTab) {
+            closeQuickTabsModal();
+            switchTab(targetTab);
+          }
+        }
+      } else if (e.key === 'Escape') {
+        closeQuickTabsModal();
+      }
+    });
+  }
+
+  // Atajos globales de teclado: Ctrl + K o Escape
+  document.addEventListener('keydown', (e) => {
+    if ((e.ctrlKey || e.metaKey) && (e.key === 'k' || e.key === 'K')) {
+      e.preventDefault();
+      if (quickTabsModal && quickTabsModal.style.display === 'flex') {
+        closeQuickTabsModal();
+      } else {
+        openQuickTabsModal();
+      }
+    } else if (e.key === 'Escape') {
+      if (quickTabsModal && quickTabsModal.style.display === 'flex') {
+        closeQuickTabsModal();
+      }
+    }
+  });
 
   // ==========================================================================
   // LÓGICA DEL DIRECTORIO DE CLIENTES (Pestaña Clientes y Perfiles)
