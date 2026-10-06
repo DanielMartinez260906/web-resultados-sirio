@@ -601,7 +601,7 @@ document.addEventListener('DOMContentLoaded', () => {
         // Si el cliente no tiene retenidos pero es moroso, podemos ocultar o mostrar vacío
         if (selectedClient && selectedClient.moroso) {
           retainedSection.style.display = 'block';
-          retainedContainer.innerHTML = '<p style="text-align: center; color: var(--text-dark); padding: 1rem 0; font-size: 0.85rem;">No hay resultados retenidos pendientes.</p>';
+          retainedContainer.innerHTML = '<p style="grid-column: 1 / -1; text-align: center; color: var(--text-dark); padding: 1rem 0; font-size: 0.85rem;">No hay resultados retenidos pendientes.</p>';
         } else {
           retainedSection.style.display = 'none';
         }
@@ -609,7 +609,7 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     } catch (err) {
       console.error('Error al cargar retenidos:', err);
-      retainedContainer.innerHTML = '<p style="color: var(--error); text-align: center; padding: 0.5rem; font-size: 0.85rem;">Error al cargar retenidos.</p>';
+      retainedContainer.innerHTML = '<p style="grid-column: 1 / -1; color: var(--error); text-align: center; padding: 0.5rem; font-size: 0.85rem;">Error al cargar retenidos.</p>';
     }
   }
 
@@ -637,7 +637,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (dirCountBadge) dirCountBadge.innerText = '0';
         if (selectedDirClient && selectedDirClient.moroso) {
           dirRetainedSection.style.display = 'block';
-          dirRetainedContainer.innerHTML = '<p style="text-align: center; color: var(--text-dark); padding: 1rem 0; font-size: 0.85rem;">No hay resultados retenidos pendientes.</p>';
+          dirRetainedContainer.innerHTML = '<p style="grid-column: 1 / -1; text-align: center; color: var(--text-dark); padding: 1rem 0; font-size: 0.85rem;">No hay resultados retenidos pendientes.</p>';
         } else {
           dirRetainedSection.style.display = 'none';
         }
@@ -645,7 +645,7 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     } catch (err) {
       console.error('Error al cargar retenidos en directorio:', err);
-      dirRetainedContainer.innerHTML = '<p style="color: var(--error); text-align: center; padding: 0.5rem; font-size: 0.85rem;">Error al cargar retenidos.</p>';
+      dirRetainedContainer.innerHTML = '<p style="grid-column: 1 / -1; color: var(--error); text-align: center; padding: 0.5rem; font-size: 0.85rem;">Error al cargar retenidos.</p>';
     }
   }
 
@@ -654,26 +654,25 @@ document.addEventListener('DOMContentLoaded', () => {
     container.innerHTML = '';
     results.forEach(res => {
       const card = document.createElement('div');
-      card.className = 'client-item';
-      card.style.cssText = 'cursor: default; border-left: 3px solid #fbbf24; background: rgba(245, 158, 11, 0.05); padding: 10px 14px; margin-bottom: 6px; display: flex; align-items: center; justify-content: space-between; gap: 10px; border-radius: 6px; border: 1px solid rgba(245, 158, 11, 0.2);';
+      card.className = 'retained-card-item';
       
       card.innerHTML = `
-        <div style="display: flex; align-items: center; gap: 12px; flex: 1; min-width: 0;">
-          <input type="checkbox" class="${checkboxClass}" data-id="${res.id_resultado}" style="width: 18px; height: 18px; cursor: pointer; accent-color: #10b981;">
+        <div style="display: flex; align-items: center; gap: 10px; flex: 1; min-width: 0;">
+          <input type="checkbox" class="${checkboxClass}" data-id="${res.id_resultado}" style="width: 18px; height: 18px; cursor: pointer; accent-color: #10b981; flex-shrink: 0;">
           <div style="flex: 1; min-width: 0;">
-            <h4 style="font-size: 0.88rem; font-weight: 600; text-overflow: ellipsis; overflow: hidden; white-space: nowrap; margin: 0; color: #fbbf24;" title="${res.nombre_examen}">
-              <i class="fa-solid fa-file-pdf" style="color: #fbbf24; margin-right: 6px;"></i> ${res.nombre_examen}
+            <h4 style="font-size: 0.85rem; font-weight: 600; text-overflow: ellipsis; overflow: hidden; white-space: nowrap; margin: 0; color: #fbbf24;" title="${res.nombre_examen}">
+              <i class="fa-solid fa-file-pdf" style="color: #fbbf24; margin-right: 4px;"></i> ${res.nombre_examen}
             </h4>
-            <p style="font-size: 0.72rem; margin: 2px 0 0 0; color: var(--text-muted);">
-              <i class="fa-solid fa-clock"></i> Subido: ${SirioAuth.formatDate(res.fecha_subida)}
+            <p style="font-size: 0.72rem; margin: 2px 0 0 0; color: var(--text-muted); text-overflow: ellipsis; overflow: hidden; white-space: nowrap;">
+              <i class="fa-solid fa-clock"></i> ${SirioAuth.formatDate(res.fecha_subida)}
             </p>
           </div>
         </div>
-        <div style="display: flex; gap: 6px; align-items: center; flex-shrink: 0;">
-          <a href="${getPdfUrl(res.nombre_archivo)}" target="_blank" rel="noopener noreferrer" class="btn btn-secondary btn-icon" style="padding: 4px 8px; font-size: 0.8rem;" title="Previsualizar PDF">
+        <div style="display: flex; gap: 5px; align-items: center; flex-shrink: 0;">
+          <a href="${getPdfUrl(res.nombre_archivo)}" target="_blank" rel="noopener noreferrer" class="btn btn-secondary btn-icon" style="padding: 4px 7px; font-size: 0.75rem;" title="Previsualizar PDF">
             <i class="fa-solid fa-eye"></i>
           </a>
-          <button type="button" class="btn btn-primary release-single-btn" data-id="${res.id_resultado}" style="padding: 4px 10px; font-size: 0.75rem; background: #10b981; border-color: #10b981; gap: 4px;" title="Liberar sólo este resultado">
+          <button type="button" class="btn btn-primary release-single-btn" data-id="${res.id_resultado}" style="padding: 4px 8px; font-size: 0.72rem; background: #10b981; border-color: #10b981; gap: 4px;" title="Liberar sólo este resultado">
             <i class="fa-solid fa-unlock"></i> Liberar
           </button>
         </div>

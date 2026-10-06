@@ -2642,4 +2642,41 @@ body.light-theme #stats-recent-count-badge {
   }
 }
 
+/* ── Grid de 2 Columnas para Resultados Retenidos ────────── */
+.retained-cards-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+  max-height: 280px;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+
+.retained-card-item {
+  cursor: default;
+  border-left: 3px solid #fbbf24;
+  background: rgba(245, 158, 11, 0.05);
+  padding: 10px 12px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  border-radius: 8px;
+  border: 1px solid rgba(245, 158, 11, 0.2);
+  transition: background 0.2s ease, border-color 0.2s ease;
+  min-width: 0;
+}
+
+.retained-card-item:hover {
+  background: rgba(245, 158, 11, 0.09);
+  border-color: rgba(245, 158, 11, 0.35);
+}
+
+@media (max-width: 640px) {
+  .retained-cards-grid {
+    grid-template-columns: 1fr;
+    max-height: 240px;
+  }
+}
+
 
